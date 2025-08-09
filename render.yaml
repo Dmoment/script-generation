@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: script-generation
+    env: ruby
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec puma -C config/puma.rb"
+    plan: starter
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: script-generation-db
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: 2
+      - key: RAILS_ENV
+        value: production
+      - key: BUNDLE_WITHOUT
+        value: development:test
+      - key: RAILS_LOG_TO_STDOUT
+        value: true
+      - key: RAILS_SERVE_STATIC_FILES
+        value: true
+
+  - type: worker
+    name: script-generation-worker
+    env: ruby
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "bundle exec solid_queue:start"
+    plan: starter
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: script-generation-db
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: RAILS_ENV
+        value: production
+      - key: BUNDLE_WITHOUT
+        value: development:test
+
+databases:
+  - name: script-generation-db
+    databaseName: script_generation_production
+    user: script_generation
+    plan: starter

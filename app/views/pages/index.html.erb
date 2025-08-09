@@ -1,1 +1,6 @@
-<div id="react-root"></div>
+<%# React landing app mount: header + hero + features + cta + footer %>
+<div id="react-root"
+     data-features='<%= raw marketing_features.to_json %>'
+     data-app-name="<%= app_name %>"
+     data-signin-path="/sign_in"
+     data-signup-path="/sign_up"></div>
