@@ -2,9 +2,10 @@ services:
   - type: web
     name: script-generation
     env: ruby
+    region: virginia
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
-    postDeployCommand: "bundle exec rails db:prepare"
+    preDeployCommand: "bundle exec rails db:prepare"
     plan: starter
     envVars:
       - key: DATABASE_URL
@@ -27,9 +28,10 @@ services:
   - type: worker
     name: script-generation-worker
     env: ruby
+    region: virginia
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec solid_queue:start"
-    postDeployCommand: "bundle exec rails db:prepare"
+    preDeployCommand: "bundle exec rails db:prepare"
     plan: starter
     envVars:
       - key: DATABASE_URL
@@ -45,6 +47,7 @@ services:
 
 databases:
   - name: script-generation-db
+    region: virginia
     databaseName: script_generation_production
     user: script_generation
     plan: basic-256mb
