@@ -31,7 +31,7 @@ services:
     env: ruby
     region: virginia
     buildCommand: "./bin/render-build.sh"
-    startCommand: "bundle exec solid_queue:start"
+    startCommand: "bundle exec rails solid_queue:start"
     preDeployCommand: |
       bash -lc 'for i in {1..3}; do bundle exec rails db:prepare && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
     plan: starter
