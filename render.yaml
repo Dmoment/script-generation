@@ -4,6 +4,7 @@ services:
     env: ruby
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
+    postDeployCommand: "bundle exec rails db:prepare"
     plan: starter
     envVars:
       - key: DATABASE_URL
@@ -28,6 +29,7 @@ services:
     env: ruby
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec solid_queue:start"
+    postDeployCommand: "bundle exec rails db:prepare"
     plan: starter
     envVars:
       - key: DATABASE_URL
