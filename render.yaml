@@ -45,4 +45,5 @@ databases:
   - name: script-generation-db
     databaseName: script_generation_production
     user: script_generation
-    plan: starter
+    plan: basic-256mb
+    postgresMajorVersion: "16"
