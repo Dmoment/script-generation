@@ -3,6 +3,10 @@ services:
     name: script-generation
     env: ruby
     region: virginia
+    dependsOn:
+      - name: script-generation-db
+        type: database
+        waitFor: ready
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
     preDeployCommand: "bundle exec rails db:prepare"
@@ -29,6 +33,10 @@ services:
     name: script-generation-worker
     env: ruby
     region: virginia
+    dependsOn:
+      - name: script-generation-db
+        type: database
+        waitFor: ready
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec solid_queue:start"
     preDeployCommand: "bundle exec rails db:prepare"
