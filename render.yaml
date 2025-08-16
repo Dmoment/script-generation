@@ -3,13 +3,10 @@ services:
     name: script-generation
     env: ruby
     region: virginia
-    dependsOn:
-      - name: script-generation-db
-        type: database
-        waitFor: ready
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
-    preDeployCommand: "bundle exec rails db:prepare"
+    preDeployCommand: |
+      bash -lc 'for i in {1..12}; do bundle exec rails db:prepare && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
     plan: starter
     envVars:
       - key: DATABASE_URL
@@ -33,13 +30,10 @@ services:
     name: script-generation-worker
     env: ruby
     region: virginia
-    dependsOn:
-      - name: script-generation-db
-        type: database
-        waitFor: ready
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec solid_queue:start"
-    preDeployCommand: "bundle exec rails db:prepare"
+    preDeployCommand: |
+      bash -lc 'for i in {1..12}; do bundle exec rails db:prepare && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
     plan: starter
     envVars:
       - key: DATABASE_URL
