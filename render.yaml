@@ -6,7 +6,16 @@ services:
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
     preDeployCommand: |
-      bash -lc 'for i in {1..5}; do bundle exec rails db:prepare db:prepare:queue db:prepare:cache db:prepare:cable && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
+      bash -lc '
+        for i in {1..5}; do \
+          bundle exec rails db:prepare && \
+          (bundle exec rails db:migrate:queue || bundle exec rails db:schema:load:queue) && \
+          (bundle exec rails db:migrate:cache || bundle exec rails db:schema:load:cache) && \
+          (bundle exec rails db:migrate:cable || bundle exec rails db:schema:load:cable) && \
+          exit 0; \
+          echo "DB not ready, retrying..."; sleep 5; \
+        done; \
+        exit 1'
     plan: starter
     envVars:
       - key: DATABASE_URL
@@ -33,7 +42,16 @@ services:
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec rails solid_queue:start"
     preDeployCommand: |
-      bash -lc 'for i in {1..5}; do bundle exec rails db:prepare db:prepare:queue db:prepare:cache db:prepare:cable && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
+      bash -lc '
+        for i in {1..5}; do \
+          bundle exec rails db:prepare && \
+          (bundle exec rails db:migrate:queue || bundle exec rails db:schema:load:queue) && \
+          (bundle exec rails db:migrate:cache || bundle exec rails db:schema:load:cache) && \
+          (bundle exec rails db:migrate:cable || bundle exec rails db:schema:load:cable) && \
+          exit 0; \
+          echo "DB not ready, retrying..."; sleep 5; \
+        done; \
+        exit 1'
     plan: starter
     envVars:
       - key: DATABASE_URL
