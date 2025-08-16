@@ -22,12 +22,6 @@ bun run build:css
 echo "🗂️ Precompiling Rails assets..."
 bundle exec rails assets:precompile
 
-# Run database migrations
-echo "🗄️ Running database migrations..."
-bundle exec rails db:migrate
-
-# Create seed data if needed
-echo "🌱 Creating seed data..."
-bundle exec rails db:seed
+echo "ℹ️ Skipping DB migrate/seed during build. Migrations will run in postDeploy."
 
 echo "✅ Build process completed successfully!"
