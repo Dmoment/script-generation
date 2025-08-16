@@ -9,9 +9,9 @@ services:
       bash -lc '
         for i in {1..5}; do \
           bundle exec rails db:prepare && \
-          (bundle exec rails db:migrate:queue || bundle exec rails db:schema:load:queue) && \
-          (bundle exec rails db:migrate:cache || bundle exec rails db:schema:load:cache) && \
-          (bundle exec rails db:migrate:cable || bundle exec rails db:schema:load:cable) && \
+          bundle exec rails db:migrate:queue && \
+          bundle exec rails db:migrate:cache && \
+          bundle exec rails db:migrate:cable && \
           exit 0; \
           echo "DB not ready, retrying..."; sleep 5; \
         done; \
@@ -45,9 +45,9 @@ services:
       bash -lc '
         for i in {1..5}; do \
           bundle exec rails db:prepare && \
-          (bundle exec rails db:migrate:queue || bundle exec rails db:schema:load:queue) && \
-          (bundle exec rails db:migrate:cache || bundle exec rails db:schema:load:cache) && \
-          (bundle exec rails db:migrate:cable || bundle exec rails db:schema:load:cable) && \
+          bundle exec rails db:migrate:queue && \
+          bundle exec rails db:migrate:cache && \
+          bundle exec rails db:migrate:cable && \
           exit 0; \
           echo "DB not ready, retrying..."; sleep 5; \
         done; \

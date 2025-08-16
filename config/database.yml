@@ -20,12 +20,34 @@ default: &default
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 development:
-  <<: *default
-  database: script_generation_development
-  username: <%= ENV.fetch("DATABASE_USERNAME") { `whoami`.strip } %>
-  password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
-  host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
-  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  primary:
+    <<: *default
+    database: script_generation_development
+    username: <%= ENV.fetch("DATABASE_USERNAME") { `whoami`.strip } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
+    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  queue:
+    <<: *default
+    database: script_generation_queue_development
+    username: <%= ENV.fetch("DATABASE_USERNAME") { `whoami`.strip } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
+    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  cache:
+    <<: *default
+    database: script_generation_cache_development
+    username: <%= ENV.fetch("DATABASE_USERNAME") { `whoami`.strip } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
+    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  cable:
+    <<: *default
+    database: script_generation_cable_development
+    username: <%= ENV.fetch("DATABASE_USERNAME") { `whoami`.strip } %>
+    password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
+    host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>
+    port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
