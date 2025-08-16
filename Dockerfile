@@ -33,14 +33,10 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git node-gyp pkg-config python-is-python3 && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Install JavaScript dependencies
-ARG NODE_VERSION=16.4.2
-ARG YARN_VERSION=1.22.19
-ENV PATH=/usr/local/node/bin:$PATH
-RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
-    /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
-    npm install -g yarn@$YARN_VERSION && \
-    rm -rf /tmp/node-build-master
+# Install Bun (JS runtime & package manager)
+ENV BUN_INSTALL=/usr/local/bun
+ENV PATH=$BUN_INSTALL/bin:$PATH
+RUN curl -fsSL https://bun.sh/install | bash
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
@@ -48,9 +44,9 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
-# Install node modules
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+# Install JS dependencies with Bun
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
 # Copy application code
 COPY . .
@@ -58,7 +54,8 @@ COPY . .
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+# Build JS/CSS assets and precompile Rails assets
+RUN bun run build && bun run build:css
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 
