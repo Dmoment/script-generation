@@ -6,7 +6,7 @@ services:
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
     preDeployCommand: |
-      bash -lc 'for i in {1..12}; do bundle exec rails db:prepare && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
+      bash -lc 'for i in {1..3}; do bundle exec rails db:prepare && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
     plan: starter
     envVars:
       - key: DATABASE_URL
@@ -33,7 +33,7 @@ services:
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec solid_queue:start"
     preDeployCommand: |
-      bash -lc 'for i in {1..12}; do bundle exec rails db:prepare && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
+      bash -lc 'for i in {1..3}; do bundle exec rails db:prepare && exit 0; echo "DB not ready, retrying..."; sleep 5; done; exit 1'
     plan: starter
     envVars:
       - key: DATABASE_URL
