@@ -23,5 +23,9 @@ module ScriptGeneration
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Add API directory to autoload paths so Grape API classes are loaded
+    config.autoload_paths << Rails.root.join("app/api")
+    config.eager_load_paths << Rails.root.join("app/api")
   end
 end

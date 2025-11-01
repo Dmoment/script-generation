@@ -6,7 +6,29 @@ import Footer from './Footer';
 import LandingPage from '../pages/LandingPage';
 import DashboardPage from '../pages/DashboardPage';
 
-const App = ({ features = [], appName = 'Script Generation' }) => {
+/**
+ * Feature interface for marketing features
+ */
+interface Feature {
+  id?: string;
+  title: string;
+  description: string;
+  icon?: string;
+}
+
+/**
+ * App component props
+ */
+interface AppProps {
+  features?: Feature[];
+  appName?: string;
+}
+
+/**
+ * Main App Component
+ * Handles routing and provides authentication context
+ */
+const App: React.FC<AppProps> = ({ features = [], appName = 'Script Generation' }) => {
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -38,3 +60,4 @@ const App = ({ features = [], appName = 'Script Generation' }) => {
 };
 
 export default App;
+

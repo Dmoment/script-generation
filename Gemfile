@@ -19,6 +19,17 @@ gem "cssbundling-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
+gem "omniauth"
+gem "omniauth-auth0"
+gem "dotenv-rails", groups: [:development, :test]
+
+# API Framework
+gem "grape", "~> 2.0"
+gem "grape-entity", "~> 1.0"
+gem "grape-swagger", "~> 2.0"
+gem "grape-swagger-rails", "~> 0.4"
+gem "rack-cors"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 
@@ -54,6 +65,9 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  gem "pry"
+  gem "pry-rails"
 end
 
 group :development do

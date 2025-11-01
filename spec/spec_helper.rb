@@ -92,3 +92,16 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 =end
 end
+
+require 'webmock/rspec'
+WebMock.disable_net_connect!(allow_localhost: true)
+
+require 'vcr'
+VCR.configure do |c|
+  c.cassette_library_dir = 'spec/cassettes'
+  c.hook_into :webmock
+  c.configure_rspec_metadata!
+  c.filter_sensitive_data('<AUTH0_DOMAIN>') { ENV['AUTH0_DOMAIN'] }
+  c.filter_sensitive_data('<AUTH0_CLIENT_ID>') { ENV['AUTH0_CLIENT_ID'] }
+  c.filter_sensitive_data('<AUTH0_CLIENT_SECRET>') { ENV['AUTH0_CLIENT_SECRET'] }
+end

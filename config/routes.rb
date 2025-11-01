@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  get "pages/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -10,6 +9,22 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  # Defines the root path route ("/")
+  # Grape API
+  mount V1::Base => '/api'
+  mount GrapeSwaggerRails::Engine => '/api/docs'
+
+  # API/Auth endpoints (must be before catch-all)
+  get '/auth/auth0/callback', to: 'sessions#callback'
+  get '/auth/failure', to: 'sessions#failure'
+  delete '/logout', to: 'sessions#logout'
+  get '/current_user', to: 'sessions#current'
+
+  # Root path
   root "pages#index"
+
+  # Catch-all route for React Router (must be absolute last)
+  # This allows React Router to handle all routes client-side
+  get '*path', to: 'pages#index', constraints: ->(req) {
+    !req.xhr? && req.format.html?
+  }
 end

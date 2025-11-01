@@ -2,11 +2,14 @@
   "name": "app",
   "private": true,
   "scripts": {
-    "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets",
+    "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets --loader:.tsx=tsx --loader:.ts=ts",
     "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules --quiet-deps",
     "build:css:prefix": "postcss ./app/assets/builds/application.css --output=./app/assets/builds/application.css",
     "build:css": "bun run build:css:compile && bun run build:css:prefix",
-    "watch:css": "nodemon --watch ./app/assets/stylesheets/ --ext scss --exec \"bun run build:css\""
+    "watch:css": "nodemon --watch ./app/assets/stylesheets/ --ext scss --exec \"bun run build:css\"",
+    "generate:api-types": "rails api:generate_spec && openapi-ts --input ./public/api-spec-generated.json --output ./app/javascript/types/generated --client fetch",
+    "generate:api-types:remote": "openapi-ts --input http://localhost:3000/api/v1/swagger_doc.json --output ./app/javascript/types/generated --client fetch",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
@@ -20,15 +23,18 @@
     "nodemon": "^3.1.10",
     "postcss": "^8.5.6",
     "postcss-cli": "10.1.0",
-    "tailwindcss": "^3.4.14",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "sass": "^1.89.2"
+    "react-router-dom": "^7.9.4",
+    "sass": "^1.89.2",
+    "tailwindcss": "^3.4.14"
   },
   "browserslist": [
     "defaults"
   ],
   "devDependencies": {
-    "esbuild": "0.17.19"
+    "esbuild": "0.17.19",
+    "typescript": "^5.3.3",
+    "@hey-api/openapi-ts": "^0.45.0"
   }
 }

@@ -5,7 +5,7 @@ import { mountHeaderPropsFromDom } from './components/Header';
 
 // Initialize React when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  const rootElement = document.getElementById('react-root');
+  const rootElement = document.getElementById('root');
   if (rootElement) {
     const props = mountHeaderPropsFromDom(rootElement);
     const root = createRoot(rootElement);

@@ -37,7 +37,7 @@ const NavLink = ({ href, label, active }) => (
   </a>
 );
 
-const Header = ({ features, appName, signInPath = '/signin', signUpPath = '/signup' }) => {
+const Header = ({ features, appName, signInPath = '/auth/auth0', signUpPath = '/auth/auth0' }) => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hash, setHash] = useState(typeof window !== 'undefined' ? window.location.hash : '');
