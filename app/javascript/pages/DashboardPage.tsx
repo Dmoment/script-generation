@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Navigate } from 'react-router-dom';
 
 /**
@@ -38,12 +38,13 @@ interface TopbarProps {
     email?: string;
     image?: string;
   } | null;
+  onLogout: () => void;
 }
 
 /**
  * Topbar Component
  */
-const Topbar: React.FC<TopbarProps> = ({ user }) => (
+const Topbar: React.FC<TopbarProps> = ({ user, onLogout }) => (
   <div className="bg-gradient-to-r from-white via-white to-brand-50/30 border-b border-gray-100/60 backdrop-blur-sm">
     <div className="flex items-center justify-between px-8 py-6">
       <div>
@@ -70,6 +71,13 @@ const Topbar: React.FC<TopbarProps> = ({ user }) => (
             {user?.name?.charAt(0) || 'U'}
           </div>
         )}
+        <button
+          onClick={onLogout}
+          className="ml-2 rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          title="Logout"
+        >
+          Logout
+        </button>
       </div>
     </div>
   </div>
@@ -152,9 +160,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, date, status = 'Active
  * Dashboard Page Component
  */
 const DashboardPage: React.FC = () => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, logout } = useAuth0();
   
-  if (loading) {
+  // Debug logging
+  console.log('Dashboard - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user);
+  
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/20 flex items-center justify-center">
         <div className="text-center">
@@ -169,9 +180,13 @@ const DashboardPage: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  const handleLogout = () => {
+    logout({ logoutParams: { returnTo: window.location.origin } });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/20">
-      <Topbar user={user} />
+      <Topbar user={user} onLogout={handleLogout} />
       <div className="mx-auto max-w-7xl px-8 py-8">
         <div className="grid grid-cols-12 gap-8">
           {/* Sidebar */}

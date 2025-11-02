@@ -30,6 +30,9 @@ gem "grape-swagger", "~> 2.0"
 gem "grape-swagger-rails", "~> 0.4"
 gem "rack-cors"
 
+# JWT Authentication
+gem "jwt"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 

@@ -13,11 +13,9 @@ Rails.application.routes.draw do
   mount V1::Base => '/api'
   mount GrapeSwaggerRails::Engine => '/api/docs'
 
-  # API/Auth endpoints (must be before catch-all)
+  # Auth0 callback - returns JSON with tokens (must be before catch-all)
   get '/auth/auth0/callback', to: 'sessions#callback'
   get '/auth/failure', to: 'sessions#failure'
-  delete '/logout', to: 'sessions#logout'
-  get '/current_user', to: 'sessions#current'
 
   # Root path
   root "pages#index"

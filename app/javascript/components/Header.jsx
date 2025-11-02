@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 
 function parseJsonDataset(el, key, fallback) {
   try {
@@ -37,10 +38,17 @@ const NavLink = ({ href, label, active }) => (
   </a>
 );
 
-const Header = ({ features, appName, signInPath = '/auth/auth0', signUpPath = '/auth/auth0' }) => {
+const Header = ({ features, appName }) => {
+  const { loginWithRedirect, logout, isAuthenticated, user, isLoading } = useAuth0();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hash, setHash] = useState(typeof window !== 'undefined' ? window.location.hash : '');
+
+  useEffect(() => {
+    if (isAuthenticated && window.location.pathname === '/') {
+      window.location.href = '/dashboard';
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -106,13 +114,34 @@ const Header = ({ features, appName, signInPath = '/auth/auth0', signUpPath = '/
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            <a href={signInPath} className="rounded-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Sign in</a>
-            <a
-              href={signUpPath}
-              className="inline-flex items-center rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-brand-600/10 hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
-            >
-              Create account
-            </a>
+            {isLoading ? (
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></div>
+            ) : isAuthenticated ? (
+              <>
+                <a href="/dashboard" className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  {user?.picture && <img src={user.picture} alt={user.name} className="h-6 w-6 rounded-full" />}
+                  <span>Dashboard</span>
+                </a>
+                <button
+                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                  className="rounded-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => loginWithRedirect()} className="rounded-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  Sign in
+                </button>
+                <button
+                  onClick={() => loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } })}
+                  className="inline-flex items-center rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-brand-600/10 hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+                >
+                  Create account
+                </button>
+              </>
+            )}
           </div>
 
           <button
@@ -134,11 +163,32 @@ const Header = ({ features, appName, signInPath = '/auth/auth0', signUpPath = '/
               {items.map((item) => (
                 <NavLink key={item.href} href={item.href} label={item.label} active={hash === item.href} />
               ))}
-              <div className="mt-2 flex items-center gap-2">
-                <a href={signInPath} className="flex-1 rounded-md px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-50">Sign in</a>
-                <a href={signUpPath} className="flex-1 inline-flex items-center justify-center rounded-md bg-brand-600 px-4 py-2 font-medium text-white hover:bg-brand-700" onClick={() => setOpen(false)}>
-                  Create account
-                </a>
+              <div className="mt-2 flex flex-col gap-2">
+                {isAuthenticated ? (
+                  <>
+                    <a href="/dashboard" className="rounded-md px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-50" onClick={() => setOpen(false)}>
+                      Dashboard
+                    </a>
+                    <button
+                      onClick={() => {
+                        logout({ logoutParams: { returnTo: window.location.origin } });
+                        setOpen(false);
+                      }}
+                      className="rounded-md px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => { loginWithRedirect(); setOpen(false); }} className="flex-1 rounded-md px-3 py-2 text-center font-medium text-gray-700 hover:bg-gray-50">
+                      Sign in
+                    </button>
+                    <button onClick={() => { loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } }); setOpen(false); }} className="flex-1 inline-flex items-center justify-center rounded-md bg-brand-600 px-4 py-2 font-medium text-white hover:bg-brand-700">
+                      Create account
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

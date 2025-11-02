@@ -2,7 +2,7 @@
   "name": "app",
   "private": true,
   "scripts": {
-    "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets --loader:.tsx=tsx --loader:.ts=ts",
+    "build": "node esbuild.config.js",
     "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules --quiet-deps",
     "build:css:prefix": "postcss ./app/assets/builds/application.css --output=./app/assets/builds/application.css",
     "build:css": "bun run build:css:compile && bun run build:css:prefix",
@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.2.4",
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo-rails": "^8.0.16",
     "@popperjs/core": "^2.11.8",

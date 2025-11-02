@@ -489,6 +489,7 @@ DEPENDENCIES
   grape-swagger-rails (~> 0.4)
   jbuilder
   jsbundling-rails
+  jwt
   kamal
   omniauth
   omniauth-auth0
