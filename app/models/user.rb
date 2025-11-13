@@ -1,10 +1,20 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
-  # Add validations
-  validates :name, presence: true
-  validates :email, presence: true, uniqueness: true
+  # Validations
+  validates :auth0_id, presence: true, uniqueness: true
+  # validates :email, presence: true, uniqueness: true
+  # validates :name, presence: true
 
-  # Add associations if needed
-  # has_many :projects
+  # Associations
+  has_many :projects, dependent: :destroy
+
+  # Callbacks
+  before_validation :normalize_email
+
+  private
+
+  def normalize_email
+    self.email = email.downcase.strip if email.present?
+  end
 end

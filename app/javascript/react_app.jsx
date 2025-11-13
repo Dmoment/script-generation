@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Auth0Provider } from "@auth0/auth0-react";
 import App from "./components/App";
 import { mountHeaderPropsFromDom } from "./components/Header";
+import "./lib/openapi-config";
 
 // Initialize React when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
@@ -22,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clientId={auth0ClientId}
         authorizationParams={{
           redirect_uri: window.location.origin,
+          scope: "openid profile email",
           ...(auth0Audience && { audience: auth0Audience }),
         }}
       >

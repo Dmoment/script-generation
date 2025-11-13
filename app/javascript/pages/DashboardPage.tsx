@@ -1,6 +1,9 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Navigate } from 'react-router-dom';
+import type { Project } from '../types/api';
+import '../lib/openapi-config';
+import { useProjectsQuery } from '../queries/projects/useProjectsQuery';
 
 /**
  * Sidebar Item Props
@@ -160,11 +163,31 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, date, status = 'Active
  * Dashboard Page Component
  */
 const DashboardPage: React.FC = () => {
-  const { user, isLoading, isAuthenticated, logout } = useAuth0();
+  const { user, isLoading, isAuthenticated, logout, getAccessTokenSilently } = useAuth0();
+  const { data: projectsData, isLoading: projectsLoading, isFetching, error: projectsError } = useProjectsQuery({
+    enabled: isAuthenticated,
+  });
+  const projects: Project[] = projectsData ?? [];
+  const projectsErrorMessage = projectsError ? projectsError.message : null;
   
   // Debug logging
   console.log('Dashboard - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user);
   
+  // Get and log access token
+  React.useEffect(() => {
+    const getToken = async () => {
+      if (isAuthenticated) {
+        try {
+          const token = await getAccessTokenSilently();
+          console.log('🔑 Access Token:', token);
+        } catch (error) {
+          console.error('Failed to get access token:', error);
+        }
+      }
+    };
+    
+    getToken();
+  }, [isAuthenticated, getAccessTokenSilently]);
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/20 flex items-center justify-center">
@@ -184,9 +207,42 @@ const DashboardPage: React.FC = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
+  const activeCount = projects.filter((project) => project.status === 'active').length;
+  const completedCount = projects.filter((project) => project.status === 'completed').length;
+  const draftCount = projects.filter((project) => project.status === 'draft').length;
+  const totalBudget = projects.reduce<number>((sum, project) => sum + (project.budget ?? 0), 0);
+
+  const formatStatusLabel = (status?: Project['status']): 'Active' | 'Completed' | 'Draft' => {
+    switch (status) {
+      case 'active':
+        return 'Active';
+      case 'completed':
+        return 'Completed';
+      default:
+        return 'Draft';
+    }
+  };
+
+  const formatDate = (value?: string | null) => {
+    if (!value) {
+      return 'Unknown date';
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const recentProjects = projects.slice(0, 6);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/20">
-      <Topbar user={user} onLogout={handleLogout} />
+      <Topbar user={user ?? null} onLogout={handleLogout} />
       <div className="mx-auto max-w-7xl px-8 py-8">
         <div className="grid grid-cols-12 gap-8">
           {/* Sidebar */}
@@ -217,49 +273,75 @@ const DashboardPage: React.FC = () => {
             {/* Project Summary Section */}
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Project Summary</h2>
+              {projectsErrorMessage && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {projectsErrorMessage}
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard 
                   title="Active Projects" 
-                  value="7" 
-                  trend="40.58%" 
+                  value={projectsLoading || isFetching ? '...' : activeCount.toString()} 
+                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((activeCount / projects.length) * 100) : 0}% active`} 
                   color="green"
                 />
                 <StatCard 
                   title="Completed Projects" 
-                  value="21" 
-                  trend="15.5%" 
+                  value={projectsLoading || isFetching ? '...' : completedCount.toString()} 
+                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((completedCount / projects.length) * 100) : 0}% complete`} 
                   color="blue"
                 />
                 <StatCard 
                   title="Drafts Projects" 
-                  value="0" 
-                  subtitle="0%" 
+                  value={projectsLoading || isFetching ? '...' : draftCount.toString()} 
+                  subtitle={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((draftCount / projects.length) * 100) : 0}%`} 
                   color="purple"
                 />
                 <div className="rounded-2xl bg-white p-6 shadow-soft-lg border border-gray-100/50">
                   <div className="text-sm font-medium text-gray-600 mb-2">Budget for projects</div>
                   <div className="text-2xl font-bold text-gray-900 mb-1">
-                    $221.5k <span className="text-lg font-normal text-gray-500">/ $400k</span>
+                    {projectsLoading || isFetching ? '...' : `$${totalBudget.toLocaleString()}`}
+                    <span className="text-lg font-normal text-gray-500">
+                      {projectsLoading || isFetching ? '' : ' total'}
+                    </span>
                   </div>
                   <div className="text-xs text-gray-500 mb-3">
-                    Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem ipsum has
+                    {projectsLoading || isFetching
+                      ? 'Fetching budget information...'
+                      : 'Aggregated budget of all projects retrieved from the API.'}
                   </div>
                   
                   {/* Budget Chart Visualization */}
-                  <div className="flex gap-2 mt-4">
-                    <div className="flex-1 h-16 rounded-lg bg-gradient-to-t from-blue-600 to-blue-500 flex items-end justify-center pb-2">
-                      <span className="text-xs text-white font-medium">$75.5K</span>
+                  {projectsLoading || isFetching ? (
+                    <div className="mt-6 flex h-16 items-center justify-center text-sm text-gray-500">
+                      Loading project budgets...
                     </div>
-                    <div className="flex-1 h-12 rounded-lg bg-gradient-to-t from-blue-500 to-blue-400 flex items-end justify-center pb-2">
-                      <span className="text-xs text-white font-medium">$47.2K</span>
+                  ) : (
+                    <div className="flex gap-2 mt-4">
+                      {recentProjects.length === 0 ? (
+                        <div className="text-sm text-gray-500">
+                          Add a project to see budget distribution.
+                        </div>
+                      ) : (
+                        recentProjects.map((project) => {
+                          const budget = project.budget ?? 0;
+                          const height = Math.min(100, Math.max(10, Math.round(budget / Math.max(totalBudget, 1) * 100)));
+                          return (
+                            <div
+                              key={project.id}
+                              className="flex-1 rounded-lg bg-gradient-to-t from-blue-500 to-blue-400 flex items-end justify-center pb-2 transition-all hover:from-brand-500 hover:to-brand-400"
+                              style={{ height: `${height}%` }}
+                              title={`${project.name || 'Untitled'}: $${budget.toLocaleString()}`}
+                            >
+                              <span className="text-xs text-white font-medium">
+                                ${budget.toLocaleString()}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
-                    <div className="flex-1 h-10 rounded-lg bg-gradient-to-t from-blue-400 to-blue-300 flex items-end justify-center pb-1">
-                      <span className="text-xs text-white font-medium">$52.9K</span>
-                    </div>
-                    <div className="flex-1 h-14 rounded-lg bg-gradient-to-t from-orange-500 to-orange-400 flex items-end justify-center pb-2">
-                      <span className="text-xs text-white font-medium">$49.8K</span>
-                    </div>
-                  </div>
+                  )}
                   
                   <div className="flex items-center justify-center mt-4">
                     <button className="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors">
@@ -273,14 +355,27 @@ const DashboardPage: React.FC = () => {
             {/* Recent Projects */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Recent Projects</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <ProjectCard title="Demo Project 2.0" date="Jan 1, 1970" status="Active" />
-                <ProjectCard title="Grammy's 2025" date="Jan 1, 1970" status="Active" />
-                <ProjectCard title="Create project (new data)" date="Jan 1, 1970" status="Active" />
-                <ProjectCard title="Philosophy Design and Decor" date="Jan 1, 1970" status="Active" />
-                <ProjectCard title="Year End Test 2" date="Jan 1, 1970" status="Active" />
-                <ProjectCard title="Test Project 2025" date="Jan 1, 1970" status="Active" />
-              </div>
+              {projectsLoading || isFetching ? (
+                <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 shadow-soft-lg">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></div>
+                  Loading projects...
+                </div>
+              ) : recentProjects.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center text-sm text-gray-500 shadow-soft-lg">
+                  No projects found. Create a project to see it listed here.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {recentProjects.map((project) => (
+                    <ProjectCard
+                      key={project.id ?? project.name}
+                      title={project.name || 'Untitled Project'}
+                      date={formatDate(project.updated_at || project.created_at)}
+                      status={formatStatusLabel(project.status)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </main>
         </div>

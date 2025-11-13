@@ -16,7 +16,7 @@ module V1
         optional :status, type: String, values: ["active", "completed", "draft"], desc: "Filter by status"
       end
       get do
-        # authenticate! # Commented out for testing
+        authenticate! # Commented out for testing
 
         projects = Project.all
         projects = projects.where(status: params[:status]) if params[:status].present?

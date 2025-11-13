@@ -3,49 +3,40 @@
  * 
  * Configures the auto-generated API client with:
  * - Base URL
- * - CSRF token handling for Rails
- * - Credentials/cookies
+ * - JWT token authentication via Auth0
  * - Error handling
+ * 
+ * Note: Token is added dynamically in components using useAuth()
  */
 
 import { OpenAPI } from '../types/generated/core/OpenAPI';
-import { getCsrfToken } from '../utils/csrf';
+import { getAuthToken } from './authTokenProvider';
 
 // Base configuration
-// Use empty string to make requests relative to current origin
-OpenAPI.BASE = '';
-OpenAPI.WITH_CREDENTIALS = true;
+OpenAPI.BASE = '/api';
+OpenAPI.WITH_CREDENTIALS = false; // No cookies needed with JWT!
 OpenAPI.CREDENTIALS = 'same-origin';
 
-// CSRF token interceptor for Rails
-// Automatically adds CSRF token to all non-GET requests
-OpenAPI.interceptors.request.use((request) => {
-  const method = request.method?.toUpperCase();
-  
-  // Add CSRF token for non-GET requests (Rails requirement)
-  if (method && method !== 'GET' && method !== 'HEAD') {
-    const token = getCsrfToken();
-    if (token) {
-      request.headers = {
-        ...request.headers,
-        'X-CSRF-Token': token,
-      };
-    }
+OpenAPI.interceptors.request.use(async (request) => {
+  const token = await getAuthToken();
+  if (!token) {
+    return request;
   }
-  
-  return request;
+
+  const headers = new Headers(request.headers ?? {});
+  headers.set('Authorization', `Bearer ${token}`);
+
+  return {
+    ...request,
+    headers,
+  };
 });
 
-// Error interceptor
-// Handles CSRF token expiration and other errors
+// Error interceptor for 401 responses
 OpenAPI.interceptors.response.use((response) => {
-  // Handle 403 CSRF errors by reloading the page
-  if (response.status === 403) {
-    const contentType = response.headers.get('Content-Type');
-    if (contentType?.includes('text/html')) {
-      console.error('CSRF token invalid or session expired. Reloading page...');
-      window.location.reload();
-    }
+  if (response.status === 401) {
+    // Token invalid or expired, redirect to login
+    window.location.href = '/';
   }
   
   return response;
