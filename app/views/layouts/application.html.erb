@@ -1,10 +1,21 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Script Generation" %></title>
+    <title><%= content_for(:title) || "Script Generation - AI-Assisted Script Writing & Production Management" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    
+    <%# SEO Meta Tags for marketing page %>
+    <% if request.path == '/' || request.path == '/index' %>
+      <meta name="description" content="Write, manage, and produce scripts faster with AI-assisted writing, production-grade breakdowns, and collaboration tools in one streamlined workspace.">
+      <meta name="keywords" content="script writing, AI scripts, film production, call sheets, script breakdown, production management">
+      <meta property="og:title" content="Script Generation - AI-Assisted Script Writing & Production">
+      <meta property="og:description" content="Write, manage, and produce scripts faster with AI-assisted writing and production tools.">
+      <meta property="og:type" content="website">
+      <meta name="twitter:card" content="summary_large_image">
+    <% end %>
+    
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 

@@ -11,3 +11,892 @@
 
 /* Reveal animation helper for IntersectionObserver */
 .reveal-in { animation: fade-in-up 700ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ============================================
+   MODULAR DIAGONAL TRIANGLES - POSTMODERN DESIGN
+   ============================================ */
+
+/* Base triangle class - reusable */
+.triangle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Triangle positions and directions */
+.triangle-top-left {
+  top: 0;
+  left: 0;
+  clip-path: polygon(0 0, 0 100%, 100% 0);
+}
+
+.triangle-top-right {
+  top: 0;
+  right: 0;
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+}
+
+.triangle-bottom-left {
+  bottom: 0;
+  left: 0;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+.triangle-bottom-right {
+  bottom: 0;
+  right: 0;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+
+/* Triangle sizes */
+.triangle-large {
+  width: 60%;
+  height: 60%;
+}
+
+.triangle-medium {
+  width: 50%;
+  height: 50%;
+}
+
+.triangle-small {
+  width: 40%;
+  height: 40%;
+}
+
+/* Triangle colors */
+.triangle-teal {
+  background: #2EC4B6;
+}
+
+.triangle-orange {
+  background: #FF6B35;
+}
+
+.triangle-beige {
+  background: #F2E0B6;
+}
+
+.triangle-yellow {
+  background: #FFD93D;
+}
+
+/* Hero section triangles - create diagonal split */
+.hero-triangles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  
+  .triangle-top-left.triangle-large.triangle-teal {
+    top: 0;
+    left: 0;
+  }
+  
+  .triangle-bottom-right.triangle-large.triangle-orange {
+    bottom: 0;
+    right: 0;
+  }
+}
+
+/* Hero Section Background */
+.hero-section-bg {
+  position: relative;
+  background-color: #f5f1e8; /* Fallback color */
+  overflow: hidden;
+  
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.hero-background-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  z-index: 0;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+
+/* Retro Video Window Frame */
+.retro-video-frame {
+  border: 4px solid #000;
+  background: #f5e6d3;
+  position: relative;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: visible;
+  
+  /* Inner border for double-line effect */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid #000;
+    background: transparent;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.retro-window-bar {
+  background: #f5e6d3;
+  border-bottom: 3px solid #000;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.retro-window-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.retro-window-icon {
+  width: 12px;
+  height: 12px;
+  background: #ff69b4;
+  flex-shrink: 0;
+  border: 1px solid #000;
+}
+
+.retro-window-title {
+  font-family: 'Courier New', 'Monaco', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex: 1;
+  /* Pixelated effect */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.retro-window-lines {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.retro-line {
+  width: 8px;
+  height: 1px;
+  background: #000;
+}
+
+.retro-window-control {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #000;
+  background: #fff;
+  position: relative;
+  flex-shrink: 0;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border: 1px solid #000;
+  }
+}
+
+.retro-video-container {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+  background: #000;
+  box-sizing: border-box;
+  z-index: 0;
+  margin: 1px;
+  border: 1px solid #000;
+  
+  @media (min-width: 1024px) {
+    height: 900px;
+  }
+  
+  @media (min-width: 1280px) {
+    height: 1000px;
+  }
+}
+
+.retro-video-content {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+  display: block;
+}
+
+/* Small Retro Video Windows - Like screenshot */
+.retro-video-frame-small {
+  border: 3px solid #ffffff;
+  background: #fff;
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Top video window */
+.retro-video-top {
+  position: relative;
+  z-index: 2;
+  margin-bottom: -100px;
+  margin-left: 100px;
+}
+
+/* Bottom video window - overlapping, smaller, shifted to the right */
+.retro-video-bottom {
+  position: relative;
+  z-index: 1;
+  margin-left: 70px;
+  margin-top: 20px;
+  max-width: 360px;
+}
+
+.retro-window-bar-small {
+  background: #ffffff;
+  border-bottom: 1px solid #333333;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.retro-window-icon-small {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border: 1px solid #333333;
+}
+
+.retro-window-title-small {
+  font-family: 'Courier New', 'Monaco', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #333333;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex: 1;
+  margin-left: 0.5rem;
+}
+
+.retro-window-control-small {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #333333;
+  background: #fff;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.retro-video-container-small {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  background: #000;
+  box-sizing: border-box;
+  border: 1px solid #ffffff;
+  
+  @media (min-width: 1024px) {
+    height: 320px;
+  }
+}
+
+.retro-video-container-bottom {
+  height: 240px;
+  width: 100%;
+  overflow: hidden;
+  
+  @media (min-width: 1024px) {
+    height: 280px;
+  }
+}
+
+.retro-video-content-small {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Image Container for Center Image Section */
+.retro-image-container {
+  height: auto !important;
+  min-height: 280px;
+  background: #fff;
+  
+  @media (min-width: 1024px) {
+    min-height: 400px;
+  }
+}
+
+.retro-image-content {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Diagonal Text Styling - Postmodern/Swiss Modernist */
+.diagonal-text-container {
+  position: relative;
+  padding: 2rem 0;
+}
+
+.diagonal-title-large {
+  font-size: 4rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #000;
+  transform: rotate(-2deg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.1;
+  margin: 0;
+  display: inline-block;
+  
+  @media (min-width: 1024px) {
+    font-size: 6rem;
+    transform: rotate(-3deg);
+  }
+}
+
+.diagonal-number {
+  position: absolute;
+  bottom: -1rem;
+  left: 2rem;
+  font-size: 3rem;
+  font-weight: 900;
+  color: #000;
+  transform: rotate(-5deg);
+  font-family: 'Courier New', monospace;
+  
+  @media (min-width: 1024px) {
+    font-size: 4rem;
+    left: 4rem;
+    bottom: -2rem;
+  }
+}
+
+/* Retro Feature Boxes - Newspaper/Classic Design Style */
+.retro-feature-box {
+  background: #ffffff;
+  border: 4px solid #000;
+  border-radius: 0;
+  position: relative;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  /* Inner border effect */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid #000;
+    pointer-events: none;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Retro Feature Boxes - Newspaper/Classic Design Style */
+.retro-feature-box {
+  background: #ffffff;
+  border: 4px solid #000;
+  border-radius: 0;
+  position: relative;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  /* Inner border effect */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid #000;
+    pointer-events: none;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+  }
+}
+
+.retro-box-header {
+  background: transparent;
+  border-bottom: 1px solid #000;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.retro-header-line {
+  width: 100%;
+  height: 1px;
+  background: #000;
+}
+
+.retro-box-content {
+  padding: 1.5rem;
+  position: relative;
+}
+
+.retro-color-square {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.retro-color-0 {
+  background: #ff6b35; /* Orange */
+}
+
+.retro-color-1 {
+  background: #00cc66; /* Green */
+}
+
+.retro-color-2 {
+  background: #ff69b4; /* Pink */
+}
+
+.retro-feature-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.retro-title-main {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #000;
+  font-family: Georgia, 'Times New Roman', serif;
+  text-transform: none;
+  letter-spacing: 0;
+  display: block;
+}
+
+.retro-title-sub {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #000;
+  font-family: Georgia, 'Times New Roman', serif;
+  text-transform: none;
+  letter-spacing: 0;
+  display: block;
+  margin-top: 2px;
+}
+
+.retro-feature-description {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #000;
+  font-family: Georgia, 'Times New Roman', serif;
+  margin: 0;
+}
+
+.retro-feature-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #e0e0e0;
+  border: 1px solid #000;
+  border-radius: 4px;
+  color: #000;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #d0d0d0;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+    transform: translate(-1px, -1px);
+  }
+}
+
+/* Typewriter Gradient Background - Subtle Yellow that dissolves into background */
+.typewriter-gradient-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse farthest-side at center,
+    rgba(200, 170, 40, 0.5) 10%,
+    rgba(215, 185, 70, 0.4) 10%,
+    rgba(235, 210, 150, 0.3) 30%,
+    rgba(240, 210, 145, 0.2) 45%,
+    rgba(245, 200, 130, 0.1) 60%,
+    rgba(240, 190, 120, 0.05) 70%,
+    rgba(245, 241, 232, 0.02) 85%,
+    rgba(248, 209, 117, 0.01) 92%,
+    transparent 100%
+  );
+  width: 450px;
+  height: 450px;
+  border-radius: 50%;
+  z-index: 0;
+  
+  @media (min-width: 1024px) {
+    width: 600px;
+    height: 600px;
+  }
+}
+
+.retro-center-image {
+  max-width: 400px;
+  height: auto;
+  position: relative;
+  z-index: 10;
+  filter: 
+    drop-shadow(6px 6px 12px rgba(0, 0, 0, 0.25))
+    drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.15))
+    drop-shadow(1px 1px 3px rgba(0, 0, 0, 0.1));
+  
+  @media (min-width: 1024px) {
+    max-width: 500px;
+    filter: 
+      drop-shadow(8px 8px 16px rgba(0, 0, 0, 0.3))
+      drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2))
+      drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.15));
+  }
+}
+
+/* Video Overlay Title - Now below video, dark text */
+.video-overlay-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #333333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.2;
+  margin: 0;
+  text-align: left;
+  
+  @media (min-width: 768px) {
+    font-size: 3.5rem;
+    letter-spacing: 0.2em;
+  }
+  
+  @media (min-width: 1024px) {
+    font-size: 5rem;
+    letter-spacing: 0.25em;
+  }
+}
+
+/* Features Section Title - Same font as video overlay title */
+.features-section-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #333333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.2;
+  margin: 0;
+  text-align: left;
+  
+  @media (min-width: 768px) {
+    font-size: 3.5rem;
+    letter-spacing: 0.2em;
+  }
+  
+  @media (min-width: 1024px) {
+    font-size: 4rem;
+    letter-spacing: 0.25em;
+  }
+}
+
+/* Scroll Fade In Animation */
+.scroll-zoom-in {
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}
+
+.scroll-zoom-in.visible {
+  opacity: 1;
+}
+
+/* Header Navigation Links - Remove default link styling */
+header nav a,
+header a[href^="/dashboard"],
+header a[href^="#"] {
+  color: #333333 !important;
+  text-decoration: none !important;
+  
+  &:hover {
+    color: #666666 !important;
+    text-decoration: none !important;
+  }
+  
+  &:visited {
+    color: #333333 !important;
+  }
+  
+  &:active {
+    color: #333333 !important;
+  }
+}
+
+/* Subtle Abstract Background for Header and Hero Section */
+.header-hero-subtle-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0.15;
+  background-image: 
+    /* Top dark teal curve - subtle */
+    radial-gradient(ellipse 800px 500px at -150px 50px, #2D434F 0%, transparent 60%),
+    /* Middle burnt orange curve - subtle */
+    radial-gradient(ellipse 900px 600px at 300px 200px, #F7931E 0%, transparent 60%),
+    /* Bottom mustard yellow - subtle */
+    radial-gradient(ellipse 600px 450px at 150px 400px, #FFD93D 0%, transparent 60%),
+    /* Right side dark teal - subtle */
+    radial-gradient(ellipse 700px 550px at 1100px 150px, #2D434F 0%, transparent 60%),
+    /* Bottom right orange - subtle */
+    radial-gradient(ellipse 500px 400px at 1000px 500px, #F7931E 0%, transparent 60%);
+}
+
+/* Footer Abstract Geometric Background */
+.footer-abstract-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background-image: 
+    /* Top dark teal curve */
+    radial-gradient(ellipse 600px 400px at -100px 100px, #2D434F 0%, transparent 70%),
+    /* Middle burnt orange curve */
+    radial-gradient(ellipse 700px 500px at 200px 300px, #F7931E 0%, transparent 70%),
+    /* Bottom mustard yellow */
+    radial-gradient(ellipse 500px 400px at 100px 600px, #FFD93D 0%, transparent 70%),
+    /* Bottom dark teal on left */
+    radial-gradient(ellipse 600px 500px at -200px 700px, #2D434F 0%, transparent 70%),
+    /* Bottom right orange quarter circle */
+    radial-gradient(ellipse 400px 400px at 1200px 800px, #F7931E 0%, transparent 70%);
+}
+
+.footer-abstract-bg::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: -100px;
+  width: 800px;
+  height: 600px;
+  background: #2D434F; /* Dark teal */
+  border-radius: 50% 50% 40% 60% / 60% 50% 50% 40%;
+  transform: rotate(-20deg);
+  opacity: 0.9;
+}
+
+.footer-abstract-bg::after {
+  content: '';
+  position: absolute;
+  top: 50px;
+  left: 0;
+  width: 700px;
+  height: 500px;
+  background: #F7931E; /* Burnt orange */
+  border-radius: 50% 40% 50% 40% / 50% 50% 40% 60%;
+  transform: rotate(15deg);
+  opacity: 0.9;
+}
+
+/* Social Media Icons */
+.social-icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #333333;
+  background: transparent;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #333333;
+    color: #F2E0B6 !important;
+    
+    span {
+      color: #F2E0B6 !important;
+    }
+  }
+  
+  span {
+    font-size: 18px;
+    line-height: 1;
+  }
+}
+
+/* Footer Links */
+footer nav a,
+footer a {
+  color: #333333 !important;
+  text-decoration: none !important;
+  
+  &:hover {
+    color: #666666 !important;
+  }
+}
+
+/* U-shaped Colorful Graphic - Design Reference */
+.u-shape-graphic {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.u-shape-graphic::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    /* Left orange segment */
+    linear-gradient(135deg, #F7931E 0%, #F7931E 28%, transparent 28%),
+    /* Center dark teal segment */
+    linear-gradient(135deg, transparent 22%, #2D434F 22%, #2D434F 62%, transparent 62%),
+    /* Right red segment */
+    linear-gradient(135deg, transparent 57%, #D94C3F 57%, #D94C3F 83%, transparent 83%);
+  clip-path: polygon(
+    0% 100%,
+    22% 100%,
+    25% 92%,
+    30% 85%,
+    35% 78%,
+    40% 72%,
+    45% 66%,
+    50% 60%,
+    55% 66%,
+    60% 72%,
+    65% 78%,
+    70% 85%,
+    75% 92%,
+    78% 100%,
+    100% 100%,
+    100% 100%,
+    50% 35%,
+    0% 100%
+  );
+}
+
+/* Hero Section Diagonal Text - Matching "POSTMODERNISM" style */
+.diagonal-hero-text-container {
+  position: relative;
+  padding: 2rem 0;
+  overflow: visible;
+}
+
+.diagonal-hero-title-large {
+  font-size: 3.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #000;
+  transform: rotate(-2deg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.1;
+  margin: 0;
+  display: inline-block;
+  
+  @media (min-width: 768px) {
+    font-size: 5.5rem;
+    transform: rotate(-1.5deg);
+    letter-spacing: 0.2em;
+  }
+  
+  @media (min-width: 1024px) {
+    font-size: 8rem;
+    transform: rotate(-2deg);
+    letter-spacing: 0.25em;
+  }
+}
+
+.diagonal-hero-subtitle-container {
+  position: relative;
+  margin-top: 2rem;
+  padding-left: 1rem;
+  
+  @media (min-width: 1024px) {
+    margin-top: 3rem;
+    padding-left: 3rem;
+  }
+}
+
+.diagonal-hero-subtitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #000;
+  transform: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.7;
+  max-width: 900px;
+  margin: 0;
+  opacity: 0.9;
+  
+  @media (min-width: 768px) {
+    font-size: 1rem;
+    transform: none;
+    letter-spacing: 0.1em;
+  }
+  
+  @media (min-width: 1024px) {
+    font-size: 1.125rem;
+    transform: none;
+    line-height: 1.8;
+    letter-spacing: 0.12em;
+    max-width: 1000px;
+  }
+}

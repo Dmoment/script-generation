@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Navigate } from 'react-router-dom';
 import type { Project } from '../types/api';
 import '../lib/openapi-config';
 import { useProjectsQuery } from '../queries/projects/useProjectsQuery';
@@ -163,44 +162,37 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, date, status = 'Active
  * Dashboard Page Component
  */
 const DashboardPage: React.FC = () => {
-  const { user, isLoading, isAuthenticated, logout, getAccessTokenSilently } = useAuth0();
+  const { user, isLoading, isAuthenticated, logout, getAccessTokenSilently, loginWithRedirect } = useAuth0();
   const { data: projectsData, isLoading: projectsLoading, isFetching, error: projectsError } = useProjectsQuery({
     enabled: isAuthenticated,
   });
   const projects: Project[] = projectsData ?? [];
   const projectsErrorMessage = projectsError ? projectsError.message : null;
-  
-  // Debug logging
-  console.log('Dashboard - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user);
-  
-  // Get and log access token
+
+  // Automatically trigger login if not authenticated (e.g., coming from marketing page)
   React.useEffect(() => {
-    const getToken = async () => {
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          console.log('🔑 Access Token:', token);
-        } catch (error) {
-          console.error('Failed to get access token:', error);
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect({
+        appState: {
+          returnTo: '/dashboard'
         }
-      }
-    };
-    
-    getToken();
-  }, [isAuthenticated, getAccessTokenSilently]);
-  if (isLoading) {
+      }).catch((error) => {
+        console.error('Login redirect failed:', error);
+      });
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect]);
+
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">
+            {isLoading ? 'Loading...' : 'Redirecting to login...'}
+          </p>
         </div>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
   }
 
   const handleLogout = () => {
