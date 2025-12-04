@@ -48,5 +48,3 @@ const Features = ({ features }) => {
 };
 
 export default Features;
-
-

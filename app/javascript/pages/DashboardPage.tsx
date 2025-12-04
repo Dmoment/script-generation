@@ -3,6 +3,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import type { Project } from '../types/api';
 import '../lib/openapi-config';
 import { useProjectsQuery } from '../queries/projects/useProjectsQuery';
+import LoadingScreen from '../components/LoadingScreen';
 
 /**
  * Sidebar Item Props
@@ -17,15 +18,15 @@ interface SidebarItemProps {
  * Sidebar Item Component
  */
 const SidebarItem: React.FC<SidebarItemProps> = ({ label, active = false, icon }) => (
-  <div className={`group flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
+  <div className={`group flex items-center gap-3 px-4 py-3 text-sm font-mono uppercase tracking-wide transition-all duration-200 border-l-4 ${
     active 
-      ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-500/25' 
-      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+      ? 'bg-black text-white border-black' 
+      : 'text-gray-600 hover:bg-gray-100 hover:text-black border-transparent hover:border-gray-300'
   }`}>
-    <div className={`flex h-6 w-6 items-center justify-center rounded-md ${
-      active ? 'bg-white/20' : 'bg-gray-100 group-hover:bg-brand-100'
+    <div className={`flex h-5 w-5 items-center justify-center ${
+      active ? 'text-white' : 'text-gray-400 group-hover:text-black'
     }`}>
-      {icon || <span className={`h-2 w-2 rounded-full ${active ? 'bg-white' : 'bg-brand-500'}`}></span>}
+      {icon || <div className={`h-2 w-2 bg-current ${active ? 'animate-pulse' : ''}`}></div>}
     </div>
     <span>{label}</span>
   </div>
@@ -47,38 +48,40 @@ interface TopbarProps {
  * Topbar Component
  */
 const Topbar: React.FC<TopbarProps> = ({ user, onLogout }) => (
-  <div className="bg-gradient-to-r from-white via-white to-brand-50/30 border-b border-gray-100/60 backdrop-blur-sm">
+  <div className="bg-[#f5f1e8] border-b-2 border-black">
     <div className="flex items-center justify-between px-8 py-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Good Morning{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+        <h1 className="text-3xl font-black text-[#333333] uppercase tracking-tight">
+          System Status: <span className="text-green-600">Online</span>
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          It is a long established fact that a reader will be distracted by the readable
+        <p className="text-sm text-gray-600 font-mono mt-1 uppercase tracking-wide">
+          Welcome back, {user?.name?.split(' ')[0] || 'User'}
         </p>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 rounded-full bg-brand-50 px-3 py-2">
-          <div className="h-2 w-2 rounded-full bg-brand-500"></div>
-          <span className="text-sm font-medium text-brand-700">Active</span>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-xs font-bold uppercase tracking-wider text-black">Active Session</span>
         </div>
-        <div className="text-right">
-          <div className="text-sm font-medium text-gray-900">{user?.name || 'User'}</div>
-          <div className="text-xs text-gray-500">{user?.email}</div>
-        </div>
-        {user?.image ? (
-          <img alt="avatar" src={user.image} className="h-10 w-10 rounded-full border-2 border-white shadow-md" />
-        ) : (
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm">
-            {user?.name?.charAt(0) || 'U'}
+        
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <div className="text-xs font-bold uppercase text-black">{user?.name || 'User'}</div>
+            <div className="text-[10px] font-mono text-gray-500 uppercase">{user?.email}</div>
           </div>
-        )}
+          {user?.image ? (
+            <img alt="avatar" src={user.image} className="h-28 w-24 border-2 border-black grayscale" />
+          ) : (
+            <img alt="avatar" src="/videos/boy_avatar.png" className="h-28 w-20" />
+          )}
+        </div>
+        
         <button
           onClick={onLogout}
-          className="ml-2 rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          className="ml-2 px-4 py-2 text-xs font-bold uppercase tracking-wider border-2 border-black hover:bg-black hover:text-white transition-colors"
           title="Logout"
         >
-          Logout
+          Eject
         </button>
       </div>
     </div>
@@ -100,27 +103,34 @@ interface StatCardProps {
  * Stat Card Component
  */
 const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, color = 'blue', trend }) => {
-  const colorMap: Record<string, string> = {
-    blue: 'from-blue-500 to-blue-600',
-    green: 'from-brand-500 to-brand-600', 
-    orange: 'from-orange-400 to-orange-500',
-    purple: 'from-purple-500 to-purple-600'
+  const colorClasses: Record<string, string> = {
+    blue: 'bg-blue-100',
+    green: 'bg-green-100', 
+    orange: 'bg-orange-100',
+    purple: 'bg-purple-100'
+  };
+  
+  const accentColors: Record<string, string> = {
+    blue: 'bg-blue-500',
+    green: 'bg-green-500', 
+    orange: 'bg-orange-500',
+    purple: 'bg-purple-500'
   };
   
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 border border-gray-100/50">
+    <div className="group relative bg-white border-2 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all duration-200">
+      <div className={`absolute top-4 right-4 w-3 h-3 ${accentColors[color]} border border-black`}></div>
       <div className="relative z-10">
-        <div className="text-sm font-medium text-gray-600">{title}</div>
-        <div className="mt-2 text-3xl font-bold text-gray-900">{value}</div>
-        {subtitle && <div className="mt-1 text-sm text-gray-500">{subtitle}</div>}
+        <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">{title}</div>
+        <div className="text-4xl font-black text-black tracking-tighter">{value}</div>
+        {subtitle && <div className="mt-2 text-xs font-mono text-gray-600 border-t border-gray-200 pt-2 inline-block">{subtitle}</div>}
         {trend && (
-          <div className="mt-2 flex items-center gap-1 text-xs">
-            <span className="text-brand-600">↗</span>
-            <span className="font-medium text-brand-600">{trend}</span>
+          <div className="mt-3 flex items-center gap-1 text-xs font-bold uppercase">
+            <span className="text-black">↗</span>
+            <span className="text-black">{trend}</span>
           </div>
         )}
       </div>
-      <div className={`absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br ${colorMap[color]} opacity-10 group-hover:opacity-20 transition-opacity duration-300`}></div>
     </div>
   );
 };
@@ -138,22 +148,30 @@ interface ProjectCardProps {
  * Project Card Component
  */
 const ProjectCard: React.FC<ProjectCardProps> = ({ title, date, status = 'Active' }) => {
-  const statusColors: Record<string, string> = {
-    Active: 'bg-brand-500 text-white',
-    Completed: 'bg-blue-100 text-blue-700',
-    Draft: 'bg-gray-100 text-gray-600'
+  const statusStyles: Record<string, string> = {
+    Active: 'bg-green-500 text-white border-green-600',
+    Completed: 'bg-blue-500 text-white border-blue-600',
+    Draft: 'bg-gray-200 text-gray-800 border-gray-300'
   };
 
   return (
-    <div className="group relative overflow-hidden rounded-xl bg-white p-5 shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 border border-gray-100/50 hover:border-brand-200">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 group-hover:text-brand-700 transition-colors">{title}</h3>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}>
+    <div className="group relative bg-white border-2 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all duration-200">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="font-bold text-lg text-black group-hover:underline decoration-2 underline-offset-2">{title}</h3>
+          <p className="text-xs font-mono text-gray-500 mt-1 uppercase">{date}</p>
+        </div>
+        <div className={`w-3 h-3 ${status === 'Active' ? 'bg-green-500' : status === 'Completed' ? 'bg-blue-500' : 'bg-gray-400'} border border-black`}></div>
+      </div>
+      
+      <div className="flex justify-between items-end mt-4 border-t-2 border-gray-100 pt-4">
+        <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 border border-black bg-gray-50">
           {status}
         </span>
+        <button className="text-xs font-bold uppercase hover:bg-black hover:text-white px-2 py-1 transition-colors">
+          Open →
+        </button>
       </div>
-      <p className="text-sm text-gray-500">{date}</p>
-      <div className="absolute -right-2 -bottom-2 h-16 w-16 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
     </div>
   );
 };
@@ -183,16 +201,7 @@ const DashboardPage: React.FC = () => {
   }, [isLoading, isAuthenticated, loginWithRedirect]);
 
   if (isLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {isLoading ? 'Loading...' : 'Redirecting to login...'}
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const handleLogout = () => {
@@ -217,7 +226,7 @@ const DashboardPage: React.FC = () => {
 
   const formatDate = (value?: string | null) => {
     if (!value) {
-      return 'Unknown date';
+      return 'UNKNOWN';
     }
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
@@ -227,34 +236,34 @@ const DashboardPage: React.FC = () => {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
-    });
+    }).toUpperCase();
   };
 
   const recentProjects = projects.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50/20">
+    <div className="min-h-screen bg-[#f5f1e8]">
       <Topbar user={user ?? null} onLogout={handleLogout} />
       <div className="mx-auto max-w-7xl px-8 py-8">
         <div className="grid grid-cols-12 gap-8">
           {/* Sidebar */}
           <aside className="col-span-12 lg:col-span-3">
             <div className="sticky top-8">
-              <div className="rounded-2xl bg-white/70 backdrop-blur-sm border border-gray-200/50 p-6 shadow-soft-lg">
-                <div className="mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-1">Script Generation</h2>
-                  <p className="text-sm text-gray-500">Everything you need</p>
+              <div className="bg-white border-2 border-black p-0 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                <div className="p-5 border-b-2 border-black bg-gray-50">
+                  <h2 className="text-xl font-black text-black uppercase tracking-tighter">Command Center</h2>
+                  <p className="text-xs font-mono text-gray-600 mt-1">V.2.4.0-STABLE</p>
                 </div>
-                <nav className="space-y-2">
-                  <SidebarItem label="Dashboard" active />
-                  <SidebarItem label="Scripts" />
-                  <SidebarItem label="Projects" />
-                  <SidebarItem label="Props & VFX" />
-                  <SidebarItem label="Call Sheets" />
-                  <SidebarItem label="Expenses" />
+                <nav className="flex flex-col py-2">
+                  <SidebarItem label="Overview" active />
+                  <SidebarItem label="Script Database" />
+                  <SidebarItem label="Production Log" />
+                  <SidebarItem label="Assets & Props" />
+                  <SidebarItem label="Cast & Crew" />
+                  <SidebarItem label="Budget Control" />
                   <SidebarItem label="Approvals" />
-                  <SidebarItem label="Members" />
-                  <SidebarItem label="Settings" />
+                  <SidebarItem label="System Users" />
+                  <SidebarItem label="Configuration" />
                 </nav>
               </div>
             </div>
@@ -263,71 +272,75 @@ const DashboardPage: React.FC = () => {
           {/* Main Content */}
           <main className="col-span-12 lg:col-span-9">
             {/* Project Summary Section */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Project Summary</h2>
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-black text-black uppercase tracking-tight flex items-center gap-3">
+                  <span className="w-4 h-4 bg-black"></span>
+                  Production Metrics
+                </h2>
+                <div className="h-1 flex-1 bg-black mx-4 opacity-20"></div>
+              </div>
+              
               {projectsErrorMessage && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {projectsErrorMessage}
+                <div className="mb-6 border-2 border-red-500 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 uppercase tracking-wide">
+                  Error: {projectsErrorMessage}
                 </div>
               )}
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard 
-                  title="Active Projects" 
+                  title="Active Productions" 
                   value={projectsLoading || isFetching ? '...' : activeCount.toString()} 
-                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((activeCount / projects.length) * 100) : 0}% active`} 
+                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((activeCount / projects.length) * 100) : 0}% RUNNING`} 
                   color="green"
                 />
                 <StatCard 
-                  title="Completed Projects" 
+                  title="Archived / Done" 
                   value={projectsLoading || isFetching ? '...' : completedCount.toString()} 
-                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((completedCount / projects.length) * 100) : 0}% complete`} 
+                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((completedCount / projects.length) * 100) : 0}% COMPLETED`} 
                   color="blue"
                 />
                 <StatCard 
-                  title="Drafts Projects" 
+                  title="Draft Concepts" 
                   value={projectsLoading || isFetching ? '...' : draftCount.toString()} 
                   subtitle={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((draftCount / projects.length) * 100) : 0}%`} 
                   color="purple"
                 />
-                <div className="rounded-2xl bg-white p-6 shadow-soft-lg border border-gray-100/50">
-                  <div className="text-sm font-medium text-gray-600 mb-2">Budget for projects</div>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
+                
+                {/* Budget Card */}
+                <div className="bg-white border-2 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all duration-200">
+                  <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Total Budget Allocation</div>
+                  <div className="text-2xl font-black text-black tracking-tighter mb-1">
                     {projectsLoading || isFetching ? '...' : `$${totalBudget.toLocaleString()}`}
-                    <span className="text-lg font-normal text-gray-500">
-                      {projectsLoading || isFetching ? '' : ' total'}
-                    </span>
                   </div>
-                  <div className="text-xs text-gray-500 mb-3">
-                    {projectsLoading || isFetching
-                      ? 'Fetching budget information...'
-                      : 'Aggregated budget of all projects retrieved from the API.'}
+                  <div className="text-[10px] font-mono text-gray-500 mb-4 uppercase">
+                    {projectsLoading || isFetching ? 'SYNCING...' : 'AGGREGATED ACROSS ALL UNITS'}
                   </div>
                   
-                  {/* Budget Chart Visualization */}
+                  {/* Budget Visualization - Retro Bar */}
                   {projectsLoading || isFetching ? (
-                    <div className="mt-6 flex h-16 items-center justify-center text-sm text-gray-500">
-                      Loading project budgets...
-                    </div>
+                    <div className="h-12 w-full bg-gray-100 animate-pulse border border-gray-200"></div>
                   ) : (
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex w-full h-12 border border-black bg-gray-50">
                       {recentProjects.length === 0 ? (
-                        <div className="text-sm text-gray-500">
-                          Add a project to see budget distribution.
+                        <div className="w-full h-full flex items-center justify-center text-[10px] font-mono uppercase text-gray-400">
+                          No Data
                         </div>
                       ) : (
-                        recentProjects.map((project) => {
+                        recentProjects.map((project, idx) => {
                           const budget = project.budget ?? 0;
-                          const height = Math.min(100, Math.max(10, Math.round(budget / Math.max(totalBudget, 1) * 100)));
+                          const widthPercent = Math.max(5, Math.round(budget / Math.max(totalBudget, 1) * 100));
+                          // Cycle through retro patterns/colors
+                          const patterns = ['bg-black', 'bg-gray-400', 'bg-gray-800', 'bg-gray-200'];
+                          const patternClass = patterns[idx % patterns.length];
+                          
                           return (
                             <div
                               key={project.id}
-                              className="flex-1 rounded-lg bg-gradient-to-t from-blue-500 to-blue-400 flex items-end justify-center pb-2 transition-all hover:from-brand-500 hover:to-brand-400"
-                              style={{ height: `${height}%` }}
-                              title={`${project.name || 'Untitled'}: $${budget.toLocaleString()}`}
+                              className={`h-full ${patternClass} border-r border-white last:border-r-0 relative group`}
+                              style={{ width: `${widthPercent}%` }}
+                              title={`${project.name}: $${budget.toLocaleString()}`}
                             >
-                              <span className="text-xs text-white font-medium">
-                                ${budget.toLocaleString()}
-                              </span>
                             </div>
                           );
                         })
@@ -335,9 +348,9 @@ const DashboardPage: React.FC = () => {
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-center mt-4">
-                    <button className="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors">
-                      View all projects
+                  <div className="mt-4 text-center">
+                    <button className="text-xs font-bold uppercase tracking-widest border-b border-black hover:bg-black hover:text-white transition-all">
+                      View Financials
                     </button>
                   </div>
                 </div>
@@ -346,22 +359,32 @@ const DashboardPage: React.FC = () => {
 
             {/* Recent Projects */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Recent Projects</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-black text-black uppercase tracking-tight flex items-center gap-3">
+                  <span className="w-4 h-4 bg-black"></span>
+                  Recent Deployments
+                </h2>
+                <div className="h-1 flex-1 bg-black mx-4 opacity-20"></div>
+              </div>
+              
               {projectsLoading || isFetching ? (
-                <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600 shadow-soft-lg">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent"></div>
-                  Loading projects...
+                <div className="flex items-center justify-center gap-3 border-2 border-black bg-white px-6 py-12 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="h-6 w-6 animate-spin border-4 border-black border-t-transparent rounded-full"></div>
+                  <span className="font-mono text-sm uppercase font-bold">Retrieving Data...</span>
                 </div>
               ) : recentProjects.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center text-sm text-gray-500 shadow-soft-lg">
-                  No projects found. Create a project to see it listed here.
+                <div className="border-2 border-dashed border-gray-400 bg-gray-50 px-6 py-12 text-center shadow-none">
+                  <p className="font-mono text-sm text-gray-500 uppercase mb-4">No active deployments found in database.</p>
+                  <button className="px-6 py-3 bg-black text-white font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors">
+                    Initialize New Project
+                  </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {recentProjects.map((project) => (
                     <ProjectCard
                       key={project.id ?? project.name}
-                      title={project.name || 'Untitled Project'}
+                      title={project.name || 'UNTITLED PROTOCOL'}
                       date={formatDate(project.updated_at || project.created_at)}
                       status={formatStatusLabel(project.status)}
                     />
