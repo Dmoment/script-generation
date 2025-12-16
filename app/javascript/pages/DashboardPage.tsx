@@ -3,7 +3,10 @@ import { useAuth0 } from '@auth0/auth0-react';
 import type { Project } from '../types/api';
 import '../lib/openapi-config';
 import { useProjectsQuery } from '../queries/projects/useProjectsQuery';
+import { useCurrentUserQuery } from '../queries/users/useCurrentUserQuery';
+import { useOnboardingMutation, type OnboardingData } from '../queries/users/useOnboardingMutation';
 import LoadingScreen from '../components/LoadingScreen';
+import OnboardingModal from '../components/OnboardingModal';
 
 /**
  * Sidebar Item Props
@@ -16,19 +19,29 @@ interface SidebarItemProps {
 
 /**
  * Sidebar Item Component
+ * 
+ * @param label - The text label to display (e.g., "Overview", "Script Database")
+ * @param active - Boolean indicating if this is the currently selected/active menu item
+ *                 When active=true: shows black background with white text and left border
+ *                 When active=false: shows gray text, becomes black on hover
+ * @param icon - Optional React icon component to display next to the label
  */
 const SidebarItem: React.FC<SidebarItemProps> = ({ label, active = false, icon }) => (
-  <div className={`group flex items-center gap-3 px-4 py-3 text-sm font-mono uppercase tracking-wide transition-all duration-200 border-l-4 ${
+  <div className={`group/item flex items-center gap-3 px-4 py-3 text-sm font-mono uppercase tracking-wide transition-all duration-200 border-l-4 ${
     active 
       ? 'bg-black text-white border-black' 
       : 'text-gray-600 hover:bg-gray-100 hover:text-black border-transparent hover:border-gray-300'
   }`}>
-    <div className={`flex h-5 w-5 items-center justify-center ${
-      active ? 'text-white' : 'text-gray-400 group-hover:text-black'
+    {/* Icon container - always visible */}
+    <div className={`flex h-5 w-5 items-center justify-center flex-shrink-0 ${
+      active ? 'text-white' : 'text-gray-400 group-hover/item:text-black'
     }`}>
       {icon || <div className={`h-2 w-2 bg-current ${active ? 'animate-pulse' : ''}`}></div>}
     </div>
-    <span>{label}</span>
+    {/* Label - hidden when collapsed, shown when sidebar is hovered */}
+    <span className="sidebar-label whitespace-nowrap transition-all duration-300 inline-block opacity-0 ml-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-[180px] group-hover/sidebar:ml-2">
+      {label}
+    </span>
   </div>
 );
 
@@ -41,23 +54,39 @@ interface TopbarProps {
     email?: string;
     image?: string;
   } | null;
+  gender?: 'male' | 'female' | 'other' | null;
   onLogout: () => void;
 }
 
 /**
+ * Get avatar based on gender
+ */
+const getAvatarByGender = (gender?: 'male' | 'female' | 'other' | null): string => {
+  switch (gender) {
+    case 'female':
+      return '/videos/girl_avatar.png';
+    case 'male':
+    case 'other':
+    default:
+      return '/videos/boy_avatar.png';
+  }
+};
+
+/**
  * Topbar Component
  */
-const Topbar: React.FC<TopbarProps> = ({ user, onLogout }) => (
-  <div className="bg-[#f5f1e8] border-b-2 border-black">
-    <div className="flex items-center justify-between px-8 py-6">
-      <div>
-        <h1 className="text-3xl font-black text-[#333333] uppercase tracking-tight">
-          System Status: <span className="text-green-600">Online</span>
-        </h1>
-        <p className="text-sm text-gray-600 font-mono mt-1 uppercase tracking-wide">
-          Welcome back, {user?.name?.split(' ')[0] || 'User'}
-        </p>
+const Topbar: React.FC<TopbarProps> = ({ user, gender, onLogout }) => (
+  <div className="bg-[#FAF5ED] border-b-2 border-black relative">
+    <div className="flex items-center justify-between px-8 py-6 relative z-10">
+      <div className="absolute left-0 top-0 bottom-0 w-1/3 overflow-hidden">
+        <img 
+          src="/videos/dashboard_header.png" 
+          alt="Dashboard Header" 
+          className="h-full w-full object-cover object-left"
+          style={{ transform: 'scale(1.0)', transformOrigin: 'left center' }}
+        />
       </div>
+      <div className="w-1/3"></div>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2 px-4 py-2 border-2 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -72,7 +101,7 @@ const Topbar: React.FC<TopbarProps> = ({ user, onLogout }) => (
           {user?.image ? (
             <img alt="avatar" src={user.image} className="h-28 w-24 border-2 border-black grayscale" />
           ) : (
-            <img alt="avatar" src="/videos/boy_avatar.png" className="h-28 w-20" />
+            <img alt="avatar" src={getAvatarByGender(gender)} className="h-28 w-20" />
           )}
         </div>
         
@@ -180,9 +209,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, date, status = 'Active
  * Dashboard Page Component
  */
 const DashboardPage: React.FC = () => {
-  const { user, isLoading, isAuthenticated, logout, getAccessTokenSilently, loginWithRedirect } = useAuth0();
-  const { data: projectsData, isLoading: projectsLoading, isFetching, error: projectsError } = useProjectsQuery({
+  const { user, isLoading, isAuthenticated, logout, loginWithRedirect } = useAuth0();
+  
+  // Current user query to check onboarding status
+  const { 
+    data: currentUser, 
+    isLoading: userLoading,
+    error: userError 
+  } = useCurrentUserQuery({
     enabled: isAuthenticated,
+  });
+  
+  // Onboarding mutation
+  const onboardingMutation = useOnboardingMutation();
+  
+  const { data: projectsData, isLoading: projectsLoading, isFetching, error: projectsError } = useProjectsQuery({
+    enabled: isAuthenticated && currentUser?.onboarding_completed === true,
   });
   const projects: Project[] = projectsData ?? [];
   const projectsErrorMessage = projectsError ? projectsError.message : null;
@@ -200,7 +242,15 @@ const DashboardPage: React.FC = () => {
     }
   }, [isLoading, isAuthenticated, loginWithRedirect]);
 
-  if (isLoading || !isAuthenticated) {
+  // Check if onboarding is required
+  const showOnboarding = isAuthenticated && currentUser && !currentUser.onboarding_completed;
+
+  // Handle onboarding completion
+  const handleOnboardingComplete = async (data: OnboardingData) => {
+    await onboardingMutation.mutateAsync(data);
+  };
+
+  if (isLoading || !isAuthenticated || userLoading) {
     return <LoadingScreen />;
   }
 
@@ -242,35 +292,122 @@ const DashboardPage: React.FC = () => {
   const recentProjects = projects.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-[#f5f1e8]">
-      <Topbar user={user ?? null} onLogout={handleLogout} />
-      <div className="mx-auto max-w-7xl px-8 py-8">
-        <div className="grid grid-cols-12 gap-8">
-          {/* Sidebar */}
-          <aside className="col-span-12 lg:col-span-3">
-            <div className="sticky top-8">
-              <div className="bg-white border-2 border-black p-0 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                <div className="p-5 border-b-2 border-black bg-gray-50">
-                  <h2 className="text-xl font-black text-black uppercase tracking-tighter">Command Center</h2>
-                  <p className="text-xs font-mono text-gray-600 mt-1">V.2.4.0-STABLE</p>
-                </div>
-                <nav className="flex flex-col py-2">
-                  <SidebarItem label="Overview" active />
-                  <SidebarItem label="Script Database" />
-                  <SidebarItem label="Production Log" />
-                  <SidebarItem label="Assets & Props" />
-                  <SidebarItem label="Cast & Crew" />
-                  <SidebarItem label="Budget Control" />
-                  <SidebarItem label="Approvals" />
-                  <SidebarItem label="System Users" />
-                  <SidebarItem label="Configuration" />
-                </nav>
+    <>
+      <style>{`
+        .group\\/sidebar:hover .sidebar-label {
+          opacity: 1 !important;
+          width: 180px !important;
+          margin-left: 0.5rem !important;
+        }
+      `}</style>
+      {/* Onboarding Modal - rendered at root level with portal-like behavior */}
+      {showOnboarding && (
+        <OnboardingModal
+          onComplete={handleOnboardingComplete}
+          isSubmitting={onboardingMutation.isPending}
+          error={onboardingMutation.error?.message ?? null}
+          initialName={user?.name || currentUser?.name || ''}
+        />
+      )}
+      
+      {/* Dashboard Content - blurred when onboarding modal is shown */}
+      <div className={`min-h-screen bg-[#f5f1e8] flex ${showOnboarding ? 'blur-sm pointer-events-none select-none' : ''}`}>
+        {/* Fixed Sidebar - Collapsible on hover */}
+        <aside className="group/sidebar w-20 hover:w-64 flex-shrink-0 bg-white border-r-2 border-black h-screen sticky top-0 transition-all duration-300 ease-in-out">
+          <div className="h-full flex flex-col">
+            <div className="border-b-2 border-black bg-gray-50">
+              <div className="px-5 pt-12 pb-6">
+                <h2 className="text-xl font-black text-black uppercase tracking-tighter whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+                  Command Center
+                </h2>
+                <p className="text-xs font-mono text-gray-600 mt-1 whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+                  V.2.4.0-STABLE
+                </p>
               </div>
+            </div>
+            <nav className="flex flex-col py-2 flex-1 overflow-y-auto">
+              <SidebarItem 
+                label="Overview" 
+                active 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="Script Database" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="Production Log" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="Assets & Props" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="Cast & Crew" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="Budget Control" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="Approvals" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="System Users" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                }
+              />
+              <SidebarItem 
+                label="Configuration" 
+                icon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                }
+              />
+                </nav>
             </div>
           </aside>
 
-          {/* Main Content */}
-          <main className="col-span-12 lg:col-span-9">
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <Topbar user={user ?? null} gender={currentUser?.gender} onLogout={handleLogout} />
+          <main className="flex-1 px-8 py-8 overflow-y-auto">
             {/* Project Summary Section */}
             <div className="mb-12">
               <div className="flex items-center justify-between mb-6">
@@ -395,7 +532,7 @@ const DashboardPage: React.FC = () => {
           </main>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

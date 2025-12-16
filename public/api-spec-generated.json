@@ -271,6 +271,48 @@
           }
         ]
       }
+    },
+    "/v1/onboarding/complete": {
+      "post": {
+        "operationId": "postComplete",
+        "summary": "Complete user onboarding",
+        "tags": [
+          "Complete"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/onboarding/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Get onboarding status",
+        "tags": [
+          "Status"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

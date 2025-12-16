@@ -9,7 +9,7 @@ module V1
       expose :status, documentation: {
         type: "String",
         desc: "Project status",
-        values: ["active", "completed", "draft"]
+        values: [ "active", "completed", "draft" ]
       }
       expose :budget, documentation: { type: "Float", desc: "Project budget" }
       expose :created_at, documentation: { type: "DateTime", desc: "When the project was created" }

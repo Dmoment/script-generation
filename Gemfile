@@ -21,7 +21,7 @@ gem "jbuilder"
 
 gem "omniauth"
 gem "omniauth-auth0"
-gem "dotenv-rails", groups: [:development, :test]
+gem "dotenv-rails", groups: [ :development, :test ]
 
 # API Framework
 gem "grape", "~> 2.0"

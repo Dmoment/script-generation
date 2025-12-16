@@ -13,7 +13,7 @@ module V1
       params do
         optional :page, type: Integer, default: 1, desc: "Page number"
         optional :per_page, type: Integer, default: 20, desc: "Items per page"
-        optional :status, type: String, values: ["active", "completed", "draft"], desc: "Filter by status"
+        optional :status, type: String, values: [ "active", "completed", "draft" ], desc: "Filter by status"
       end
       get do
         authenticate! # Commented out for testing
@@ -51,7 +51,7 @@ module V1
       params do
         requires :name, type: String, desc: "Project name"
         optional :description, type: String, desc: "Project description"
-        optional :status, type: String, values: ["active", "completed", "draft"], default: "draft", desc: "Project status"
+        optional :status, type: String, values: [ "active", "completed", "draft" ], default: "draft", desc: "Project status"
         optional :budget, type: Float, desc: "Project budget"
       end
       post do
@@ -78,7 +78,7 @@ module V1
         requires :id, type: Integer, desc: "Project ID"
         optional :name, type: String, desc: "Project name"
         optional :description, type: String, desc: "Project description"
-        optional :status, type: String, values: ["active", "completed", "draft"], desc: "Project status"
+        optional :status, type: String, values: [ "active", "completed", "draft" ], desc: "Project status"
         optional :budget, type: Float, desc: "Project budget"
       end
       put ":id" do

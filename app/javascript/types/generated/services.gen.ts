@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse } from './types.gen';
+import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, PostCompleteResponse, GetStatusResponse } from './types.gen';
 
 export class CurrentService {
     /**
@@ -148,6 +148,36 @@ export class IdService {
             path: {
                 id: data.id
             }
+        });
+    }
+    
+}
+
+export class CompleteService {
+    /**
+     * Complete user onboarding
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static postComplete(): CancelablePromise<PostCompleteResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/v1/onboarding/complete'
+        });
+    }
+    
+}
+
+export class StatusService {
+    /**
+     * Get onboarding status
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static getStatus(): CancelablePromise<GetStatusResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/onboarding/status'
         });
     }
     

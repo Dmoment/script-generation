@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'grape-swagger'
+require "grape-swagger"
 
 module V1
   class Base < BaseApi
@@ -8,6 +8,7 @@ module V1
 
     mount V1::UsersApi
     mount V1::ProjectsApi
+    mount V1::OnboardingApi
 
     # Add Swagger documentation
     add_swagger_documentation(

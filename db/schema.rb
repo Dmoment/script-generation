@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_13_211913) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_16_125134) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_13_211913) do
     t.string "subdomain"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "account_type", default: "company"
   end
 
   create_table "projects", force: :cascade do |t|
@@ -38,7 +39,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_13_211913) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "auth0_id"
+    t.string "gender"
+    t.string "phone_number"
+    t.bigint "company_id"
+    t.boolean "onboarding_completed", default: false, null: false
+    t.string "role", default: "member"
     t.index ["auth0_id"], name: "index_users_on_auth0_id", unique: true
+    t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
+
+  add_foreign_key "users", "companies"
 end

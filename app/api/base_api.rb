@@ -36,17 +36,17 @@ class BaseApi < Grape::API
   helpers do
     # Extract token from Authorization header
     def token_from_header
-      auth_header = headers['Authorization']
+      auth_header = headers["Authorization"]
       return nil unless auth_header
 
       # Format: "Bearer <token>"
-      auth_header.split(' ').last if auth_header.start_with?('Bearer ')
+      auth_header.split(" ").last if auth_header.start_with?("Bearer ")
     end
 
     # Validate token and return user info
     def validate_token!
       token = token_from_header
-      error!('No token provided', 401) unless token
+      error!("No token provided", 401) unless token
 
       validator = Auth0TokenValidator.new(token)
       validator.validate!

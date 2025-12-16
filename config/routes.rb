@@ -10,19 +10,19 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Grape API
-  mount V1::Base => '/api'
-  mount GrapeSwaggerRails::Engine => '/api/docs'
+  mount V1::Base => "/api"
+  mount GrapeSwaggerRails::Engine => "/api/docs"
 
   # Auth0 callback - returns JSON with tokens (must be before catch-all)
-  get '/auth/auth0/callback', to: 'sessions#callback'
-  get '/auth/failure', to: 'sessions#failure'
+  get "/auth/auth0/callback", to: "sessions#callback"
+  get "/auth/failure", to: "sessions#failure"
 
   # Root path
   root "pages#index"
 
   # Catch-all route for React Router (must be absolute last)
   # This allows React Router to handle all routes client-side
-  get '*path', to: 'pages#index', constraints: ->(req) {
+  get "*path", to: "pages#index", constraints: ->(req) {
     !req.xhr? && req.format.html?
   }
 end

@@ -64,6 +64,14 @@ export type DeleteByIdData = {
 
 export type DeleteByIdResponse = Project;
 
+export type PostCompleteResponse = {
+    [key: string]: unknown;
+};
+
+export type GetStatusResponse = {
+    [key: string]: unknown;
+};
+
 export type $OpenApiTs = {
     '/v1/users/current': {
         get: {
@@ -150,6 +158,30 @@ export type $OpenApiTs = {
                  * Success
                  */
                 200: Project;
+            };
+        };
+    };
+    '/v1/onboarding/complete': {
+        post: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
+    '/v1/onboarding/status': {
+        get: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
             };
         };
     };

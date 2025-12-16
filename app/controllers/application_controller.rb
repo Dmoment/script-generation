@@ -38,7 +38,7 @@ class ApplicationController < ActionController::Base
   def handle_tenant_not_found
     # Allow the main app to render without a tenant instead of redirecting to a different host
     ActsAsTenant.current_tenant = nil
-    flash.now[:alert] = 'Company not found'
+    flash.now[:alert] = "Company not found"
   end
 
   def handle_no_subdomain
