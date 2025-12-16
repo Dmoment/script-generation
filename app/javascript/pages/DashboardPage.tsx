@@ -22,14 +22,14 @@ interface SidebarItemProps {
  * 
  * @param label - The text label to display (e.g., "Overview", "Script Database")
  * @param active - Boolean indicating if this is the currently selected/active menu item
- *                 When active=true: shows black background with white text and left border
+ *                 When active=true: shows pink background (#F2556E) with white text and left border
  *                 When active=false: shows gray text, becomes black on hover
  * @param icon - Optional React icon component to display next to the label
  */
 const SidebarItem: React.FC<SidebarItemProps> = ({ label, active = false, icon }) => (
   <div className={`group/item flex items-center gap-3 px-4 py-3 text-sm font-mono uppercase tracking-wide transition-all duration-200 border-l-4 ${
     active 
-      ? 'bg-black text-white border-black' 
+      ? 'bg-[#F2556E] text-white border-[#F2556E]' 
       : 'text-gray-600 hover:bg-gray-100 hover:text-black border-transparent hover:border-gray-300'
   }`}>
     {/* Icon container - always visible */}
@@ -324,7 +324,7 @@ const DashboardPage: React.FC = () => {
                   V.2.4.0-STABLE
                 </p>
               </div>
-            </div>
+                </div>
             <nav className="flex flex-col py-2 flex-1 overflow-y-auto">
               <SidebarItem 
                 label="Overview" 

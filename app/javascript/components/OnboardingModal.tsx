@@ -220,7 +220,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   disabled={!isStep2Valid || isSubmitting}
                   className={`w-full px-6 py-4 border-2 border-black font-black uppercase tracking-wider text-lg transition-all ${
                     isStep2Valid && !isSubmitting
-                      ? 'bg-black text-white hover:bg-gray-800 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.3)]'
+                      ? 'bg-black text-white hover:bg-[#E0445D] shadow-[6px_6px_0px_0px_rgba(242,85,110,0.3)]'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
