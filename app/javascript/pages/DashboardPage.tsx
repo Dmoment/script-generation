@@ -10,6 +10,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import OnboardingModal from '../components/OnboardingModal';
 import CreateProjectModal from '../components/CreateProjectModal';
 import FilterDropdown from '../components/FilterDropdown';
+import Pagination from '../components/Pagination';
 import { colors, getColorWithOpacity } from '../lib/theme';
 
 /**
@@ -372,18 +373,42 @@ const DashboardPage: React.FC = () => {
   const [sortColumn, setSortColumn] = React.useState<string | null>(null);
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = React.useState<number>(1);
+  const [perPage] = React.useState<number>(10); // Items per page
+  
   // Bulk selection state
   const [selectedProjects, setSelectedProjects] = React.useState<Set<number | string>>(new Set());
   
-  const { data: projectsData, isLoading: projectsLoading, isFetching, error: projectsError } = useProjectsQuery({
+  // Fetch all projects (we'll paginate client-side after filtering)
+  const { data: projectsResponse, isLoading: projectsLoading, isFetching, error: projectsError } = useProjectsQuery({
+    page: 1,
+    per_page: 1000, // Fetch all for client-side filtering
     enabled: isAuthenticated && currentUser?.onboarding_completed === true,
   });
-  const projects: Project[] = projectsData ?? [];
+  
+  // Extract projects from response (handle both old array format and new paginated format)
+  const allProjects: Project[] = React.useMemo(() => {
+    if (!projectsResponse) return [];
+    
+    // Check if it's the new paginated format (has 'data' key)
+    if (typeof projectsResponse === 'object' && 'data' in projectsResponse && Array.isArray((projectsResponse as any).data)) {
+      return (projectsResponse as any).data;
+    }
+    
+    // Old format (array)
+    if (Array.isArray(projectsResponse)) {
+      return projectsResponse;
+    }
+    
+    return [];
+  }, [projectsResponse]);
+  
   const projectsErrorMessage = projectsError ? projectsError.message : null;
 
   // Filter and sort projects - MUST be before any early returns (useMemo is a hook)
   const filteredProjects = React.useMemo(() => {
-    let filtered = projects.filter((project) => {
+    let filtered = allProjects.filter((project) => {
       // Status filter
       if (statusFilter !== 'all' && project.status !== statusFilter) {
         return false;
@@ -442,7 +467,22 @@ const DashboardPage: React.FC = () => {
     }
 
     return filtered;
-  }, [projects, statusFilter, typeFilter, searchQuery, sortColumn, sortDirection]);
+  }, [allProjects, statusFilter, typeFilter, searchQuery, sortColumn, sortDirection]);
+
+  // Paginate filtered results
+  const paginatedProjects = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    return filteredProjects.slice(startIndex, endIndex);
+  }, [filteredProjects, currentPage, perPage]);
+
+  // Calculate pagination metadata
+  const totalPages = Math.ceil(filteredProjects.length / perPage) || 1; // Always at least 1 page
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, typeFilter, searchQuery, sortColumn, sortDirection]);
 
   // Automatically trigger login if not authenticated (e.g., coming from marketing page)
   React.useEffect(() => {
@@ -485,10 +525,10 @@ const DashboardPage: React.FC = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
-  const activeCount = projects.filter((project) => project.status === 'active').length;
-  const completedCount = projects.filter((project) => project.status === 'completed').length;
-  const draftCount = projects.filter((project) => project.status === 'draft').length;
-  const totalBudget = projects.reduce<number>((sum, project) => sum + (project.budget ?? 0), 0);
+  const activeCount = allProjects.filter((project) => project.status === 'active').length;
+  const completedCount = allProjects.filter((project) => project.status === 'completed').length;
+  const draftCount = allProjects.filter((project) => project.status === 'draft').length;
+  const totalBudget = allProjects.reduce<number>((sum, project) => sum + (project.budget ?? 0), 0);
 
   const formatStatusLabel = (status?: Project['status']): 'Active' | 'Completed' | 'Draft' => {
     switch (status) {
@@ -663,19 +703,19 @@ const DashboardPage: React.FC = () => {
                 <StatCard 
                   title="Active Productions" 
                   value={projectsLoading || isFetching ? '...' : activeCount.toString()} 
-                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((activeCount / projects.length) * 100) : 0}% RUNNING`} 
+                  trend={projectsLoading || isFetching ? undefined : `${allProjects.length ? Math.round((activeCount / allProjects.length) * 100) : 0}% RUNNING`} 
                   color="green"
                 />
                 <StatCard 
                   title="Archived / Done" 
                   value={projectsLoading || isFetching ? '...' : completedCount.toString()} 
-                  trend={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((completedCount / projects.length) * 100) : 0}% COMPLETED`} 
+                  trend={projectsLoading || isFetching ? undefined : `${allProjects.length ? Math.round((completedCount / allProjects.length) * 100) : 0}% COMPLETED`} 
                   color="blue"
                 />
                 <StatCard 
                   title="Draft Concepts" 
                   value={projectsLoading || isFetching ? '...' : draftCount.toString()} 
-                  subtitle={projectsLoading || isFetching ? undefined : `${projects.length ? Math.round((draftCount / projects.length) * 100) : 0}%`} 
+                  subtitle={projectsLoading || isFetching ? undefined : `${allProjects.length ? Math.round((draftCount / allProjects.length) * 100) : 0}%`} 
                   color="purple"
                 />
                 
@@ -694,12 +734,12 @@ const DashboardPage: React.FC = () => {
                     <div className="h-12 w-full bg-gray-100 animate-pulse border border-gray-200"></div>
                   ) : (
                     <div className="flex w-full h-12 border border-black bg-gray-50">
-                      {projects.length === 0 ? (
+                      {allProjects.length === 0 ? (
                         <div className="w-full h-full flex items-center justify-center text-[10px] font-mono uppercase text-gray-400">
                           No Data
                         </div>
                       ) : (
-                        projects.slice(0, 6).map((project: Project, idx: number) => {
+                        allProjects.slice(0, 6).map((project: Project, idx: number) => {
                           const budget = project.budget ?? 0;
                           const widthPercent = Math.max(5, Math.round(budget / Math.max(totalBudget, 1) * 100));
                           // Cycle through retro patterns/colors
@@ -827,9 +867,13 @@ const DashboardPage: React.FC = () => {
                   <FilterDropdown
                     options={[
                       { value: 'all', label: 'All Types' },
-                      ...Array.from(new Set(projects.map(p => p.project_type).filter(Boolean))).map((type) => ({
-                        value: type?.toLowerCase() || '',
-                        label: type || '',
+                      ...Array.from(new Set(
+                        allProjects
+                          .map((p: Project) => p.project_type)
+                          .filter(Boolean) as string[]
+                      )).map((type) => ({
+                        value: type.toLowerCase(),
+                        label: type,
                       })),
                     ]}
                     value={typeFilter}
@@ -873,16 +917,27 @@ const DashboardPage: React.FC = () => {
                   </button>
                 </div>
               ) : viewMode === 'card' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredProjects.map((project) => (
-                    <ProjectCard
-                      key={project.id ?? project.title}
-                      title={project.title || 'UNTITLED PROJECT'}
-                      date={formatDate(project.updated_at || project.created_at)}
-                      status={formatStatusLabel(project.status)}
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {paginatedProjects.map((project) => (
+                      <ProjectCard
+                        key={project.id ?? project.title}
+                        title={project.title || 'UNTITLED PROJECT'}
+                        date={formatDate(project.updated_at || project.created_at)}
+                        status={formatStatusLabel(project.status)}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-8">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={filteredProjects.length}
+                      perPage={perPage}
+                      onPageChange={setCurrentPage}
                     />
-                  ))}
-                </div>
+                  </div>
+                </>
               ) : (
                 <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
                   {/* Column Headers */}
@@ -1060,7 +1115,7 @@ const DashboardPage: React.FC = () => {
                   
                   {/* List Items */}
                   <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
-                    {filteredProjects.map((project) => (
+                    {paginatedProjects.map((project) => (
                       <ProjectListItem
                         key={project.id ?? project.title}
                         projectId={(project.id ?? project.title ?? '') as string | number}
@@ -1088,6 +1143,17 @@ const DashboardPage: React.FC = () => {
                         }}
                       />
                     ))}
+                  </div>
+                  
+                  {/* Pagination */}
+                  <div className="border-t border-gray-300 bg-white px-6 py-4">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      totalItems={filteredProjects.length}
+                      perPage={perPage}
+                      onPageChange={setCurrentPage}
+                    />
                   </div>
                   
                   {/* Bulk Actions Bar */}

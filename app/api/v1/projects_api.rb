@@ -29,10 +29,21 @@ module V1
           projects = projects.ransack(params[:q]).result
         end
 
-        # Pagination
-        projects = projects.limit(params[:per_page]).offset((params[:page] - 1) * params[:per_page])
+        # Use Kaminari for pagination
+        paginated_projects = projects.page(params[:page]).per(params[:per_page])
 
-        present projects, with: V1::Entities::Project
+        # Return paginated response with metadata
+        {
+          data: paginated_projects.map { |p| V1::Entities::Project.represent(p) },
+          pagination: {
+            page: paginated_projects.current_page,
+            per_page: paginated_projects.limit_value,
+            total: paginated_projects.total_count,
+            total_pages: paginated_projects.total_pages,
+            has_next: paginated_projects.next_page.present?,
+            has_prev: paginated_projects.prev_page.present?
+          }
+        }
       end
 
       desc "Get a specific project", {

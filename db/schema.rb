@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_16_125134) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_17_163324) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,13 +22,26 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_16_125134) do
     t.string "account_type", default: "company"
   end
 
-  create_table "projects", force: :cascade do |t|
+  create_table "project_types", force: :cascade do |t|
     t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_project_types_on_name", unique: true
+  end
+
+  create_table "projects", force: :cascade do |t|
+    t.string "title", null: false
     t.text "description"
     t.string "status", default: "draft", null: false
     t.decimal "budget", precision: 10, scale: 2
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "company_id", null: false
+    t.uuid "created_by_user_id", null: false
+    t.string "project_type", default: "film", null: false
+    t.index ["company_id"], name: "index_projects_on_company_id"
+    t.index ["created_by_user_id"], name: "index_projects_on_created_by_user_id"
+    t.index ["project_type"], name: "index_projects_on_project_type"
     t.index ["status"], name: "index_projects_on_status"
   end
 
@@ -49,5 +62,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_16_125134) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "projects", "companies"
+  add_foreign_key "projects", "users", column: "created_by_user_id"
   add_foreign_key "users", "companies"
 end

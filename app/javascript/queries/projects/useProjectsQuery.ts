@@ -8,7 +8,19 @@ export const projectKeys = {
   filtered: (q?: Record<string, any>) => ['projects', { q }] as const,
 };
 
-type ProjectsQueryData = Project[];
+export interface PaginationMeta {
+  page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface ProjectsResponse {
+  data: Project[];
+  pagination: PaginationMeta;
+}
 
 interface UseProjectsQueryOptions {
   q?: Record<string, any>; // Ransack query parameters
@@ -23,8 +35,8 @@ export const useProjectsQuery = ({
   per_page = 20,
   enabled = true,
 }: UseProjectsQueryOptions = {}) => {
-  return useQuery<ProjectsQueryData, Error>({
-    queryKey: projectKeys.filtered(q),
+  return useQuery<ProjectsResponse, Error>({
+    queryKey: [...projectKeys.filtered(q), 'page', page, 'per_page', per_page],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (q) {
@@ -44,7 +56,7 @@ export const useProjectsQuery = ({
       if (page) params.append('page', String(page));
       if (per_page) params.append('per_page', String(per_page));
 
-      const response = await request<ProjectsQueryData>(OpenAPI, {
+      const response = await request<ProjectsResponse>(OpenAPI, {
         method: 'GET',
         url: `/v1/projects?${params.toString()}`,
         mediaType: 'application/json',

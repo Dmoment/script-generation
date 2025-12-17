@@ -39,6 +39,7 @@ gem "jwt"
 # Multi-tenancy support
 gem "acts_as_tenant", "~> 1.0"
 gem "ransack", "~> 4.0"
+gem "kaminari", "~> 1.2"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
