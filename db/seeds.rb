@@ -26,6 +26,24 @@ companies_data.each do |company_attrs|
   puts "✅ Company created: #{company.name} (#{company.subdomain})"
 end
 
+# Create default project types
+project_types_data = [
+  'Film',
+  'Series',
+  'Short',
+  'Ad',
+  'Documentary',
+  'Commercial',
+  'Music Video',
+  'Web Series',
+  'Other'
+]
+
+project_types_data.each do |type_name|
+  ProjectType.find_or_create_by(name: type_name)
+  puts "✅ Project type created: #{type_name}"
+end
+
 puts "🌱 Seed data created successfully!"
 puts "📋 Available companies:"
 Company.all.each do |company|

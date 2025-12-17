@@ -63,11 +63,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto">
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/70" />
+      {/* Backdrop with blur */}
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-md" />
       
       {/* Modal */}
-      <div className="relative w-full max-w-xl mx-4 bg-[#f5f1e8] border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+      <div className="relative w-full max-w-xl mx-4 bg-[#f5f1e8] border-4 border-black" style={{
+        boxShadow: '0 20px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)'
+      }}>
         {/* Header */}
         <ModalHeader
           title="System Initialization"

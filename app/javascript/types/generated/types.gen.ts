@@ -39,6 +39,14 @@ export type PostProjectsData = {
 
 export type PostProjectsResponse = Array<Project>;
 
+export type GetProjectTypesResponse = {
+    [key: string]: unknown;
+};
+
+export type PostProjectTypesResponse = {
+    [key: string]: unknown;
+};
+
 export type GetByIdData = {
     id: string;
 };
@@ -118,6 +126,28 @@ export type $OpenApiTs = {
                  * Success
                  */
                 200: Array<Project>;
+            };
+        };
+    };
+    '/v1/project_types': {
+        get: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        post: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
             };
         };
     };

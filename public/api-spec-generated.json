@@ -313,6 +313,46 @@
           }
         }
       }
+    },
+    "/v1/project_types": {
+      "get": {
+        "operationId": "getProjectTypes",
+        "summary": "Search project types",
+        "tags": [
+          "API"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postProjectTypes",
+        "summary": "Create a new project type",
+        "tags": [
+          "API"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

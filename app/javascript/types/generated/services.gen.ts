@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, PostCompleteResponse, GetStatusResponse } from './types.gen';
+import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetProjectTypesResponse, PostProjectTypesResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, PostCompleteResponse, GetStatusResponse } from './types.gen';
 
 export class CurrentService {
     /**
@@ -74,6 +74,30 @@ export class ApiService {
             url: '/v1/projects',
             body: data.requestBody,
             mediaType: 'application/json'
+        });
+    }
+    
+    /**
+     * Search project types
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static getProjectTypes(): CancelablePromise<GetProjectTypesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/project_types'
+        });
+    }
+    
+    /**
+     * Create a new project type
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static postProjectTypes(): CancelablePromise<PostProjectTypesResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/v1/project_types'
         });
     }
     
