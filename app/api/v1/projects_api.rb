@@ -89,9 +89,7 @@ module V1
           project_type: params[:project_type],
           company_id: user_company.id,
           created_by_user_id: current_user.id,
-          status: params[:status] || 'draft',
-          stage: params[:stage] || 'idea',
-          language: params[:language] || 'en'
+          status: params[:status] || 'draft'
         )
 
         # Add optional fields if provided

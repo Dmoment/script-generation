@@ -64,22 +64,22 @@ const Pagination: React.FC<PaginationProps> = ({
   const endItem = Math.min(currentPage * perPage, totalItems);
 
   return (
-    <div className={`flex items-center justify-between ${className}`}>
+    <div className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 ${className}`}>
       {/* Results info */}
-      <div className="text-sm text-gray-600">
+      <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
         Showing <span className="font-semibold text-gray-900">{startItem}</span> to{' '}
         <span className="font-semibold text-gray-900">{endItem}</span> of{' '}
         <span className="font-semibold text-gray-900">{totalItems}</span> projects
       </div>
 
       {/* Pagination controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-1 sm:gap-2">
         {/* Previous button */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className={`
-            px-4 py-2 text-sm font-medium rounded-md border-2 transition-all duration-200
+            px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md border-2 transition-all duration-200
             ${currentPage === 1
               ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-white'
               : 'border-gray-300 text-gray-700 bg-white hover:border-pink-500 hover:text-pink-600 hover:bg-pink-50'
@@ -90,10 +90,10 @@ const Pagination: React.FC<PaginationProps> = ({
           }}
         >
           <span className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Previous
+            <span className="hidden sm:inline">Previous</span>
           </span>
         </button>
 
@@ -119,7 +119,7 @@ const Pagination: React.FC<PaginationProps> = ({
                 key={pageNum}
                 onClick={() => onPageChange(pageNum)}
                 className={`
-                  min-w-[40px] px-3 py-2 text-sm font-medium rounded-md border-2 transition-all duration-200
+                  min-w-[32px] sm:min-w-[40px] px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md border-2 transition-all duration-200
                   ${isActive
                     ? 'text-white border-pink-500'
                     : 'border-gray-300 text-gray-700 bg-white hover:border-pink-500 hover:text-pink-600 hover:bg-pink-50'
@@ -145,7 +145,7 @@ const Pagination: React.FC<PaginationProps> = ({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className={`
-            px-4 py-2 text-sm font-medium rounded-md border-2 transition-all duration-200
+            px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md border-2 transition-all duration-200
             ${currentPage === totalPages
               ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-white'
               : 'border-gray-300 text-gray-700 bg-white hover:border-pink-500 hover:text-pink-600 hover:bg-pink-50'
@@ -156,8 +156,8 @@ const Pagination: React.FC<PaginationProps> = ({
           }}
         >
           <span className="flex items-center gap-1">
-            Next
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="hidden sm:inline">Next</span>
+            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </span>

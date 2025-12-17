@@ -5,7 +5,7 @@ import SidebarItem from "./SidebarItem";
  * Sidebar Component
  */
 const Sidebar: React.FC = () => (
-  <aside className="group/sidebar w-20 hover:w-64 flex-shrink-0 bg-white border-r-2 border-black h-screen sticky top-0 transition-all duration-300 ease-in-out">
+  <aside className="hidden md:block group/sidebar w-20 hover:w-64 flex-shrink-0 bg-white border-r-2 border-black h-screen sticky top-0 transition-all duration-300 ease-in-out">
     <div className="h-full flex flex-col">
       <div className="border-b-2 border-black bg-gray-50">
         <div className="px-5 pt-12 pb-6">

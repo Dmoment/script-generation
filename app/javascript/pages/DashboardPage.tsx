@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { Project } from "../types/api";
 import "../lib/openapi-config";
@@ -15,6 +15,7 @@ import CreateProjectModal from "../components/CreateProjectModal";
 import FilterDropdown from "../components/FilterDropdown";
 import Pagination from "../components/Pagination";
 import Sidebar from "../components/dashboard/Sidebar";
+import SidebarItem from "../components/dashboard/SidebarItem";
 import Topbar from "../components/dashboard/Topbar";
 import StatCard from "../components/dashboard/StatCard";
 import ProjectCard from "../components/dashboard/ProjectCard";
@@ -42,157 +43,119 @@ const DashboardPage: React.FC = () => {
 
   // Create project mutation
   const createProjectMutation = useCreateProjectMutation();
-  const [showCreateProjectModal, setShowCreateProjectModal] =
-    React.useState(false);
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
+
+  // Mobile menu state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // View and filter state - MUST be before any early returns
-  const [viewMode, setViewMode] = React.useState<"card" | "list">("list");
-  const [statusFilter, setStatusFilter] = React.useState<string>("all");
-  const [typeFilter, setTypeFilter] = React.useState<string>("all");
-  const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const [viewMode, setViewMode] = useState<"card" | "list">("list");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Sorting state
-  const [sortColumn, setSortColumn] = React.useState<string | null>(null);
-  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(
-    "asc"
-  );
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Pagination state
-  const [currentPage, setCurrentPage] = React.useState<number>(1);
-  const [perPage] = React.useState<number>(10); // Items per page
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [perPage] = useState<number>(10); // Items per page
 
   // Bulk selection state
-  const [selectedProjects, setSelectedProjects] = React.useState<
+  const [selectedProjects, setSelectedProjects] = useState<
     Set<number | string>
   >(new Set());
 
-  // Fetch all projects (we'll paginate client-side after filtering)
+  // Build Ransack query parameters for server-side filtering
+  const ransackQuery = useMemo(() => {
+    const q: Record<string, any> = {};
+
+    // Status filter
+    if (statusFilter !== "all") {
+      q.status_eq = statusFilter;
+    }
+
+    // Type filter
+    if (typeFilter !== "all") {
+      q.project_type_eq = typeFilter;
+    }
+
+    // Search query (search in title, project_type, and description)
+    if (searchQuery.trim()) {
+      q.title_or_project_type_or_description_cont = searchQuery.trim();
+    }
+
+    // Sorting
+    if (sortColumn) {
+      const sortKey = sortColumn === "updated" ? "updated_at" : sortColumn;
+      q.s = `${sortKey} ${sortDirection}`;
+    }
+
+    return Object.keys(q).length > 0 ? q : undefined;
+  }, [statusFilter, typeFilter, searchQuery, sortColumn, sortDirection]);
+
+  // Fetch projects with server-side filtering and pagination
   const {
     data: projectsResponse,
     isLoading: projectsLoading,
     isFetching,
     error: projectsError,
   } = useProjectsQuery({
-    page: 1,
-    per_page: 1000, // Fetch all for client-side filtering
+    q: ransackQuery,
+    page: currentPage,
+    per_page: perPage,
     enabled: isAuthenticated && currentUser?.onboarding_completed === true,
   });
 
-  // Extract projects from response (handle both old array format and new paginated format)
-  const allProjects: Project[] = React.useMemo(() => {
+  // Extract projects and pagination metadata from response
+  const projects: Project[] = useMemo(() => {
     if (!projectsResponse) return [];
-
-    // Check if it's the new paginated format (has 'data' key)
     if (
       typeof projectsResponse === "object" &&
       "data" in projectsResponse &&
-      Array.isArray((projectsResponse as any).data)
+      Array.isArray(projectsResponse.data)
     ) {
-      return (projectsResponse as any).data;
+      return projectsResponse.data;
     }
-
-    // Old format (array)
     if (Array.isArray(projectsResponse)) {
       return projectsResponse;
     }
-
     return [];
   }, [projectsResponse]);
 
-  const projectsErrorMessage = projectsError ? projectsError.message : null;
-
-  // Filter and sort projects - MUST be before any early returns (useMemo is a hook)
-  const filteredProjects = React.useMemo(() => {
-    let filtered = allProjects.filter((project) => {
-      // Status filter
-      if (statusFilter !== "all" && project.status !== statusFilter) {
-        return false;
-      }
-
-      // Type filter
-      if (
-        typeFilter !== "all" &&
-        project.project_type?.toLowerCase() !== typeFilter.toLowerCase()
-      ) {
-        return false;
-      }
-
-      // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = project.title?.toLowerCase().includes(query);
-        const matchesType = project.project_type?.toLowerCase().includes(query);
-        const matchesDescription = project.description
-          ?.toLowerCase()
-          .includes(query);
-        if (!matchesTitle && !matchesType && !matchesDescription) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
-    // Apply sorting
-    if (sortColumn) {
-      filtered = [...filtered].sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
-
-        switch (sortColumn) {
-          case "title":
-            aValue = a.title?.toLowerCase() || "";
-            bValue = b.title?.toLowerCase() || "";
-            break;
-          case "type":
-            aValue = a.project_type?.toLowerCase() || "";
-            bValue = b.project_type?.toLowerCase() || "";
-            break;
-          case "status":
-            aValue = a.status?.toLowerCase() || "";
-            bValue = b.status?.toLowerCase() || "";
-            break;
-          case "updated":
-            aValue = new Date(a.updated_at || a.created_at || 0).getTime();
-            bValue = new Date(b.updated_at || b.created_at || 0).getTime();
-            break;
-          default:
-            return 0;
-        }
-
-        if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-        if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-        return 0;
-      });
+  const paginationMeta = useMemo(() => {
+    if (
+      projectsResponse &&
+      typeof projectsResponse === "object" &&
+      "pagination" in projectsResponse
+    ) {
+      return (projectsResponse as any).pagination;
     }
 
-    return filtered;
-  }, [
-    allProjects,
-    statusFilter,
-    typeFilter,
-    searchQuery,
-    sortColumn,
-    sortDirection,
-  ]);
+    return {
+      page: currentPage,
+      per_page: perPage,
+      total: projects.length,
+      total_pages: Math.ceil(projects.length / perPage) || 1,
+      has_next: false,
+      has_prev: false,
+    };
+  }, [projectsResponse, projects.length, currentPage, perPage]);
 
-  // Paginate filtered results
-  const paginatedProjects = React.useMemo(() => {
-    const startIndex = (currentPage - 1) * perPage;
-    const endIndex = startIndex + perPage;
-    return filteredProjects.slice(startIndex, endIndex);
-  }, [filteredProjects, currentPage, perPage]);
+  const projectsErrorMessage = projectsError ? projectsError.message : null;
 
-  // Calculate pagination metadata
-  const totalPages = Math.ceil(filteredProjects.length / perPage) || 1; // Always at least 1 page
+  // Use server-paginated projects directly
+  const paginatedProjects = projects;
+  const totalPages = paginationMeta.total_pages || 1;
 
-  // Reset to page 1 when filters change
-  React.useEffect(() => {
+  // Reset to page 1 when filters change (but not when page changes)
+  useEffect(() => {
     setCurrentPage(1);
   }, [statusFilter, typeFilter, searchQuery, sortColumn, sortDirection]);
 
   // Automatically trigger login if not authenticated (e.g., coming from marketing page)
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       loginWithRedirect({
         appState: {
@@ -236,16 +199,19 @@ const DashboardPage: React.FC = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
-  const activeCount = allProjects.filter(
+  // For stats, we need to fetch all projects (without filters) or use a separate stats endpoint
+  // For now, we'll calculate from the current page data (not ideal, but works)
+  // TODO: Consider adding a separate stats endpoint
+  const activeCount = projects.filter(
     (project) => project.status === "active"
   ).length;
-  const completedCount = allProjects.filter(
-    (project) => project.status === "completed"
+  const completedCount = projects.filter(
+    (project) => (project.status as string) === "archived" || project.status === "completed"
   ).length;
-  const draftCount = allProjects.filter(
+  const draftCount = projects.filter(
     (project) => project.status === "draft"
   ).length;
-  const totalBudget = allProjects.reduce<number>(
+  const totalBudget = projects.reduce<number>(
     (sum, project) => sum + (project.budget ?? 0),
     0
   );
@@ -315,8 +281,235 @@ const DashboardPage: React.FC = () => {
           showOnboarding ? "blur-sm pointer-events-none select-none" : ""
         }`}
       >
-        {/* Fixed Sidebar - Collapsible on hover */}
+        {/* Fixed Sidebar - Collapsible on hover, hidden on mobile */}
         <Sidebar />
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Mobile Sidebar - Slide in from left */}
+        <aside
+          className={`fixed left-0 top-0 h-full w-64 bg-white border-r-2 border-black z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="h-full flex flex-col">
+            <div className="border-b-2 border-black bg-gray-50 px-5 pt-6 pb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-black uppercase tracking-tighter">
+                  Command Center
+                </h2>
+                <p className="text-xs font-mono text-gray-600 mt-1">
+                  V.2.4.0-STABLE
+                </p>
+                </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 hover:bg-gray-200 rounded transition-colors"
+                aria-label="Close menu"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex flex-col py-2 flex-1 overflow-y-auto">
+              <SidebarItem
+                label="Overview"
+                active
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="Script Database"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="Production Log"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="Assets & Props"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="Cast & Crew"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="Budget Control"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="Approvals"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="System Users"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                }
+              />
+              <SidebarItem
+                label="Configuration"
+                alwaysShowLabel={true}
+                icon={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                }
+              />
+                </nav>
+            </div>
+          </aside>
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
@@ -324,8 +517,9 @@ const DashboardPage: React.FC = () => {
             user={user ?? null}
             gender={currentUser?.gender}
             onLogout={handleLogout}
+            onMenuClick={() => setIsMobileMenuOpen(true)}
           />
-          <main className="flex-1 px-8 py-8 overflow-y-auto">
+          <main className="flex-1 px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 overflow-y-auto">
             {/* Project Summary Section */}
             <div className="mb-12">
               <div className="flex items-center justify-between mb-6">
@@ -335,16 +529,16 @@ const DashboardPage: React.FC = () => {
                 </h2>
                 <div className="h-1 flex-1 bg-black mx-4 opacity-20"></div>
               </div>
-
+              
               {projectsErrorMessage && (
                 <div className="mb-6 border-2 border-red-500 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 uppercase tracking-wide">
                   Error: {projectsErrorMessage}
                 </div>
               )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                  title="Active Productions"
+              
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <StatCard 
+                  title="Active Productions" 
                   value={
                     projectsLoading || isFetching
                       ? "..."
@@ -354,17 +548,17 @@ const DashboardPage: React.FC = () => {
                     projectsLoading || isFetching
                       ? undefined
                       : `${
-                          allProjects.length
+                          paginationMeta.total > 0
                             ? Math.round(
-                                (activeCount / allProjects.length) * 100
+                                (activeCount / paginationMeta.total) * 100
                               )
                             : 0
                         }% RUNNING`
                   }
                   color="green"
                 />
-                <StatCard
-                  title="Archived / Done"
+                <StatCard 
+                  title="Archived / Done" 
                   value={
                     projectsLoading || isFetching
                       ? "..."
@@ -374,17 +568,17 @@ const DashboardPage: React.FC = () => {
                     projectsLoading || isFetching
                       ? undefined
                       : `${
-                          allProjects.length
+                          paginationMeta.total > 0
                             ? Math.round(
-                                (completedCount / allProjects.length) * 100
+                                (completedCount / paginationMeta.total) * 100
                               )
                             : 0
                         }% COMPLETED`
                   }
                   color="blue"
                 />
-                <StatCard
-                  title="Draft Concepts"
+                <StatCard 
+                  title="Draft Concepts" 
                   value={
                     projectsLoading || isFetching
                       ? "..."
@@ -394,16 +588,16 @@ const DashboardPage: React.FC = () => {
                     projectsLoading || isFetching
                       ? undefined
                       : `${
-                          allProjects.length
+                          paginationMeta.total > 0
                             ? Math.round(
-                                (draftCount / allProjects.length) * 100
+                                (draftCount / paginationMeta.total) * 100
                               )
                             : 0
                         }%`
                   }
                   color="purple"
                 />
-
+                
                 {/* Budget Card */}
                 <div className="bg-white border-2 border-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all duration-200">
                   <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
@@ -419,28 +613,28 @@ const DashboardPage: React.FC = () => {
                       ? "SYNCING..."
                       : "AGGREGATED ACROSS ALL UNITS"}
                   </div>
-
+                  
                   {/* Budget Visualization - Retro Bar */}
                   {projectsLoading || isFetching ? (
                     <div className="h-12 w-full bg-gray-100 animate-pulse border border-gray-200"></div>
                   ) : (
                     <div className="flex w-full h-12 border border-black bg-gray-50">
-                      {allProjects.length === 0 ? (
+                      {projects.length === 0 ? (
                         <div className="w-full h-full flex items-center justify-center text-[10px] font-mono uppercase text-gray-400">
                           No Data
                         </div>
                       ) : (
-                        allProjects
+                        projects
                           .slice(0, 6)
                           .map((project: Project, idx: number) => {
-                            const budget = project.budget ?? 0;
+                          const budget = project.budget ?? 0;
                             const widthPercent = Math.max(
                               5,
                               Math.round(
                                 (budget / Math.max(totalBudget, 1)) * 100
                               )
                             );
-                            // Cycle through retro patterns/colors
+                          // Cycle through retro patterns/colors
                             const patterns = [
                               "bg-black",
                               "bg-gray-400",
@@ -449,22 +643,22 @@ const DashboardPage: React.FC = () => {
                             ];
                             const patternClass =
                               patterns[idx % patterns.length];
-
-                            return (
-                              <div
-                                key={project.id}
-                                className={`h-full ${patternClass} border-r border-white last:border-r-0 relative group`}
-                                style={{ width: `${widthPercent}%` }}
+                          
+                          return (
+                            <div
+                              key={project.id}
+                              className={`h-full ${patternClass} border-r border-white last:border-r-0 relative group`}
+                              style={{ width: `${widthPercent}%` }}
                                 title={`${
                                   project.title
                                 }: $${budget.toLocaleString()}`}
                               ></div>
-                            );
-                          })
+                          );
+                        })
                       )}
                     </div>
                   )}
-
+                  
                   <div className="mt-4 text-center">
                     <button className="text-xs font-bold uppercase tracking-widest border-b border-black hover:bg-black hover:text-white transition-all">
                       View Financials
@@ -476,13 +670,13 @@ const DashboardPage: React.FC = () => {
 
             {/* My Projects */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-black text-black uppercase tracking-tight flex items-center gap-3">
-                  <span className="w-4 h-4 bg-black"></span>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-black uppercase tracking-tight flex items-center gap-2 sm:gap-3">
+                  <span className="w-3 h-3 sm:w-4 sm:h-4 bg-black"></span>
                   My Projects
                 </h2>
-                <div className="h-1 flex-1 bg-black mx-4 opacity-20"></div>
-                <div className="flex items-center gap-2">
+                <div className="h-1 flex-1 bg-black mx-2 sm:mx-4 opacity-20 hidden sm:block"></div>
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {/* Create New Project Button */}
                   <button
                     onClick={() => setShowCreateProjectModal(true)}
@@ -575,9 +769,9 @@ const DashboardPage: React.FC = () => {
               </div>
 
               {/* Filters */}
-              <div className="mb-6 flex flex-wrap items-center gap-3">
+              <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                 {/* Search */}
-                <div className="flex-1 min-w-[200px]">
+                <div className="flex-1 w-full sm:min-w-[200px]">
                   <input
                     type="text"
                     placeholder="Search projects..."
@@ -588,7 +782,7 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 {/* Status Filter */}
-                <div className="min-w-[150px]">
+                <div className="w-full sm:w-auto sm:min-w-[150px]">
                   <FilterDropdown
                     options={[
                       { value: "all", label: "All Status" },
@@ -603,13 +797,13 @@ const DashboardPage: React.FC = () => {
                 </div>
 
                 {/* Type Filter */}
-                <div className="min-w-[150px]">
+                <div className="w-full sm:w-auto sm:min-w-[150px]">
                   <FilterDropdown
                     options={[
                       { value: "all", label: "All Types" },
                       ...Array.from(
                         new Set(
-                          allProjects
+                          projects
                             .map((p: Project) => p.project_type)
                             .filter(Boolean) as string[]
                         )
@@ -634,13 +828,13 @@ const DashboardPage: React.FC = () => {
                       setTypeFilter("all");
                       setSearchQuery("");
                     }}
-                    className="px-4 py-2 border-2 border-black bg-white font-mono text-sm uppercase hover:bg-gray-100 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2 border-2 border-black bg-white font-mono text-sm uppercase hover:bg-gray-100 transition-colors"
                   >
                     Clear
                   </button>
                 )}
               </div>
-
+              
               {projectsLoading || isFetching ? (
                 <div className="flex items-center justify-center gap-3 border-2 border-black bg-white px-6 py-12 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                   <div className="h-6 w-6 animate-spin border-4 border-black border-t-transparent rounded-full"></div>
@@ -648,7 +842,7 @@ const DashboardPage: React.FC = () => {
                     Retrieving Data...
                   </span>
                 </div>
-              ) : filteredProjects.length === 0 ? (
+              ) : projects.length === 0 ? (
                 <div className="border-2 border-dashed border-gray-400 bg-gray-50 px-6 py-12 text-center shadow-none">
                   <p className="font-mono text-sm text-gray-500 uppercase mb-4">
                     {searchQuery ||
@@ -666,23 +860,23 @@ const DashboardPage: React.FC = () => {
                 </div>
               ) : viewMode === "card" ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {paginatedProjects.map((project) => (
-                      <ProjectCard
+                    <ProjectCard
                         key={project.id ?? project.title}
                         title={project.title || "UNTITLED PROJECT"}
                         date={formatDate(
                           project.updated_at || project.created_at
                         )}
-                        status={formatStatusLabel(project.status)}
-                      />
-                    ))}
+                      status={formatStatusLabel(project.status)}
+                    />
+                  ))}
                   </div>
                   <div className="mt-8">
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
-                      totalItems={filteredProjects.length}
+                      totalItems={paginationMeta.total}
                       perPage={perPage}
                       onPageChange={setCurrentPage}
                     />
@@ -690,25 +884,27 @@ const DashboardPage: React.FC = () => {
                 </>
               ) : (
                 <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                  {/* Column Headers */}
-                  <div
-                    className="sticky top-0 z-10"
-                    style={{ backgroundColor: colors.primary.pink }}
-                  >
-                    <div className="grid grid-cols-12 gap-4 px-6 py-2.5 items-center border-b-2 border-black">
+                  {/* Mobile: Scrollable table wrapper */}
+                  <div className="overflow-x-auto">
+                    {/* Column Headers */}
+                    <div
+                      className="sticky top-0 z-10 min-w-[800px]"
+                      style={{ backgroundColor: colors.primary.pink }}
+                    >
+                      <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-2.5 items-center border-b-2 border-black">
                       {/* Checkbox Column */}
                       <div className="col-span-1 flex items-center">
                         <input
                           type="checkbox"
                           checked={
                             selectedProjects.size > 0 &&
-                            selectedProjects.size === filteredProjects.length
+                            selectedProjects.size === paginatedProjects.length
                           }
                           onChange={(e) => {
                             if (e.target.checked) {
                               setSelectedProjects(
                                 new Set(
-                                  filteredProjects
+                                  paginatedProjects
                                     .map(
                                       (p) =>
                                         (p.id ?? p.title ?? "") as
@@ -800,11 +996,11 @@ const DashboardPage: React.FC = () => {
                                     d="M19 9l-7 7-7-7"
                                   />
                                 </svg>
-                              </div>
-                            )}
-                          </div>
+                </div>
+              )}
+            </div>
                         </button>
-                      </div>
+        </div>
                       <div className="col-span-2">
                         <button
                           onClick={() => {
@@ -879,9 +1075,9 @@ const DashboardPage: React.FC = () => {
                                     d="M19 9l-7 7-7-7"
                                   />
                                 </svg>
-                              </div>
+      </div>
                             )}
-                          </div>
+    </div>
                         </button>
                       </div>
                       <div className="col-span-2">
@@ -1047,57 +1243,58 @@ const DashboardPage: React.FC = () => {
                           Actions
                         </span>
                       </div>
+                      </div>
+                    </div>
+
+                    {/* List Items */}
+                    <div className="divide-y divide-gray-200 max-h-[400px] sm:max-h-[600px] overflow-y-auto min-w-[800px]">
+                      {paginatedProjects.map((project) => (
+                        <ProjectListItem
+                          key={project.id ?? project.title}
+                          projectId={
+                            (project.id ?? project.title ?? "") as string | number
+                          }
+                          title={project.title || "UNTITLED PROJECT"}
+                          date={formatDate(
+                            project.updated_at || project.created_at
+                          )}
+                      status={formatStatusLabel(project.status)}
+                          projectType={project.project_type}
+                          updatedAt={project.updated_at}
+                          createdAt={project.created_at}
+                          isSelected={selectedProjects.has(
+                            (project.id ?? project.title ?? "") as string | number
+                          )}
+                          onSelect={(id, selected) => {
+                            const newSelected = new Set(selectedProjects);
+                            if (selected) {
+                              newSelected.add(id);
+                            } else {
+                              newSelected.delete(id);
+                            }
+                            setSelectedProjects(newSelected);
+                          }}
+                          onDelete={() => {
+                            // TODO: Implement delete functionality
+                            if (
+                              window.confirm(
+                                `Are you sure you want to delete "${project.title}"?`
+                              )
+                            ) {
+                              console.log("Delete project:", project.id);
+                            }
+                          }}
+                        />
+                      ))}
                     </div>
                   </div>
 
-                  {/* List Items */}
-                  <div className="divide-y divide-gray-200 max-h-[600px] overflow-y-auto">
-                    {paginatedProjects.map((project) => (
-                      <ProjectListItem
-                        key={project.id ?? project.title}
-                        projectId={
-                          (project.id ?? project.title ?? "") as string | number
-                        }
-                        title={project.title || "UNTITLED PROJECT"}
-                        date={formatDate(
-                          project.updated_at || project.created_at
-                        )}
-                        status={formatStatusLabel(project.status)}
-                        projectType={project.project_type}
-                        updatedAt={project.updated_at}
-                        createdAt={project.created_at}
-                        isSelected={selectedProjects.has(
-                          (project.id ?? project.title ?? "") as string | number
-                        )}
-                        onSelect={(id, selected) => {
-                          const newSelected = new Set(selectedProjects);
-                          if (selected) {
-                            newSelected.add(id);
-                          } else {
-                            newSelected.delete(id);
-                          }
-                          setSelectedProjects(newSelected);
-                        }}
-                        onDelete={() => {
-                          // TODO: Implement delete functionality
-                          if (
-                            window.confirm(
-                              `Are you sure you want to delete "${project.title}"?`
-                            )
-                          ) {
-                            console.log("Delete project:", project.id);
-                          }
-                        }}
-                      />
-                    ))}
-                  </div>
-
                   {/* Pagination */}
-                  <div className="border-t border-gray-300 bg-white px-6 py-4">
+                  <div className="border-t border-gray-300 bg-white px-3 sm:px-6 py-3 sm:py-4">
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
-                      totalItems={filteredProjects.length}
+                      totalItems={paginationMeta.total}
                       perPage={perPage}
                       onPageChange={setCurrentPage}
                     />

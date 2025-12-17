@@ -5,6 +5,7 @@ interface SidebarItemProps {
   label: string;
   active?: boolean;
   icon?: React.ReactNode;
+  alwaysShowLabel?: boolean; // For mobile sidebar where labels should always be visible
 }
 
 /**
@@ -20,6 +21,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   label,
   active = false,
   icon,
+  alwaysShowLabel = false,
 }) => (
   <div
     className={`group/item flex items-center gap-3 px-4 py-3 text-sm font-mono uppercase tracking-wide transition-all duration-200 border-l-4 ${
@@ -48,8 +50,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         ></div>
       )}
     </div>
-    {/* Label - hidden when collapsed, shown when sidebar is hovered */}
-    <span className="sidebar-label whitespace-nowrap transition-all duration-300 inline-block opacity-0 ml-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-[180px] group-hover/sidebar:ml-2">
+    {/* Label - always visible in mobile, hidden when collapsed on desktop, shown when sidebar is hovered */}
+    <span
+      className={`whitespace-nowrap transition-all duration-300 inline-block ${
+        alwaysShowLabel
+          ? "opacity-100 ml-2 w-auto"
+          : "opacity-0 ml-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-[180px] group-hover/sidebar:ml-2"
+      }`}
+    >
       {label}
     </span>
   </div>

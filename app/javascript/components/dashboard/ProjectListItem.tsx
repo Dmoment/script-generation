@@ -57,7 +57,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
         isSelected ? "bg-pink-50" : ""
       }`}
     >
-      <div className="grid grid-cols-12 gap-4 px-6 py-2.5 items-center">
+      <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-2.5 items-center">
         {/* Checkbox Column */}
         <div className="col-span-1 flex items-center">
           <input
