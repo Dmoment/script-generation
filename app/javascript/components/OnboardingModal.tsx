@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ModalHeader from './ModalHeader';
+import { colors, getColorWithOpacity } from '../lib/theme';
 
 type AccountType = 'company' | 'individual';
 type Gender = 'male' | 'female' | 'other';
@@ -220,9 +221,23 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   disabled={!isStep2Valid || isSubmitting}
                   className={`w-full px-6 py-4 border-2 border-black font-black uppercase tracking-wider text-lg transition-all ${
                     isStep2Valid && !isSubmitting
-                      ? 'bg-black text-white hover:bg-[#E0445D] shadow-[6px_6px_0px_0px_rgba(242,85,110,0.3)]'
+                      ? 'text-white'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
+                  style={isStep2Valid && !isSubmitting ? {
+                    backgroundColor: colors.primary.pink,
+                    boxShadow: `6px 6px 0px 0px ${getColorWithOpacity('primary.pink', 0.3)}`,
+                  } : {}}
+                  onMouseEnter={(e) => {
+                    if (isStep2Valid && !isSubmitting) {
+                      e.currentTarget.style.backgroundColor = colors.primary.pinkDark;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isStep2Valid && !isSubmitting) {
+                      e.currentTarget.style.backgroundColor = colors.primary.pink;
+                    }
+                  }}
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-3">

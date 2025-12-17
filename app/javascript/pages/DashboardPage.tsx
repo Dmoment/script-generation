@@ -7,6 +7,7 @@ import { useCurrentUserQuery } from '../queries/users/useCurrentUserQuery';
 import { useOnboardingMutation, type OnboardingData } from '../queries/users/useOnboardingMutation';
 import LoadingScreen from '../components/LoadingScreen';
 import OnboardingModal from '../components/OnboardingModal';
+import { colors, getColorWithOpacity } from '../lib/theme';
 
 /**
  * Sidebar Item Props
@@ -22,16 +23,22 @@ interface SidebarItemProps {
  * 
  * @param label - The text label to display (e.g., "Overview", "Script Database")
  * @param active - Boolean indicating if this is the currently selected/active menu item
- *                 When active=true: shows pink background (#F2556E) with white text and left border
+ *                 When active=true: shows pink background (colors.primary.pink) with white text and left border
  *                 When active=false: shows gray text, becomes black on hover
  * @param icon - Optional React icon component to display next to the label
  */
 const SidebarItem: React.FC<SidebarItemProps> = ({ label, active = false, icon }) => (
-  <div className={`group/item flex items-center gap-3 px-4 py-3 text-sm font-mono uppercase tracking-wide transition-all duration-200 border-l-4 ${
-    active 
-      ? 'bg-[#F2556E] text-white border-[#F2556E]' 
-      : 'text-gray-600 hover:bg-gray-100 hover:text-black border-transparent hover:border-gray-300'
-  }`}>
+  <div 
+    className={`group/item flex items-center gap-3 px-4 py-3 text-sm font-mono uppercase tracking-wide transition-all duration-200 border-l-4 ${
+      active 
+        ? 'text-white' 
+        : 'text-gray-600 hover:bg-gray-100 hover:text-black border-transparent hover:border-gray-300'
+    }`}
+    style={active ? {
+      backgroundColor: colors.primary.pink,
+      borderColor: colors.primary.pink,
+    } : {}}
+  >
     {/* Icon container - always visible */}
     <div className={`flex h-5 w-5 items-center justify-center flex-shrink-0 ${
       active ? 'text-white' : 'text-gray-400 group-hover/item:text-black'
