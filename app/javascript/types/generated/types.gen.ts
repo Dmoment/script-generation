@@ -88,6 +88,22 @@ export type GetById2Response = {
     [key: string]: unknown;
 };
 
+export type DeleteById1Data = {
+    id: number;
+};
+
+export type DeleteById1Response = {
+    [key: string]: unknown;
+};
+
+export type DeleteById2Data = {
+    id: number;
+};
+
+export type DeleteById2Response = {
+    [key: string]: unknown;
+};
+
 export type PostCompleteResponse = {
     [key: string]: unknown;
 };
@@ -236,6 +252,30 @@ export type $OpenApiTs = {
     '/v1/scripts/:id': {
         get: {
             req: GetById2Data;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        delete: {
+            req: DeleteById1Data;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
+    '/v1/script_versions/:id': {
+        delete: {
+            req: DeleteById2Data;
             res: {
                 /**
                  * Success

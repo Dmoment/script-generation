@@ -8,6 +8,8 @@ import { useCurrentUserQuery } from "../queries/users/useCurrentUserQuery";
 import { useScriptsQuery } from "../queries/scripts/useScriptsQuery";
 import { useCreateScriptMutation } from "../queries/scripts/useCreateScriptMutation";
 import { useUploadScriptMutation } from "../queries/scripts/useUploadScriptMutation";
+import { useDeleteScriptMutation } from "../queries/scripts/useDeleteScriptMutation";
+import { useDeleteScriptVersionMutation } from "../queries/scripts/useDeleteScriptVersionMutation";
 import LoadingScreen from "../components/LoadingScreen";
 import CreateScriptModal from "../components/CreateScriptModal";
 import FilterDropdown from "../components/FilterDropdown";
@@ -69,7 +71,17 @@ const ScriptDatabasePage: React.FC = () => {
   // Script creation mutations
   const createScriptMutation = useCreateScriptMutation();
   const uploadScriptMutation = useUploadScriptMutation();
+  const deleteScriptMutation = useDeleteScriptMutation();
+  const deleteScriptVersionMutation = useDeleteScriptVersionMutation();
   const [showCreateScriptModal, setShowCreateScriptModal] = useState(false);
+  
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    type: 'script' | 'version';
+    id: number;
+    name: string;
+    isVersion1?: boolean;
+  } | null>(null);
 
   // View and filter state - MUST be before any early returns
   const [viewMode, setViewMode] = useState<"card" | "list">("list");
@@ -270,6 +282,24 @@ const ScriptDatabasePage: React.FC = () => {
       script_type: "screenplay", // Default script type
     });
     setShowCreateScriptModal(false);
+  };
+
+  const handleDeleteScript = async (scriptId: number) => {
+    try {
+      await deleteScriptMutation.mutateAsync(scriptId);
+      setDeleteConfirm(null);
+    } catch (error) {
+      console.error("Failed to delete script:", error);
+    }
+  };
+
+  const handleDeleteVersion = async (versionId: number) => {
+    try {
+      await deleteScriptVersionMutation.mutateAsync(versionId);
+      setDeleteConfirm(null);
+    } catch (error) {
+      console.error("Failed to delete version:", error);
+    }
   };
 
   const handleOpenCreateModal = () => {
@@ -841,7 +871,7 @@ const ScriptDatabasePage: React.FC = () => {
                                   </div>
 
                                   {/* Actions */}
-                                  <div className="col-span-1 flex justify-end gap-2">
+                                  <div className="col-span-1 flex justify-end gap-2 items-center">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -849,6 +879,32 @@ const ScriptDatabasePage: React.FC = () => {
                                       className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
                                     >
                                       Open →
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteConfirm({
+                                          type: 'script',
+                                          id: script.id,
+                                          name: script.title,
+                                        });
+                                      }}
+                                      className="text-red-600 hover:text-red-800 transition-colors p-1.5 rounded hover:bg-red-50"
+                                      title="Delete script"
+                                    >
+                                      <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                      </svg>
                                     </button>
                                   </div>
                                 </div>
@@ -951,7 +1007,7 @@ const ScriptDatabasePage: React.FC = () => {
                                           </span>
                                         </div>
                                         {/* Actions - Open link at version level */}
-                                        <div className="col-span-1 flex justify-end gap-2">
+                                        <div className="col-span-1 flex justify-end gap-2 items-center">
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -960,6 +1016,33 @@ const ScriptDatabasePage: React.FC = () => {
                                             className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
                                           >
                                             Open →
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setDeleteConfirm({
+                                                type: 'version',
+                                                id: version.id,
+                                                name: `Version ${version.version_number}`,
+                                                isVersion1: version.version_number === 1,
+                                              });
+                                            }}
+                                            className="text-red-600 hover:text-red-800 transition-colors p-1.5 rounded hover:bg-red-50"
+                                            title="Delete version"
+                                          >
+                                            <svg
+                                              className="w-4 h-4"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                              />
+                                            </svg>
                                           </button>
                                         </div>
                                       </div>
@@ -1004,6 +1087,58 @@ const ScriptDatabasePage: React.FC = () => {
           </main>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Confirm Delete
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete{" "}
+              <span className="font-medium">{deleteConfirm.name}</span>?
+              {deleteConfirm.type === 'script' && (
+                <span className="block mt-2 text-red-600">
+                  This will also delete all versions of this script.
+                </span>
+              )}
+              {deleteConfirm.type === 'version' && deleteConfirm.isVersion1 && (
+                <span className="block mt-2 text-red-600">
+                  Deleting version 1 will delete the entire script and all its versions.
+                </span>
+              )}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteConfirm.type === 'script') {
+                    handleDeleteScript(deleteConfirm.id);
+                  } else {
+                    handleDeleteVersion(deleteConfirm.id);
+                  }
+                }}
+                disabled={
+                  deleteScriptMutation.isPending ||
+                  deleteScriptVersionMutation.isPending
+                }
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleteScriptMutation.isPending ||
+                deleteScriptVersionMutation.isPending
+                  ? "Deleting..."
+                  : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

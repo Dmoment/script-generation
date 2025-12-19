@@ -357,7 +357,7 @@
     "/v1/scripts": {
       "get": {
         "operationId": "getScripts",
-        "summary": "Get all scripts for a project",
+        "summary": "Get all scripts",
         "tags": [
           "API"
         ],
@@ -419,6 +419,66 @@
       "get": {
         "operationId": "getById",
         "summary": "Get a specific script",
+        "tags": [
+          ":id"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteById",
+        "summary": "Delete a script",
+        "tags": [
+          ":id"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/script_versions/:id": {
+      "delete": {
+        "operationId": "deleteById",
+        "summary": "Delete a script version",
         "tags": [
           ":id"
         ],

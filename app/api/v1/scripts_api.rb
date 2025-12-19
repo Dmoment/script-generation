@@ -156,6 +156,66 @@ module V1
         authorize script, :show?
         present script, with: V1::Entities::Script
       end
+
+      desc "Delete a script", {
+        success: { message: String },
+        failure: [
+          { code: 401, message: "Unauthorized" },
+          { code: 404, message: "Script not found" }
+        ]
+      }
+      params do
+        requires :id, type: Integer, desc: "Script ID"
+      end
+      delete ":id" do
+        authenticate!
+        script = Script.find(params[:id])
+
+        authorize script, :destroy?
+
+        if script.destroy
+          { message: "Script deleted successfully" }
+        else
+          error!({ error: script.errors.full_messages.join(", ") }, 422)
+        end
+      end
+    end
+
+    resource :script_versions do
+      desc "Delete a script version", {
+        success: { message: String },
+        failure: [
+          { code: 401, message: "Unauthorized" },
+          { code: 404, message: "Script version not found" }
+        ]
+      }
+      params do
+        requires :id, type: Integer, desc: "Script Version ID"
+      end
+      delete ":id" do
+        authenticate!
+        script_version = ScriptVersion.find(params[:id])
+        script = script_version.script
+
+        authorize script, :show?
+
+        # If deleting version 1, delete the entire script (which will cascade delete all versions)
+        if script_version.version_number == 1
+          authorize script, :destroy?
+          if script.destroy
+            { message: "Script deleted successfully (version 1 was the only version)" }
+          else
+            error!({ error: script.errors.full_messages.join(", ") }, 422)
+          end
+        else
+          # Delete only this version
+          if script_version.destroy
+            { message: "Script version deleted successfully" }
+          else
+            error!({ error: script_version.errors.full_messages.join(", ") }, 422)
+          end
+        end
+      end
     end
   end
 end
