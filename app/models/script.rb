@@ -24,11 +24,23 @@ class Script < ApplicationRecord
   scope :by_project, ->(project_id) { where(project_id: project_id) }
   scope :by_type, ->(type) { where(script_type: type) }
 
+  after_create :create_initial_version
+
   def latest_version
     script_versions.order(version_number: :desc).first
   end
 
   def version_count
     script_versions.count
+  end
+
+  private
+
+  def create_initial_version
+    # Automatically create version 1 when script is created
+    script_versions.create!(
+      version_number: 1,
+      notes: "Initial version"
+    )
   end
 end

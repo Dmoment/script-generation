@@ -17,7 +17,8 @@ import SidebarItem from "../components/dashboard/SidebarItem";
 import Topbar from "../components/dashboard/Topbar";
 import ScriptCard from "../components/dashboard/ScriptCard";
 import ScriptListItem from "../components/dashboard/ScriptListItem";
-import { colors } from "../lib/theme";
+import ThreadConnector from "../components/ThreadConnector";
+import { colors, getStatusStyles, getVersionBadgeColor } from "../lib/theme";
 
 /**
  * Script Database Page Component
@@ -85,38 +86,14 @@ const ScriptDatabasePage: React.FC = () => {
   const [perPage] = useState<number>(10); // Items per page
 
   // UI state
-  const [expandedScripts, setExpandedScripts] = useState<Set<number>>(new Set());
-  const [selectedScripts, setSelectedScripts] = useState<Set<number>>(new Set());
+  const [expandedScripts, setExpandedScripts] = useState<Set<number>>(
+    new Set()
+  );
+  const [selectedScripts, setSelectedScripts] = useState<Set<number>>(
+    new Set()
+  );
 
-  // Helper functions for status and version colors
-  const getStatusStyles = (status: string) => {
-    switch (status) {
-      case "active":
-        return { bg: "#ECFDF5", text: "#047857", border: "#10B981" };
-      case "archived":
-        return { bg: "#F9FAFB", text: "#6B7280", border: "#D1D5DB" };
-      case "locked":
-        return { bg: "#FEF3C7", text: "#92400E", border: "#F59E0B" };
-      default:
-        return { bg: "#F9FAFB", text: "#6B7280", border: "#D1D5DB" };
-    }
-  };
-
-  const getVersionBadgeColor = (
-    versionNumber: number | undefined | null
-  ) => {
-    const colors = [
-      { bg: "#F3F4F6", text: "#6B7280" }, // v1 - gray
-      { bg: "#DBEAFE", text: "#1E40AF" }, // v2 - light blue
-      { bg: "#FCE7F3", text: "#BE185D" }, // v3 - pink
-      { bg: "#FEF3C7", text: "#92400E" }, // v4+ - yellow
-    ];
-    if (!versionNumber || versionNumber < 1) {
-      return colors[0]; // Default to v1 color
-    }
-    const index = Math.min(versionNumber - 1, 3);
-    return colors[index] || colors[0];
-  };
+  // Helper functions are now imported from theme.ts
 
   // Build Ransack query parameters for server-side filtering
   const ransackQuery = useMemo(() => {
@@ -155,7 +132,10 @@ const ScriptDatabasePage: React.FC = () => {
     q: ransackQuery,
     page: currentPage,
     per_page: perPage,
-    enabled: isAuthenticated && currentUser?.onboarding_completed === true && projects.length > 0,
+    enabled:
+      isAuthenticated &&
+      currentUser?.onboarding_completed === true &&
+      projects.length > 0,
   });
 
   // Extract scripts from response
@@ -206,7 +186,10 @@ const ScriptDatabasePage: React.FC = () => {
 
   // Group scripts by project
   const scriptsByProject = useMemo(() => {
-    const grouped: Record<number | string, { project: Project; scripts: Script[] }> = {};
+    const grouped: Record<
+      number | string,
+      { project: Project; scripts: Script[] }
+    > = {};
     scripts.forEach((script) => {
       const project = projects.find((p) => p.id === script.project_id);
       if (project && project.id !== undefined) {
@@ -271,7 +254,7 @@ const ScriptDatabasePage: React.FC = () => {
   }) => {
     await createScriptMutation.mutateAsync({
       ...data,
-      script_type: 'screenplay', // Default script type
+      script_type: "screenplay", // Default script type
     });
     setShowCreateScriptModal(false);
   };
@@ -284,7 +267,7 @@ const ScriptDatabasePage: React.FC = () => {
   }) => {
     await uploadScriptMutation.mutateAsync({
       ...data,
-      script_type: 'screenplay', // Default script type
+      script_type: "screenplay", // Default script type
     });
     setShowCreateScriptModal(false);
   };
@@ -306,8 +289,14 @@ const ScriptDatabasePage: React.FC = () => {
           onClose={() => setShowCreateScriptModal(false)}
           onCreate={handleCreateScript}
           onUpload={handleUploadScript}
-          isSubmitting={createScriptMutation.isPending || uploadScriptMutation.isPending}
-          error={createScriptMutation.error?.message || uploadScriptMutation.error?.message || null}
+          isSubmitting={
+            createScriptMutation.isPending || uploadScriptMutation.isPending
+          }
+          error={
+            createScriptMutation.error?.message ||
+            uploadScriptMutation.error?.message ||
+            null
+          }
         />
       )}
 
@@ -361,7 +350,13 @@ const ScriptDatabasePage: React.FC = () => {
               </button>
             </div>
             <nav className="flex flex-col py-2 flex-1 overflow-y-auto">
-              <div onClick={() => { navigate("/dashboard"); setIsMobileMenuOpen(false); }} className="cursor-pointer">
+              <div
+                onClick={() => {
+                  navigate("/dashboard");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="cursor-pointer"
+              >
                 <SidebarItem
                   label="Overview"
                   active={location.pathname === "/dashboard"}
@@ -383,7 +378,13 @@ const ScriptDatabasePage: React.FC = () => {
                   }
                 />
               </div>
-              <div onClick={() => { navigate("/scripts"); setIsMobileMenuOpen(false); }} className="cursor-pointer">
+              <div
+                onClick={() => {
+                  navigate("/scripts");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="cursor-pointer"
+              >
                 <SidebarItem
                   label="Script Database"
                   active={location.pathname === "/scripts"}
@@ -595,11 +596,18 @@ const ScriptDatabasePage: React.FC = () => {
                       const project = projects.find(
                         (p) => p.id === script.project_id
                       );
+                      const versions = (
+                        (script as any).script_versions || []
+                      ).sort(
+                        (a: any, b: any) =>
+                          (a.version_number || 0) - (b.version_number || 0)
+                      );
                       return (
                         <ScriptCard
                           key={script.id}
                           script={script}
                           projectTitle={project?.title}
+                          versions={versions}
                         />
                       );
                     })}
@@ -681,154 +689,273 @@ const ScriptDatabasePage: React.FC = () => {
                           const project = projects.find(
                             (p) => p.id === script.project_id
                           );
-                                const isSelected = selectedScripts.has(script.id);
-                                const isExpanded = expandedScripts.has(script.id);
-                                const versions =
-                                  (script as any).script_versions || [];
-                                const statusStyles = getStatusStyles(
-                                  script.status
-                                );
-                                const formattedDate = new Date(
-                                  script.created_at
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                });
+                          const isSelected = selectedScripts.has(script.id);
+                          const isExpanded = expandedScripts.has(script.id);
+                          const versions = (
+                            (script as any).script_versions || []
+                          ).sort(
+                            (a: any, b: any) =>
+                              (a.version_number || 0) - (b.version_number || 0)
+                          );
+                          const statusStyles = getStatusStyles(script.status);
+                          const formattedDate = new Date(
+                            script.created_at
+                          ).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          });
 
-                                return (
-                                  <React.Fragment key={script.id}>
-                                    <div
-                                      className={`group bg-white hover:bg-gray-50 transition-colors duration-150 ${
-                                        isSelected ? "bg-pink-50" : ""
-                                      } ${isExpanded ? "bg-blue-50" : ""}`}
-                                    >
-                                      <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-2.5 items-center min-w-[800px]">
-                                        {/* Checkbox */}
-                                        <div
-                                          className="col-span-1 flex items-center"
-                                          onClick={(e) => e.stopPropagation()}
+                          return (
+                            <React.Fragment key={script.id}>
+                              <div
+                                className={`group bg-white hover:bg-gray-50 transition-colors duration-150 ${
+                                  isSelected ? "bg-pink-50" : ""
+                                } ${isExpanded ? "bg-blue-50" : ""}`}
+                              >
+                                <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-2.5 items-center min-w-[800px]">
+                                  {/* Checkbox and Expand Arrow */}
+                                  <div
+                                    className="col-span-1 flex items-center gap-2"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={(e) => {
+                                        const newSelected = new Set(
+                                          selectedScripts
+                                        );
+                                        if (e.target.checked) {
+                                          newSelected.add(script.id);
+                                        } else {
+                                          newSelected.delete(script.id);
+                                        }
+                                        setSelectedScripts(newSelected);
+                                      }}
+                                      className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer focus:ring-2 focus:ring-pink-500 focus:ring-offset-1"
+                                      style={{
+                                        accentColor: colors.primary.pink,
+                                      }}
+                                    />
+                                    {versions.length > 0 && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleScriptExpand(script.id);
+                                        }}
+                                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all hover:opacity-80 border-2"
+                                        style={{
+                                          borderColor: colors.primary.pink,
+                                        }}
+                                        title={
+                                          isExpanded
+                                            ? "Collapse versions"
+                                            : `Expand ${
+                                                versions.length
+                                              } version${
+                                                versions.length !== 1 ? "s" : ""
+                                              }`
+                                        }
+                                      >
+                                        <svg
+                                          className={`w-2.5 h-2.5 transition-transform ${
+                                            isExpanded ? "rotate-90" : ""
+                                          }`}
+                                          fill="none"
+                                          stroke={colors.primary.pink}
+                                          viewBox="0 0 24 24"
                                         >
-                                          <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={(e) => {
-                                              const newSelected = new Set(
-                                                selectedScripts
-                                              );
-                                              if (e.target.checked) {
-                                                newSelected.add(script.id);
-                                              } else {
-                                                newSelected.delete(script.id);
-                                              }
-                                              setSelectedScripts(newSelected);
-                                            }}
-                                            className="w-4 h-4 border-2 border-gray-300 rounded cursor-pointer focus:ring-2 focus:ring-pink-500 focus:ring-offset-1"
-                                            style={{
-                                              accentColor: colors.primary.pink,
-                                            }}
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2.5}
+                                            d="M9 5l7 7-7 7"
                                           />
-                                        </div>
+                                        </svg>
+                                      </button>
+                                    )}
+                                  </div>
 
-                                        {/* Title */}
+                                  {/* Title */}
+                                  <div className="col-span-4 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <h3 className="font-medium text-sm text-gray-900 group-hover:text-black truncate">
+                                          {script.title}
+                                        </h3>
+                                        {script.latest_version_number > 0 && (
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <span
+                                              className="text-xs font-bold uppercase px-2 py-0.5 rounded border"
+                                              style={{
+                                                backgroundColor:
+                                                  getVersionBadgeColor(
+                                                    script.latest_version_number
+                                                  ).bg,
+                                                color: getVersionBadgeColor(
+                                                  script.latest_version_number
+                                                ).text,
+                                                borderColor:
+                                                  getVersionBadgeColor(
+                                                    script.latest_version_number
+                                                  ).text,
+                                              }}
+                                            >
+                                              v{script.latest_version_number}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Project */}
+                                  <div className="col-span-2">
+                                    <span className="text-sm text-gray-600 truncate block">
+                                      {project?.title || "—"}
+                                    </span>
+                                  </div>
+
+                                  {/* Type */}
+                                  <div className="col-span-2">
+                                    <span className="text-sm text-gray-600 uppercase">
+                                      {script.script_type}
+                                    </span>
+                                  </div>
+
+                                  {/* Status */}
+                                  <div className="col-span-2">
+                                    <span
+                                      className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded border"
+                                      style={{
+                                        backgroundColor: statusStyles.bg,
+                                        color: statusStyles.text,
+                                        borderColor: statusStyles.border,
+                                        minWidth: "80px",
+                                      }}
+                                    >
+                                      {script.status.charAt(0).toUpperCase() +
+                                        script.status.slice(1)}
+                                    </span>
+                                  </div>
+
+                                  {/* Actions */}
+                                  <div className="col-span-1 flex justify-end gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                      className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
+                                    >
+                                      Open →
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Expanded Versions */}
+                              {isExpanded &&
+                                versions.length > 0 &&
+                                versions.map((version: any) => {
+                                  const versionBadgeColor =
+                                    getVersionBadgeColor(
+                                      version.version_number
+                                    );
+                                  const versionDate = new Date(
+                                    version.created_at
+                                  ).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  });
+                                  const isActive =
+                                    version.version_number ===
+                                    script.latest_version_number;
+
+                                  const versionIndex = versions.findIndex(
+                                    (v: any) => v.id === version.id
+                                  );
+                                  const isLastVersion =
+                                    versionIndex === versions.length - 1;
+
+                                  return (
+                                    <div
+                                      key={version.id}
+                                      className="bg-gray-50 border-b border-gray-200 relative"
+                                      style={{ minHeight: "48px" }}
+                                    >
+                                      {/* Thread connector - reusable component */}
+                                      <ThreadConnector
+                                        isLast={isLastVersion}
+                                        color={colors.primary.pink}
+                                        width="180px"
+                                        rowHeight={48}
+                                        verticalLineX={24}
+                                        curveY={24}
+                                        horizontalEndX={120}
+                                      />
+
+                                      <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2 items-center min-w-[800px] relative z-10">
+                                        <div className="col-span-1 flex items-center relative">
+                                          {/* Spacer for thread */}
+                                        </div>
                                         <div className="col-span-4 min-w-0">
                                           <div className="flex items-center gap-2">
-                                            {versions.length > 0 && (
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  toggleScriptExpand(script.id);
-                                                }}
-                                                className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-                                              >
-                                                <svg
-                                                  className={`w-4 h-4 transition-transform ${
-                                                    isExpanded
-                                                      ? "rotate-90"
-                                                      : ""
-                                                  }`}
-                                                  fill="none"
-                                                  stroke="currentColor"
-                                                  viewBox="0 0 24 24"
-                                                >
-                                                  <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M9 5l7 7-7 7"
-                                                  />
-                                                </svg>
-                                              </button>
-                                            )}
-                                            <div className="flex-1 min-w-0">
-                                              <h3 className="font-medium text-sm text-gray-900 group-hover:text-black truncate">
-                                                {script.title}
-                                              </h3>
-                                              {script.latest_version_number >
-                                                0 && (
-                                                <div className="flex items-center gap-2 mt-1">
-                                                  <span
-                                                    className="text-xs font-bold uppercase px-2 py-0.5 rounded border"
-                                                    style={{
-                                                      backgroundColor:
-                                                        getVersionBadgeColor(
-                                                          script.latest_version_number
-                                                        ).bg,
-                                                      color:
-                                                        getVersionBadgeColor(
-                                                          script.latest_version_number
-                                                        ).text,
-                                                      borderColor:
-                                                        getVersionBadgeColor(
-                                                          script.latest_version_number
-                                                        ).text,
-                                                    }}
-                                                  >
-                                                    v{script.latest_version_number}
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
+                                            <span
+                                              className="text-xs font-bold uppercase px-2 py-0.5 rounded border"
+                                              style={{
+                                                backgroundColor:
+                                                  versionBadgeColor.bg,
+                                                color: versionBadgeColor.text,
+                                                borderColor:
+                                                  versionBadgeColor.text,
+                                              }}
+                                            >
+                                              v{version.version_number}
+                                            </span>
+                                            <span className="text-sm text-gray-700 truncate">
+                                              {script.title} -{" "}
+                                              {version.notes ||
+                                                `script ${versionDate}`}
+                                            </span>
                                           </div>
                                         </div>
-
-                                        {/* Project */}
                                         <div className="col-span-2">
-                                          <span className="text-sm text-gray-600 truncate block">
-                                            {project?.title || "—"}
+                                          <span className="text-sm text-gray-500">
+                                            {versionDate}
                                           </span>
                                         </div>
-
-                                        {/* Type */}
                                         <div className="col-span-2">
-                                          <span className="text-sm text-gray-600 uppercase">
-                                            {script.script_type}
+                                          <span className="text-sm text-gray-600">
+                                            —
                                           </span>
                                         </div>
-
-                                        {/* Status */}
                                         <div className="col-span-2">
                                           <span
                                             className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded border"
                                             style={{
-                                              backgroundColor: statusStyles.bg,
-                                              color: statusStyles.text,
-                                              borderColor: statusStyles.border,
+                                              backgroundColor: isActive
+                                                ? statusStyles.bg
+                                                : "#F9FAFB",
+                                              color: isActive
+                                                ? statusStyles.text
+                                                : "#6B7280",
+                                              borderColor: isActive
+                                                ? statusStyles.border
+                                                : "#D1D5DB",
                                               minWidth: "80px",
                                             }}
                                           >
-                                            {script.status
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                              script.status.slice(1)}
+                                            {isActive ? "Active" : "Inactive"}
                                           </span>
                                         </div>
-
-                                        {/* Actions */}
+                                        {/* Actions - Open link at version level */}
                                         <div className="col-span-1 flex justify-end gap-2">
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
+                                              // TODO: Navigate to version detail page
                                             }}
                                             className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
                                           >
@@ -837,93 +964,11 @@ const ScriptDatabasePage: React.FC = () => {
                                         </div>
                                       </div>
                                     </div>
-
-                                    {/* Expanded Versions */}
-                                    {isExpanded &&
-                                      versions.length > 0 &&
-                                      versions.map((version: any) => {
-                                        const versionBadgeColor =
-                                          getVersionBadgeColor(
-                                            version.version_number
-                                          );
-                                        const versionDate = new Date(
-                                          version.created_at
-                                        ).toLocaleDateString("en-US", {
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric",
-                                        });
-                                        const isActive =
-                                          version.version_number ===
-                                          script.latest_version_number;
-
-                                        return (
-                                          <div
-                                            key={version.id}
-                                            className="bg-gray-50 border-b border-gray-200"
-                                          >
-                                            <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2 pl-8 items-center min-w-[800px]">
-                                              <div className="col-span-1"></div>
-                                              <div className="col-span-4 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                  <span
-                                                    className="text-xs font-bold uppercase px-2 py-0.5 rounded border"
-                                                    style={{
-                                                      backgroundColor:
-                                                        versionBadgeColor.bg,
-                                                      color: versionBadgeColor.text,
-                                                      borderColor:
-                                                        versionBadgeColor.text,
-                                                    }}
-                                                  >
-                                                    v{version.version_number}
-                                                  </span>
-                                                  <span className="text-sm text-gray-700 truncate">
-                                                    {script.title} -{" "}
-                                                    {version.notes ||
-                                                      `script ${versionDate}`}
-                                                  </span>
-                                                </div>
-                                              </div>
-                                              <div className="col-span-2">
-                                                <span className="text-sm text-gray-500">
-                                                  {versionDate}
-                                                </span>
-                                              </div>
-                                              <div className="col-span-2">
-                                                <span className="text-sm text-gray-600">
-                                                  —
-                                                </span>
-                                              </div>
-                                              <div className="col-span-2">
-                                                <span
-                                                  className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded border"
-                                                  style={{
-                                                    backgroundColor: isActive
-                                                      ? statusStyles.bg
-                                                      : "#F9FAFB",
-                                                    color: isActive
-                                                      ? statusStyles.text
-                                                      : "#6B7280",
-                                                    borderColor: isActive
-                                                      ? statusStyles.border
-                                                      : "#D1D5DB",
-                                                    minWidth: "80px",
-                                                  }}
-                                                >
-                                                  {isActive
-                                                    ? "Active"
-                                                    : "Inactive"}
-                                                </span>
-                                              </div>
-                                              <div className="col-span-1"></div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                  </React.Fragment>
-                                );
-                              })}
+                                  );
+                                })}
+                            </React.Fragment>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -964,4 +1009,3 @@ const ScriptDatabasePage: React.FC = () => {
 };
 
 export default ScriptDatabasePage;
-

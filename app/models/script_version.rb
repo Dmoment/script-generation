@@ -14,6 +14,8 @@ class ScriptVersion < ApplicationRecord
   private
 
   def set_version_number
+    # Only set if not already set (allows explicit version_number: 1 for initial version)
+    return if version_number.present?
     max_version = script.script_versions.maximum(:version_number) || 0
     self.version_number = max_version + 1
   end

@@ -70,15 +70,11 @@ module V1
         authorize script, :create?
 
         if script.save
-          if params[:content].present?
-          ScriptVersion.create!(
-            script: script,
-            version_number: 1,
-            notes: "Initial version"
-          )
-          end
+          # Initial version is automatically created via after_create callback
+          # If content is provided, we could update the version here
+          # For now, the callback handles version creation
 
-          present script, with: V1::Entities::Script
+          present script.reload, with: V1::Entities::Script
         else
           error!({ error: script.errors.full_messages.join(", ") }, 422)
         end
@@ -123,19 +119,21 @@ module V1
 
         if script.save
           # TODO: Store file using Active Storage or similar
-          # For now, we'll just create the version record
+          # For now, we'll just update the initial version notes
           # In production, you'd want to:
           # - Store file in S3 or similar
           # - Extract text content if possible
           # - Store file metadata
 
-          ScriptVersion.create!(
-            script: script,
-            version_number: 1,
-            notes: params[:notes] || "Uploaded file: #{uploaded_file.filename}"
-          )
+          # Update the initial version (created by callback) with upload notes
+          initial_version = script.script_versions.find_by(version_number: 1)
+          if initial_version
+            initial_version.update!(
+              notes: params[:notes] || "Uploaded file: #{uploaded_file.filename}"
+            )
+          end
 
-          present script, with: V1::Entities::Script
+          present script.reload, with: V1::Entities::Script
         else
           error!({ error: script.errors.full_messages.join(", ") }, 422)
         end

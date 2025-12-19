@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { colors } from "../../lib/theme";
+import { colors, getStatusStyles, getVersionBadgeColor } from "../../lib/theme";
 import type { Script, ScriptVersion } from "../../types/api";
 
 interface ScriptListItemProps {
@@ -19,39 +19,15 @@ const ScriptListItem: React.FC<ScriptListItemProps> = ({
   onToggleExpand,
   onClick,
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return { bg: "#ECFDF5", text: "#047857", border: "#10B981" };
-      case "archived":
-        return { bg: "#F9FAFB", text: "#6B7280", border: "#D1D5DB" };
-      case "locked":
-        return { bg: "#FEF3C7", text: "#92400E", border: "#F59E0B" };
-      default:
-        return { bg: "#F9FAFB", text: "#6B7280", border: "#D1D5DB" };
+  const statusStyles = getStatusStyles(script.status);
+  const formattedDate = new Date(script.created_at).toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }
-  };
-
-  const getVersionBadgeColor = (versionNumber: number | undefined | null) => {
-    const colors = [
-      { bg: "#F3F4F6", text: "#6B7280" }, // v1 - gray
-      { bg: "#DBEAFE", text: "#1E40AF" }, // v2 - light blue
-      { bg: "#FCE7F3", text: "#BE185D" }, // v3 - pink
-      { bg: "#FEF3C7", text: "#92400E" }, // v4+ - yellow
-    ];
-    if (!versionNumber || versionNumber < 1) {
-      return colors[0]; // Default to v1 color
-    }
-    const index = Math.min(versionNumber - 1, 3);
-    return colors[index] || colors[0];
-  };
-
-  const statusStyles = getStatusColor(script.status);
-  const formattedDate = new Date(script.created_at).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  );
 
   return (
     <>
@@ -72,7 +48,9 @@ const ScriptListItem: React.FC<ScriptListItemProps> = ({
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <svg
-                  className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                  className={`w-5 h-5 transition-transform ${
+                    isExpanded ? "rotate-90" : ""
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -104,21 +82,24 @@ const ScriptListItem: React.FC<ScriptListItemProps> = ({
               </h3>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              {script.latest_version_number > 0 && (() => {
-                const badgeColor = getVersionBadgeColor(script.latest_version_number);
-                return (
-                  <span
-                    className="text-xs font-bold uppercase px-2 py-0.5 rounded border"
-                    style={{
-                      backgroundColor: badgeColor.bg,
-                      color: badgeColor.text,
-                      borderColor: badgeColor.text,
-                    }}
-                  >
-                    v{script.latest_version_number}
-                  </span>
-                );
-              })()}
+              {script.latest_version_number > 0 &&
+                (() => {
+                  const badgeColor = getVersionBadgeColor(
+                    script.latest_version_number
+                  );
+                  return (
+                    <span
+                      className="text-xs font-bold uppercase px-2 py-0.5 rounded border"
+                      style={{
+                        backgroundColor: badgeColor.bg,
+                        color: badgeColor.text,
+                        borderColor: badgeColor.text,
+                      }}
+                    >
+                      v{script.latest_version_number}
+                    </span>
+                  );
+                })()}
             </div>
           </div>
 
@@ -160,13 +141,19 @@ const ScriptListItem: React.FC<ScriptListItemProps> = ({
       {isExpanded && versions.length > 0 && (
         <div className="bg-gray-50 border-b border-gray-200">
           {versions.map((version) => {
-            const versionBadgeColor = getVersionBadgeColor(version.version_number);
-            const versionDate = new Date(version.created_at).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
-            const isActive = version.version_number === script.latest_version_number;
+            const versionBadgeColor = getVersionBadgeColor(
+              version.version_number
+            );
+            const versionDate = new Date(version.created_at).toLocaleDateString(
+              "en-US",
+              {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }
+            );
+            const isActive =
+              version.version_number === script.latest_version_number;
 
             return (
               <div
@@ -187,7 +174,8 @@ const ScriptListItem: React.FC<ScriptListItemProps> = ({
                       v{version.version_number}
                     </span>
                     <span className="text-sm text-gray-700">
-                      {script.title} - {version.notes || `script ${versionDate}`}
+                      {script.title} -{" "}
+                      {version.notes || `script ${versionDate}`}
                     </span>
                   </div>
                 </div>
@@ -223,4 +211,3 @@ const ScriptListItem: React.FC<ScriptListItemProps> = ({
 };
 
 export default ScriptListItem;
-
