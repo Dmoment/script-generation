@@ -83,12 +83,24 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2 border-2 border-black bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-all duration-200 flex items-center justify-between"
+        className="w-full px-4 py-3 border-2 border-black bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-all duration-200 flex items-center justify-between"
         style={{
           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
         }}
       >
-        <span className="text-left uppercase">{selectedOption?.label || placeholder}</span>
+        <div className="flex items-center gap-2 flex-1">
+          {selectedOption && !isOpen && (
+            <div 
+              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#10b981', border: '2px solid white' }}
+            >
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+          <span className="text-left uppercase">{selectedOption?.label || placeholder}</span>
+        </div>
         <svg
           className={`w-4 h-4 text-gray-500 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -135,10 +147,10 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                 <span>{option.label}</span>
                 {value === option.value && (
                   <div 
-                    className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white"
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
-                    <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>

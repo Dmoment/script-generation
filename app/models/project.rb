@@ -4,6 +4,9 @@ class Project < ApplicationRecord
   # Associations
   belongs_to :company
   belongs_to :created_by_user, class_name: 'User', foreign_key: 'created_by_user_id'
+  has_many :scripts, dependent: :destroy
+  has_many :access_controls, dependent: :destroy
+  has_many :users, through: :access_controls, source: :user
 
   # Ransack configuration
   self.whitelisted_ransackable_attributes = %w[

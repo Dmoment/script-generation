@@ -6,6 +6,7 @@ import Header from './Header';
 import Footer from './Footer';
 import LandingPage from '../pages/LandingPage';
 import DashboardPage from '../pages/DashboardPage';
+import ScriptDatabasePage from '../pages/ScriptDatabasePage';
 import AuthTokenBridge from './AuthTokenBridge';
 import LoadingScreen from './LoadingScreen';
 import { queryClient } from '../lib/queryClient';
@@ -96,6 +97,9 @@ const App: React.FC<AppProps> = ({ features = [], appName = 'Script Generation' 
             
             {/* Dashboard route - no header/footer */}
             <Route path="/dashboard" element={<DashboardPage />} />
+            
+            {/* Script Database route */}
+            <Route path="/scripts" element={<ScriptDatabasePage />} />
           </Routes>
         </div>
       </BrowserRouter>

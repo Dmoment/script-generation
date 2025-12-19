@@ -47,6 +47,14 @@ export type PostProjectTypesResponse = {
     [key: string]: unknown;
 };
 
+export type GetScriptsResponse = {
+    [key: string]: unknown;
+};
+
+export type PostScriptsResponse = {
+    [key: string]: unknown;
+};
+
 export type GetByIdData = {
     id: string;
 };
@@ -72,11 +80,23 @@ export type DeleteByIdData = {
 
 export type DeleteByIdResponse = Project;
 
+export type GetById2Data = {
+    id: number;
+};
+
+export type GetById2Response = {
+    [key: string]: unknown;
+};
+
 export type PostCompleteResponse = {
     [key: string]: unknown;
 };
 
 export type GetStatusResponse = {
+    [key: string]: unknown;
+};
+
+export type PostUploadResponse = {
     [key: string]: unknown;
 };
 
@@ -151,6 +171,28 @@ export type $OpenApiTs = {
             };
         };
     };
+    '/v1/scripts': {
+        get: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        post: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
     '/v1/users/:id': {
         get: {
             req: GetByIdData;
@@ -191,6 +233,19 @@ export type $OpenApiTs = {
             };
         };
     };
+    '/v1/scripts/:id': {
+        get: {
+            req: GetById2Data;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
     '/v1/onboarding/complete': {
         post: {
             res: {
@@ -205,6 +260,18 @@ export type $OpenApiTs = {
     };
     '/v1/onboarding/status': {
         get: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
+    '/v1/scripts/upload': {
+        post: {
             res: {
                 /**
                  * Success

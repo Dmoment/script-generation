@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetProjectTypesResponse, PostProjectTypesResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, PostCompleteResponse, GetStatusResponse } from './types.gen';
+import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetProjectTypesResponse, PostProjectTypesResponse, GetScriptsResponse, PostScriptsResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, GetById2Data, GetById2Response, PostCompleteResponse, GetStatusResponse, PostUploadResponse } from './types.gen';
 
 export class CurrentService {
     /**
@@ -101,6 +101,30 @@ export class ApiService {
         });
     }
     
+    /**
+     * Get all scripts for a project
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static getScripts(): CancelablePromise<GetScriptsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/scripts'
+        });
+    }
+    
+    /**
+     * Create a new script
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static postScripts(): CancelablePromise<PostScriptsResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/v1/scripts'
+        });
+    }
+    
 }
 
 export class IdService {
@@ -175,6 +199,23 @@ export class IdService {
         });
     }
     
+    /**
+     * Get a specific script
+     * @param data The data for the request.
+     * @param data.id
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static getById2(data: GetById2Data): CancelablePromise<GetById2Response> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/scripts/:id',
+            path: {
+                id: data.id
+            }
+        });
+    }
+    
 }
 
 export class CompleteService {
@@ -202,6 +243,21 @@ export class StatusService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/v1/onboarding/status'
+        });
+    }
+    
+}
+
+export class UploadService {
+    /**
+     * Upload a script file
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static postUpload(): CancelablePromise<PostUploadResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/v1/scripts/upload'
         });
     }
     

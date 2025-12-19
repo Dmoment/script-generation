@@ -18,6 +18,31 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// Script types
+export interface Script {
+  id: number;
+  project_id: number;
+  title: string;
+  script_type: 'screenplay' | 'treatment' | 'outline' | 'other';
+  status: 'draft' | 'active' | 'locked' | 'archived';
+  description?: string;
+  created_by_user_id: string;
+  version_count: number;
+  latest_version_number: number;
+  created_at: string;
+  updated_at: string;
+  script_versions?: ScriptVersion[];
+}
+
+export interface ScriptVersion {
+  id: number;
+  script_id: number;
+  version_number: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Add more custom types here as needed
 export interface Setting {
   id: string;

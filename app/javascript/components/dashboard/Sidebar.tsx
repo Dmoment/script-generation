@@ -1,27 +1,35 @@
 import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import SidebarItem from "./SidebarItem";
 
 /**
  * Sidebar Component
  */
-const Sidebar: React.FC = () => (
-  <aside className="hidden md:block group/sidebar w-20 hover:w-64 flex-shrink-0 bg-white border-r-2 border-black h-screen sticky top-0 transition-all duration-300 ease-in-out">
-    <div className="h-full flex flex-col">
-      <div className="border-b-2 border-black bg-gray-50">
-        <div className="px-5 pt-12 pb-6">
-          <h2 className="text-xl font-black text-black uppercase tracking-tighter whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
-            Command Center
-          </h2>
-          <p className="text-xs font-mono text-gray-600 mt-1 whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
-            V.2.4.0-STABLE
-          </p>
+const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isOverview = location.pathname === "/dashboard";
+  const isScriptDatabase = location.pathname === "/scripts";
+
+  return (
+    <aside className="hidden md:block group/sidebar w-20 hover:w-64 flex-shrink-0 bg-white border-r-2 border-black h-screen sticky top-0 transition-all duration-300 ease-in-out">
+      <div className="h-full flex flex-col">
+        <div className="border-b-2 border-black bg-gray-50">
+          <div className="px-5 pt-12 pb-6">
+            <h2 className="text-xl font-black text-black uppercase tracking-tighter whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+              Command Center
+            </h2>
+            <p className="text-xs font-mono text-gray-600 mt-1 whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+              V.2.4.0-STABLE
+            </p>
+          </div>
         </div>
-      </div>
-      <nav className="flex flex-col py-2 flex-1 overflow-y-auto">
-        <SidebarItem
-          label="Overview"
-          active
-          icon={
+        <nav className="flex flex-col py-2 flex-1 overflow-y-auto">
+          <div onClick={() => navigate("/dashboard")} className="cursor-pointer">
+            <SidebarItem
+              label="Overview"
+              active={isOverview}
+              icon={
             <svg
               className="w-5 h-5"
               fill="none"
@@ -36,10 +44,13 @@ const Sidebar: React.FC = () => (
               />
             </svg>
           }
-        />
-        <SidebarItem
-          label="Script Database"
-          icon={
+            />
+          </div>
+          <div onClick={() => navigate("/scripts")} className="cursor-pointer">
+            <SidebarItem
+              label="Script Database"
+              active={isScriptDatabase}
+              icon={
             <svg
               className="w-5 h-5"
               fill="none"
@@ -54,10 +65,11 @@ const Sidebar: React.FC = () => (
               />
             </svg>
           }
-        />
-        <SidebarItem
-          label="Production Log"
-          icon={
+            />
+          </div>
+          <SidebarItem
+            label="Production Log"
+            icon={
             <svg
               className="w-5 h-5"
               fill="none"
@@ -187,9 +199,10 @@ const Sidebar: React.FC = () => (
             </svg>
           }
         />
-      </nav>
-    </div>
-  </aside>
-);
+        </nav>
+      </div>
+    </aside>
+  );
+};
 
 export default Sidebar;

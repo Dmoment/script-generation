@@ -69,7 +69,7 @@ const Pagination: React.FC<PaginationProps> = ({
       <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
         Showing <span className="font-semibold text-gray-900">{startItem}</span> to{' '}
         <span className="font-semibold text-gray-900">{endItem}</span> of{' '}
-        <span className="font-semibold text-gray-900">{totalItems}</span> projects
+        <span className="font-semibold text-gray-900">{totalItems}</span> items
       </div>
 
       {/* Pagination controls */}

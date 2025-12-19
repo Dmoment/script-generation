@@ -86,3 +86,5 @@ group :test do
   gem "selenium-webdriver"
   gem "rspec-rails", "~> 6.0"
 end
+
+gem "pundit", "~> 2.5"

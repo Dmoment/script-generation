@@ -10,6 +10,7 @@ module V1
     mount V1::ProjectsApi
     mount V1::OnboardingApi
     mount V1::ProjectTypesApi
+    mount V1::ScriptsApi
 
     # Add Swagger documentation
     add_swagger_documentation(

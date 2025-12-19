@@ -27,11 +27,11 @@ module V1
         ActiveRecord::Base.transaction do
           # Create or find company
           company_name = if params[:account_type] == "company"
-            params[:company_name]
-          else
-            # For individual accounts, create a company with user's name
-            "#{params[:full_name]}'s Workspace"
-          end
+                           params[:company_name]
+                         else
+                           # For individual accounts, create a company with user's name
+                           "#{params[:full_name]}'s Workspace"
+                         end
 
           company = Company.create!(
             name: company_name,
@@ -43,9 +43,18 @@ module V1
             name: params[:full_name],
             gender: params[:gender],
             company_id: company.id,
-            role: "admin", # First user of company is always admin
+            role: nil, # Role is now company-specific, stored in access_controls
             onboarding_completed: true
           )
+
+          # Create access_control record - first user is always company_admin
+          AccessControl.find_or_create_by!(
+            user_id: current_user.id,
+            company_id: company.id,
+            project_id: nil # Company-level role
+          ) do |ac|
+            ac.role = 'company_admin'
+          end
 
           present current_user.reload, with: V1::Entities::User
         end

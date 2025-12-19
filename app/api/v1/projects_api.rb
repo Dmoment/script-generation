@@ -18,32 +18,16 @@ module V1
       get do
         authenticate!
 
-        # Only show projects from user's company
-        user_company = current_user.company
-        error!({ error: "User must belong to a company" }, 422) unless user_company
 
-        projects = Project.where(company_id: user_company.id)
+        projects = policy_scope(Project)
 
-        # Apply Ransack search/filtering if q parameter is provided
         if params[:q].present?
           projects = projects.ransack(params[:q]).result
         end
 
-        # Use Kaminari for pagination
-        paginated_projects = projects.page(params[:page]).per(params[:per_page])
-
-        # Return paginated response with metadata
-        {
-          data: paginated_projects.map { |p| V1::Entities::Project.represent(p) },
-          pagination: {
-            page: paginated_projects.current_page,
-            per_page: paginated_projects.limit_value,
-            total: paginated_projects.total_count,
-            total_pages: paginated_projects.total_pages,
-            has_next: paginated_projects.next_page.present?,
-            has_prev: paginated_projects.prev_page.present?
-          }
-        }
+        paginate_collection(projects) do |project|
+          V1::Entities::Project.represent(project)
+        end
       end
 
       desc "Get a specific project", {
@@ -59,6 +43,7 @@ module V1
       get ":id" do
         authenticate!
         project = Project.find(params[:id])
+        authorize project, :show?
         present project, with: V1::Entities::Project
       end
 
@@ -79,11 +64,9 @@ module V1
       post do
         authenticate!
 
-        # Get user's company (required for project creation)
         user_company = current_user.company
         error!({ error: "User must belong to a company" }, 422) unless user_company
 
-        # Create project with minimal required fields
         project = Project.new(
           title: params[:title],
           project_type: params[:project_type],
@@ -92,11 +75,12 @@ module V1
           status: params[:status] || 'draft'
         )
 
-        # Add optional fields if provided
         optional_fields = [:description, :genre, :logline, :budget, :budget_range, :shooting_location, :release_type]
         optional_fields.each do |field|
           project.send("#{field}=", params[field]) if params[field].present?
         end
+
+        authorize project, :create?
 
         if project.save
           present project, with: V1::Entities::Project
@@ -125,6 +109,7 @@ module V1
         authenticate!
 
         project = Project.find(params[:id])
+        authorize project, :update?
 
         if project.update(declared(params, include_missing: false).except(:id))
           present project, with: V1::Entities::Project
@@ -146,6 +131,7 @@ module V1
         authenticate!
 
         project = Project.find(params[:id])
+        authorize project, :destroy?
         project.destroy
 
         { success: true, message: "Project deleted successfully" }

@@ -353,6 +353,98 @@
           }
         }
       }
+    },
+    "/v1/scripts": {
+      "get": {
+        "operationId": "getScripts",
+        "summary": "Get all scripts for a project",
+        "tags": [
+          "API"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postScripts",
+        "summary": "Create a new script",
+        "tags": [
+          "API"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/scripts/upload": {
+      "post": {
+        "operationId": "postUpload",
+        "summary": "Upload a script file",
+        "tags": [
+          "Upload"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/scripts/:id": {
+      "get": {
+        "operationId": "getById",
+        "summary": "Get a specific script",
+        "tags": [
+          ":id"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
     }
   },
   "components": {

@@ -1,6 +1,20 @@
 # frozen_string_literal: true
 
 class BaseApi < Grape::API
+  include Paginatable
+
+  helpers do
+    def authorize(record, query = nil)
+      query ||= params[:action].to_s + '?'
+      Pundit.authorize(current_user, record, query)
+    rescue Pundit::NotAuthorizedError => e
+      error!({ error: e.message || "Access denied" }, 403)
+    end
+
+    def policy_scope(scope)
+      Pundit.policy_scope(current_user, scope)
+    end
+  end
   format :json
 
   # Global error handling
@@ -60,15 +74,25 @@ class BaseApi < Grape::API
       @current_user ||= begin
         user_info = validate_token!
         Rails.logger.info "User info: #{user_info.inspect}"
-        # Find or create user
-        user = User.find_or_initialize_by(auth0_id: user_info[:auth0_id])
+
+        user = if user_info[:auth0_id].present?
+          User.find_by(auth0_id: user_info[:auth0_id])
+        end
+
+        user ||= User.find_by(email: user_info[:email]) if user_info[:email].present?
+
+        user ||= User.new
 
         # Update user info on each request (keeps data fresh)
-        user.update!(
+        # If found by email but auth0_id was missing, update it
+        user.assign_attributes(
+          auth0_id: user_info[:auth0_id] || user.auth0_id,
           email: user_info[:email],
           name: user_info[:name],
+          role: nil,
         )
 
+        user.save!
         user
       end
     end

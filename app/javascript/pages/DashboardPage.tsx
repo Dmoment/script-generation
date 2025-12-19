@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import type { Project } from "../types/api";
 import "../lib/openapi-config";
 import { useProjectsQuery } from "../queries/projects/useProjectsQuery";
@@ -28,6 +29,8 @@ import { colors } from "../lib/theme";
 const DashboardPage: React.FC = () => {
   const { user, isLoading, isAuthenticated, logout, loginWithRedirect } =
     useAuth0();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Current user query to check onboarding status
   const {
@@ -329,30 +332,34 @@ const DashboardPage: React.FC = () => {
               </button>
             </div>
             <nav className="flex flex-col py-2 flex-1 overflow-y-auto">
-              <SidebarItem
-                label="Overview"
-                active
-                alwaysShowLabel={true}
-                icon={
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                    />
-                  </svg>
-                }
-              />
-              <SidebarItem
-                label="Script Database"
-                alwaysShowLabel={true}
-                icon={
+              <div onClick={() => navigate("/dashboard")} className="cursor-pointer">
+                <SidebarItem
+                  label="Overview"
+                  active={location.pathname === "/dashboard"}
+                  alwaysShowLabel={true}
+                  icon={
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      />
+                    </svg>
+                  }
+                />
+              </div>
+              <div onClick={() => navigate("/scripts")} className="cursor-pointer">
+                <SidebarItem
+                  label="Script Database"
+                  active={location.pathname === "/scripts"}
+                  alwaysShowLabel={true}
+                  icon={
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -367,7 +374,8 @@ const DashboardPage: React.FC = () => {
                     />
                   </svg>
                 }
-              />
+                />
+              </div>
               <SidebarItem
                 label="Production Log"
                 alwaysShowLabel={true}
