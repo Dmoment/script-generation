@@ -19,12 +19,18 @@ OpenAPI.CREDENTIALS = 'same-origin';
 
 OpenAPI.interceptors.request.use(async (request) => {
   const token = await getAuthToken();
-  if (!token) {
-    return request;
-  }
-
   const headers = new Headers(request.headers ?? {});
-  headers.set('Authorization', `Bearer ${token}`);
+  
+  // Add Authorization header if token exists
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  
+  // If body is FormData, remove Content-Type header to let browser set it with boundary
+  // The browser will automatically set: Content-Type: multipart/form-data; boundary=...
+  if (request.body instanceof FormData) {
+    headers.delete('Content-Type');
+  }
 
   return {
     ...request,

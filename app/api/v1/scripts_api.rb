@@ -31,7 +31,7 @@ module V1
           scripts = scripts.ransack(params[:q]).result
         end
 
-        scripts = scripts.includes(:script_versions)
+        scripts = scripts.includes(script_versions: :file_attachment)
 
         paginate_collection(scripts) do |script|
           V1::Entities::Script.represent(script)
@@ -87,56 +87,51 @@ module V1
           { code: 422, message: "Validation failed" }
         ]
       }
-      params do
-        requires :project_id, type: Integer, desc: "Project ID"
-        requires :title, type: String, desc: "Script title"
-        requires :file, type: File, desc: "Script file to upload"
-        optional :script_type, type: String, values: %w[screenplay treatment outline other], default: "screenplay", desc: "Script type"
-        optional :description, type: String, desc: "Script description"
-        optional :notes, type: String, desc: "Version notes"
-      end
+      # Skip params block - Grape's format :json interferes with multipart parsing
+      # Parse manually using MultipartParams concern
       post :upload do
         authenticate!
 
-        project = Project.find(params[:project_id])
-        authorize project, :show?
+        form_params = parse_multipart_params(env)
 
-        uploaded_file = params[:file]
-
-        error!({ error: "File is required" }, 422) unless uploaded_file
-        error!({ error: "File size too large (max 50MB)" }, 422) if uploaded_file.size > 50.megabytes
-
-        script = Script.new(
-          project: project,
-          title: params[:title],
-          script_type: params[:script_type] || 'screenplay',
-          status: 'draft',
-          description: params[:description],
-          created_by_user_id: current_user.id
+        result = extract_multipart_params(
+          form_params,
+          required_fields: ['project_id', 'title', 'file']
         )
 
-        authorize script, :create?
-
-        if script.save
-          # TODO: Store file using Active Storage or similar
-          # For now, we'll just update the initial version notes
-          # In production, you'd want to:
-          # - Store file in S3 or similar
-          # - Extract text content if possible
-          # - Store file metadata
-
-          # Update the initial version (created by callback) with upload notes
-          initial_version = script.script_versions.find_by(version_number: 1)
-          if initial_version
-            initial_version.update!(
-              notes: params[:notes] || "Uploaded file: #{uploaded_file.filename}"
-            )
-          end
-
-          present script.reload, with: V1::Entities::Script
-        else
-          error!({ error: script.errors.full_messages.join(", ") }, 422)
+        if result[:errors].any?
+          error!({ error: result[:errors].join(", ") }, 400)
         end
+
+        project_id = result[:params][:project_id]&.to_i
+        project = Project.find(project_id)
+        authorize project, :show?
+
+        temp_script = Script.new(project: project, created_by_user_id: current_user.id)
+        authorize temp_script, :create?
+
+        service = ScriptUploadService.new(
+          project: project,
+          user: current_user,
+          params: {
+            project_id: project_id,
+            title: result[:params][:title],
+            script_type: result[:params][:script_type] || 'screenplay',
+            description: result[:params][:description],
+            notes: result[:params][:notes],
+            file: result[:file_hash]
+          }
+        )
+
+        script = service.call
+        present script, with: V1::Entities::Script
+      rescue ActiveRecord::RecordNotFound
+        error!({ error: "Project not found" }, 404)
+      rescue ScriptUploadError::FileValidationError, ScriptUploadError::ValidationError, ScriptUploadError::AttachmentError => e
+        error_message = e.respond_to?(:errors) && e.errors.any? ? e.errors.join(", ") : e.message
+        error!({ error: error_message }, e.status_code)
+      rescue StandardError => e
+        error!({ error: "Upload failed: #{e.message}" }, 500)
       end
 
       desc "Get a specific script", {

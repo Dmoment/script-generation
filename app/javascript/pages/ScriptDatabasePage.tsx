@@ -18,7 +18,6 @@ import Sidebar from "../components/dashboard/Sidebar";
 import SidebarItem from "../components/dashboard/SidebarItem";
 import Topbar from "../components/dashboard/Topbar";
 import ScriptCard from "../components/dashboard/ScriptCard";
-import ScriptListItem from "../components/dashboard/ScriptListItem";
 import ThreadConnector from "../components/ThreadConnector";
 import { colors, getStatusStyles, getVersionBadgeColor } from "../lib/theme";
 
@@ -74,10 +73,10 @@ const ScriptDatabasePage: React.FC = () => {
   const deleteScriptMutation = useDeleteScriptMutation();
   const deleteScriptVersionMutation = useDeleteScriptVersionMutation();
   const [showCreateScriptModal, setShowCreateScriptModal] = useState(false);
-  
+
   // Delete confirmation state
   const [deleteConfirm, setDeleteConfirm] = useState<{
-    type: 'script' | 'version';
+    type: "script" | "version";
     id: number;
     name: string;
     isVersion1?: boolean;
@@ -875,6 +874,7 @@ const ScriptDatabasePage: React.FC = () => {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        navigate(`/scripts/${script.id}/versions/${script.latest_version_number}`);
                                       }}
                                       className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
                                     >
@@ -884,7 +884,7 @@ const ScriptDatabasePage: React.FC = () => {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setDeleteConfirm({
-                                          type: 'script',
+                                          type: "script",
                                           id: script.id,
                                           name: script.title,
                                         });
@@ -970,6 +970,27 @@ const ScriptDatabasePage: React.FC = () => {
                                             >
                                               v{version.version_number}
                                             </span>
+                                            {Boolean(version.has_uploaded_file) && (
+                                              <span
+                                                className="inline-flex items-center gap-1 text-xs text-gray-600 bg-blue-50 px-1.5 py-0.5 rounded"
+                                                title="Uploaded file"
+                                              >
+                                                <svg
+                                                  className="w-3.5 h-3.5 text-blue-600"
+                                                  fill="none"
+                                                  stroke="currentColor"
+                                                  viewBox="0 0 24 24"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                                  />
+                                                </svg>
+                                                <span className="text-xs text-blue-600 font-medium">Uploaded</span>
+                                              </span>
+                                            )}
                                             <span className="text-sm text-gray-700 truncate">
                                               {script.title} -{" "}
                                               {version.notes ||
@@ -1011,7 +1032,7 @@ const ScriptDatabasePage: React.FC = () => {
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              // TODO: Navigate to version detail page
+                                              navigate(`/scripts/${script.id}/versions/${version.version_number}`);
                                             }}
                                             className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
                                           >
@@ -1021,10 +1042,11 @@ const ScriptDatabasePage: React.FC = () => {
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               setDeleteConfirm({
-                                                type: 'version',
+                                                type: "version",
                                                 id: version.id,
                                                 name: `Version ${version.version_number}`,
-                                                isVersion1: version.version_number === 1,
+                                                isVersion1:
+                                                  version.version_number === 1,
                                               });
                                             }}
                                             className="text-red-600 hover:text-red-800 transition-colors p-1.5 rounded hover:bg-red-50"
@@ -1098,14 +1120,15 @@ const ScriptDatabasePage: React.FC = () => {
             <p className="text-sm text-gray-600 mb-6">
               Are you sure you want to delete{" "}
               <span className="font-medium">{deleteConfirm.name}</span>?
-              {deleteConfirm.type === 'script' && (
+              {deleteConfirm.type === "script" && (
                 <span className="block mt-2 text-red-600">
                   This will also delete all versions of this script.
                 </span>
               )}
-              {deleteConfirm.type === 'version' && deleteConfirm.isVersion1 && (
+              {deleteConfirm.type === "version" && deleteConfirm.isVersion1 && (
                 <span className="block mt-2 text-red-600">
-                  Deleting version 1 will delete the entire script and all its versions.
+                  Deleting version 1 will delete the entire script and all its
+                  versions.
                 </span>
               )}
             </p>
@@ -1118,7 +1141,7 @@ const ScriptDatabasePage: React.FC = () => {
               </button>
               <button
                 onClick={() => {
-                  if (deleteConfirm.type === 'script') {
+                  if (deleteConfirm.type === "script") {
                     handleDeleteScript(deleteConfirm.id);
                   } else {
                     handleDeleteVersion(deleteConfirm.id);

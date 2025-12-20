@@ -7,6 +7,7 @@ import Footer from './Footer';
 import LandingPage from '../pages/LandingPage';
 import DashboardPage from '../pages/DashboardPage';
 import ScriptDatabasePage from '../pages/ScriptDatabasePage';
+import ScriptEditorPage from '../pages/ScriptEditorPage';
 import AuthTokenBridge from './AuthTokenBridge';
 import LoadingScreen from './LoadingScreen';
 import { queryClient } from '../lib/queryClient';
@@ -100,6 +101,9 @@ const App: React.FC<AppProps> = ({ features = [], appName = 'Script Generation' 
             
             {/* Script Database route */}
             <Route path="/scripts" element={<ScriptDatabasePage />} />
+            
+            {/* Script Editor route */}
+            <Route path="/scripts/:scriptId/versions/:versionId" element={<ScriptEditorPage />} />
           </Routes>
         </div>
       </BrowserRouter>

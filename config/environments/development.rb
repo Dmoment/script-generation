@@ -28,8 +28,9 @@ Rails.application.configure do
   # Change to :null_store to avoid any caching.
   config.cache_store = :memory_store
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Store uploaded files on S3 if AWS credentials are provided, otherwise use local storage
+  # Set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, and AWS_S3_BUCKET in .env.development.local
+  config.active_storage.service = ENV["AWS_ACCESS_KEY_ID"].present? ? :amazon : :local
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false

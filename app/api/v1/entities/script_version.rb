@@ -9,6 +9,10 @@ module V1
       expose :notes
       expose :created_at
       expose :updated_at
+
+      expose :has_uploaded_file do |version|
+        version.file.attached?
+      end
     end
   end
 end

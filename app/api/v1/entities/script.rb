@@ -25,8 +25,7 @@ module V1
       expose :created_at
       expose :updated_at
 
-      # Versions (used for display in frontend)
-      expose :script_versions, using: V1::Entities::ScriptVersion, if: ->(script, _options) { script.script_versions.loaded? || script.script_versions.any? }
+      expose :script_versions, using: V1::Entities::ScriptVersion
     end
   end
 end

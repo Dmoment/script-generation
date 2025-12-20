@@ -21,13 +21,9 @@ export const useUploadScriptMutation = () => {
       formData.append('project_id', String(data.project_id));
       formData.append('title', data.title);
       formData.append('script_type', data.script_type);
-      if (data.description) {
-        formData.append('description', data.description);
-      }
+      if (data.description) formData.append('description', data.description);
       formData.append('file', data.file);
-      if (data.notes) {
-        formData.append('notes', data.notes);
-      }
+      if (data.notes) formData.append('notes', data.notes);
 
       const response = await request<Script>(OpenAPI, {
         method: 'POST',
@@ -38,7 +34,6 @@ export const useUploadScriptMutation = () => {
       return response;
     },
     onSuccess: () => {
-      // Invalidate scripts queries to refetch
       queryClient.invalidateQueries({ queryKey: ['scripts'] });
     },
   });

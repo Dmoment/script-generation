@@ -2,6 +2,7 @@
 
 class BaseApi < Grape::API
   include Paginatable
+  include MultipartParams
 
   helpers do
     def authorize(record, query = nil)
@@ -23,7 +24,9 @@ class BaseApi < Grape::API
     when JWT::DecodeError, JWT::ExpiredSignature
       { error: "Invalid or expired token" }
     when Grape::Exceptions::ValidationErrors
-      { error: "Validation failed", details: e.errors }
+      error_details = e.errors.is_a?(Hash) ? e.errors.map { |k, v| "#{k}: #{v.join(', ')}" }.join("; ") : e.errors.to_s
+      Rails.logger.error "Grape validation errors: #{error_details}"
+      { error: "Validation failed: #{error_details}", details: e.errors }
     when Grape::Exceptions::MethodNotAllowed
       { error: "Method not allowed" }
     else

@@ -112,8 +112,8 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
                     // TODO: Navigate to version detail page
                   }}
                   title={`Version ${version.version_number}${
-                    version.notes ? ` - ${version.notes}` : ""
-                  }`}
+                    version.has_uploaded_file ? " (Uploaded)" : ""
+                  }${version.notes ? ` - ${version.notes}` : ""}`}
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 border-black shadow-sm bg-white"
@@ -178,8 +178,30 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
                               V{version.version_number}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-900">
-                                Version {version.version_number}
+                              <div className="flex items-center gap-2">
+                                <div className="text-sm font-medium text-gray-900">
+                                  Version {version.version_number}
+                                </div>
+                                {version.has_uploaded_file && (
+                                  <span
+                                    className="inline-flex items-center gap-1 text-xs text-gray-500"
+                                    title="Uploaded file"
+                                  >
+                                    <svg
+                                      className="w-3 h-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                      />
+                                    </svg>
+                                  </span>
+                                )}
                               </div>
                               {version.notes && (
                                 <div className="text-xs text-gray-500 truncate">

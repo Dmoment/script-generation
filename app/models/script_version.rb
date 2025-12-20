@@ -2,6 +2,7 @@
 
 class ScriptVersion < ApplicationRecord
   belongs_to :script
+  has_one_attached :file
 
   validates :version_number, presence: true, uniqueness: { scope: :script_id }
   validates :version_number, numericality: { greater_than: 0 }

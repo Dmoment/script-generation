@@ -41,6 +41,7 @@ export interface ScriptVersion {
   notes?: string;
   created_at: string;
   updated_at: string;
+  has_uploaded_file?: boolean;
 }
 
 // Add more custom types here as needed
