@@ -27,5 +27,9 @@ module ScriptGeneration
     # Add API directory to autoload paths so Grape API classes are loaded
     config.autoload_paths << Rails.root.join("app/api")
     config.eager_load_paths << Rails.root.join("app/api")
+
+    # Add services directory to autoload paths
+    config.autoload_paths << Rails.root.join("app/services")
+    config.eager_load_paths << Rails.root.join("app/services")
   end
 end
