@@ -119,23 +119,17 @@ module V1
             script_type: result[:params][:script_type] || 'screenplay',
             description: result[:params][:description],
             notes: result[:params][:notes],
-            file: result[:file_hash]
+            file: result[:file] # ActionDispatch::Http::UploadedFile directly
           }
         )
 
         script = service.call
         present script, with: V1::Entities::Script
-      rescue ActiveRecord::RecordNotFound
-        error!({ error: "Project not found" }, 404)
+      rescue ScriptUploadError::Base => e
+        error_message = e.respond_to?(:errors) && e.errors.any? ? e.errors.join(", ") : e.message
+        error!({ error: error_message }, e.status_code)
       rescue => e
-        # Handle ScriptUploadError exceptions (check by class name to avoid autoloading issues)
-        if e.class.name.start_with?('ScriptUploadError::')
-          error_message = e.respond_to?(:errors) && e.errors.any? ? e.errors.join(", ") : e.message
-          status_code = e.respond_to?(:status_code) ? e.status_code : 422
-          error!({ error: error_message }, status_code)
-        else
-          error!({ error: "Upload failed: #{e.message}" }, 500)
-        end
+        error!({ error: "Upload failed: #{e.message}" }, 500)
       end
 
       desc "Get a specific script", {
