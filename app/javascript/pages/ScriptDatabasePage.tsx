@@ -874,7 +874,16 @@ const ScriptDatabasePage: React.FC = () => {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        navigate(`/scripts/${script.id}/versions/${script.latest_version_number}`);
+                                        // Use the actual version ID, not version number
+                                        const latestVersion =
+                                          versions.length > 0
+                                            ? versions[versions.length - 1]
+                                            : null;
+                                        if (latestVersion) {
+                                          navigate(
+                                            `/scripts/${script.id}/versions/${latestVersion.id}`
+                                          );
+                                        }
                                       }}
                                       className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
                                     >
@@ -970,7 +979,9 @@ const ScriptDatabasePage: React.FC = () => {
                                             >
                                               v{version.version_number}
                                             </span>
-                                            {Boolean(version.has_uploaded_file) && (
+                                            {Boolean(
+                                              version.has_uploaded_file
+                                            ) && (
                                               <span
                                                 className="inline-flex items-center gap-1 text-xs text-gray-600 bg-blue-50 px-1.5 py-0.5 rounded"
                                                 title="Uploaded file"
@@ -988,7 +999,9 @@ const ScriptDatabasePage: React.FC = () => {
                                                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                                                   />
                                                 </svg>
-                                                <span className="text-xs text-blue-600 font-medium">Uploaded</span>
+                                                <span className="text-xs text-blue-600 font-medium">
+                                                  Uploaded
+                                                </span>
                                               </span>
                                             )}
                                             <span className="text-sm text-gray-700 truncate">
@@ -1032,7 +1045,9 @@ const ScriptDatabasePage: React.FC = () => {
                                           <button
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              navigate(`/scripts/${script.id}/versions/${version.version_number}`);
+                                              navigate(
+                                                `/scripts/${script.id}/versions/${version.id}`
+                                              );
                                             }}
                                             className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
                                           >

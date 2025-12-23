@@ -1,12 +1,12 @@
 // API Response Types
 // Re-export auto-generated types from OpenAPI spec
-export type { User, status } from './generated/types.gen';
-import type { Project as GeneratedProject } from './generated/types.gen';
+export type { User, status } from "./generated/types.gen";
+import type { Project as GeneratedProject } from "./generated/types.gen";
 
 // Extended Project type with all fields
-export interface Project extends Omit<GeneratedProject, 'name'> {
+export interface Project extends Omit<GeneratedProject, "name"> {
   title?: string;
-  project_type?: 'film' | 'series' | 'short' | 'ad' | 'documentary' | 'other';
+  project_type?: "film" | "series" | "short" | "ad" | "documentary" | "other";
   name?: string;
 }
 
@@ -23,8 +23,8 @@ export interface Script {
   id: number;
   project_id: number;
   title: string;
-  script_type: 'screenplay' | 'treatment' | 'outline' | 'other';
-  status: 'draft' | 'active' | 'locked' | 'archived';
+  script_type: "screenplay" | "treatment" | "outline" | "other";
+  status: "draft" | "active" | "locked" | "archived";
   description?: string;
   created_by_user_id: string;
   version_count: number;
@@ -44,6 +44,18 @@ export interface ScriptVersion {
   has_uploaded_file?: boolean;
 }
 
+export interface Scene {
+  id: number;
+  script_version_id: number;
+  scene_number: number;
+  slugline?: string;
+  content?: string;
+  order: number;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 // Add more custom types here as needed
 export interface Setting {
   id: string;
@@ -52,4 +64,3 @@ export interface Setting {
   created_at: string;
   updated_at: string;
 }
-

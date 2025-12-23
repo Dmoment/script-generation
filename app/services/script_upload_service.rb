@@ -45,6 +45,8 @@ class ScriptUploadService
     validate_project_exists
     script = build_script
     save_script(script)
+    initial_version = create_initial_version(script)
+    create_initial_scene(initial_version)
     attach_file_to_version(script)
     script.reload
   end
@@ -71,6 +73,34 @@ class ScriptUploadService
       "Script validation failed",
       script.errors.full_messages
     )
+  end
+
+  def create_initial_version(script)
+    script.script_versions.create!(
+      version_number: 1,
+      notes: "Initial version"
+    )
+  end
+
+  def create_initial_scene(version)
+    return version.scenes.find_by(scene_number: 1) if version.scenes.exists?(scene_number: 1)
+
+    scene = version.scenes.build(
+      scene_number: 1,
+      slugline: "INT. LOCATION - DAY",
+      content: "",
+      order: 1
+    )
+
+    unless scene.save
+      error_msg = "Failed to create initial scene: #{scene.errors.full_messages.join(', ')}"
+      Rails.logger.error error_msg
+      Rails.logger.error "Scene attributes: #{scene.attributes.inspect}"
+      raise ScriptUploadError::AttachmentError, error_msg
+    end
+
+    Rails.logger.info "Created initial scene #{scene.id} for version #{version.id}"
+    scene
   end
 
   def attach_file_to_version(script)

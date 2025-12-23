@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetProjectTypesResponse, PostProjectTypesResponse, GetScriptsResponse, PostScriptsResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, GetById2Data, GetById2Response, DeleteById1Data, DeleteById1Response, DeleteById2Data, DeleteById2Response, PostCompleteResponse, GetStatusResponse, PostUploadResponse } from './types.gen';
+import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetProjectTypesResponse, PostProjectTypesResponse, GetScriptsResponse, PostScriptsResponse, GetScenesResponse, PostScenesResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, GetById2Data, GetById2Response, DeleteById1Data, DeleteById1Response, DeleteById2Data, DeleteById2Response, GetById3Data, GetById3Response, PutById1Data, PutById1Response, DeleteById3Data, DeleteById3Response, PostCompleteResponse, GetStatusResponse, PostUploadResponse } from './types.gen';
 
 export class CurrentService {
     /**
@@ -122,6 +122,30 @@ export class ApiService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/v1/scripts'
+        });
+    }
+    
+    /**
+     * Get all scenes for a script version
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static getScenes(): CancelablePromise<GetScenesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/scenes'
+        });
+    }
+    
+    /**
+     * Create a new scene
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static postScenes(): CancelablePromise<PostScenesResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/v1/scenes'
         });
     }
     
@@ -244,6 +268,57 @@ export class IdService {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/v1/script_versions/:id',
+            path: {
+                id: data.id
+            }
+        });
+    }
+    
+    /**
+     * Get a specific scene
+     * @param data The data for the request.
+     * @param data.id
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static getById3(data: GetById3Data): CancelablePromise<GetById3Response> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/scenes/:id',
+            path: {
+                id: data.id
+            }
+        });
+    }
+    
+    /**
+     * Update a scene
+     * @param data The data for the request.
+     * @param data.id
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static putById1(data: PutById1Data): CancelablePromise<PutById1Response> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/v1/scenes/:id',
+            path: {
+                id: data.id
+            }
+        });
+    }
+    
+    /**
+     * Delete a scene
+     * @param data The data for the request.
+     * @param data.id
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static deleteById3(data: DeleteById3Data): CancelablePromise<DeleteById3Response> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/v1/scenes/:id',
             path: {
                 id: data.id
             }

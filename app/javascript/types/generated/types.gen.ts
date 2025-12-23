@@ -55,6 +55,14 @@ export type PostScriptsResponse = {
     [key: string]: unknown;
 };
 
+export type GetScenesResponse = {
+    [key: string]: unknown;
+};
+
+export type PostScenesResponse = {
+    [key: string]: unknown;
+};
+
 export type GetByIdData = {
     id: string;
 };
@@ -101,6 +109,30 @@ export type DeleteById2Data = {
 };
 
 export type DeleteById2Response = {
+    [key: string]: unknown;
+};
+
+export type GetById3Data = {
+    id: number;
+};
+
+export type GetById3Response = {
+    [key: string]: unknown;
+};
+
+export type PutById1Data = {
+    id: number;
+};
+
+export type PutById1Response = {
+    [key: string]: unknown;
+};
+
+export type DeleteById3Data = {
+    id: number;
+};
+
+export type DeleteById3Response = {
     [key: string]: unknown;
 };
 
@@ -209,6 +241,28 @@ export type $OpenApiTs = {
             };
         };
     };
+    '/v1/scenes': {
+        get: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        post: {
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
     '/v1/users/:id': {
         get: {
             req: GetByIdData;
@@ -276,6 +330,41 @@ export type $OpenApiTs = {
     '/v1/script_versions/:id': {
         delete: {
             req: DeleteById2Data;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
+    '/v1/scenes/:id': {
+        get: {
+            req: GetById3Data;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        put: {
+            req: PutById1Data;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        delete: {
+            req: DeleteById3Data;
             res: {
                 /**
                  * Success

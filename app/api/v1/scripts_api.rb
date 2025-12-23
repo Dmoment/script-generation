@@ -58,26 +58,36 @@ module V1
         project = Project.find(params[:project_id])
         authorize project, :show?
 
-        script = Script.new(
+        temp_script = Script.new(project: project, created_by_user_id: current_user.id)
+        authorize temp_script, :create?
+
+        service = ScriptCreationService.new(
           project: project,
-          title: params[:title],
-          script_type: params[:script_type] || 'screenplay',
-          status: 'draft',
-          description: params[:description],
-          created_by_user_id: current_user.id
+          user: current_user,
+          params: {
+            title: params[:title],
+            script_type: params[:script_type],
+            description: params[:description]
+          }
         )
 
-        authorize script, :create?
+        script = service.call
 
-        if script.save
-          # Initial version is automatically created via after_create callback
-          # If content is provided, we could update the version here
-          # For now, the callback handles version creation
-
-          present script.reload, with: V1::Entities::Script
-        else
-          error!({ error: script.errors.full_messages.join(", ") }, 422)
+        initial_version = script.script_versions.find_by(version_number: 1)
+        if initial_version && initial_version.scenes.empty?
+          initial_version.scenes.create!(
+            scene_number: 1,
+            slugline: "INT. LOCATION - DAY",
+            content: "",
+            order: 1
+          )
         end
+
+        present script.reload, with: V1::Entities::Script
+      rescue ActiveRecord::RecordInvalid => e
+        error!({ error: e.record.errors.full_messages.join(", ") }, 422)
+      rescue StandardError => e
+        error!({ error: "Failed to create script: #{e.message}" }, 500)
       end
 
       desc "Upload a script file", {
@@ -124,11 +134,23 @@ module V1
         )
 
         script = service.call
-        present script, with: V1::Entities::Script
+
+        initial_version = script.script_versions.find_by(version_number: 1)
+        if initial_version && initial_version.scenes.empty?
+          Rails.logger.warn "Script #{script.id} uploaded but no initial scene found. Creating now..."
+          initial_version.scenes.create!(
+            scene_number: 1,
+            slugline: "INT. LOCATION - DAY",
+            content: "",
+            order: 1
+          )
+        end
+
+        present script.reload, with: V1::Entities::Script
       rescue ScriptUploadError::Base => e
         error_message = e.respond_to?(:errors) && e.errors.any? ? e.errors.join(", ") : e.message
         error!({ error: error_message }, e.status_code)
-      rescue => e
+      rescue StandardError => e
         error!({ error: "Upload failed: #{e.message}" }, 500)
       end
 
