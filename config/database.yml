@@ -54,7 +54,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: script_generation_test
+  database: script_generation_test<%= ENV['TEST_ENV_NUMBER'] %>
   username: <%= ENV.fetch("DATABASE_USERNAME") { `whoami`.strip } %>
   password: <%= ENV.fetch("DATABASE_PASSWORD") { "" } %>
   host: <%= ENV.fetch("DATABASE_HOST") { "localhost" } %>

@@ -1,0 +1,23 @@
+#!/bin/bash
+# Setup script for parallel test databases
+
+set -e
+
+echo "Setting up parallel test databases..."
+
+# Create base test database
+echo "Creating base test database..."
+RAILS_ENV=test bundle exec rails db:create db:schema:load
+
+# Create numbered test databases for parallel processes
+echo "Creating parallel test databases (test2, test3, test4)..."
+for i in 2 3 4; do
+  echo "Creating script_generation_test${i}..."
+  RAILS_ENV=test TEST_ENV_NUMBER=$i bundle exec rails db:create db:schema:load
+done
+
+echo "✅ Parallel test databases created successfully!"
+echo ""
+echo "You can now run tests in parallel with:"
+echo "  bundle exec parallel_rspec spec/ -n 4"
+

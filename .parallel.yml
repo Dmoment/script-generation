@@ -1,0 +1,10 @@
+# Parallel tests configuration
+# This file configures how parallel_tests splits your test suite
+
+# Number of processes to use (default: number of CPUs)
+# You can override with: bundle exec parallel_rspec spec/ -n 4
+processes: 4
+
+# Test file pattern
+test_files: 'spec/**/*_spec.rb'
+

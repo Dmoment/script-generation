@@ -253,12 +253,6 @@ rails test                    # Run tests
 bun run typecheck             # TypeScript type checking
 ```
 
-## Additional Documentation
-
-- [S3 Setup Guide](./docs/S3_SETUP.md) - Configure AWS S3 for file uploads
-- [Access Control Examples](./docs/ACCESS_CONTROL_EXAMPLES.md) - Authorization examples
-- [Quick Environment Setup](./QUICK_ENV_SETUP.md) - Quick reference for env setup
-
 ## Troubleshooting
 
 ### TypeScript Errors After API Changes
