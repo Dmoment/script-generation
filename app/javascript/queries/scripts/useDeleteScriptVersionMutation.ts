@@ -20,7 +20,6 @@ export const useDeleteScriptVersionMutation = () => {
       return response;
     },
     onSuccess: () => {
-      // Invalidate scripts list to refetch (to update version counts)
       queryClient.invalidateQueries({ queryKey: scriptKeys.all });
     },
   });

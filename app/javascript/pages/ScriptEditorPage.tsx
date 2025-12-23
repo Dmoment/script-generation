@@ -11,6 +11,9 @@ import ScriptEditorActions from "../components/script-editor/ScriptEditorActions
 import IndexCardView from "../components/script-editor/IndexCardView";
 import type { SceneCard } from "../components/script-editor/IndexCard";
 import { useScenesQuery } from "../queries/scenes/useScenesQuery";
+import { useCreateSceneMutation } from "../queries/scenes/useCreateSceneMutation";
+import { useDeleteSceneMutation } from "../queries/scenes/useDeleteSceneMutation";
+import { useUpdateSceneMutation } from "../queries/scenes/useUpdateSceneMutation";
 import type { Scene } from "../types/api";
 
 /**
@@ -49,6 +52,9 @@ const ScriptEditorPage: React.FC = () => {
     scriptVersionId,
     enabled: !!versionId && activeTab === "script",
   });
+  const createSceneMutation = useCreateSceneMutation();
+  const deleteSceneMutation = useDeleteSceneMutation();
+  const updateSceneMutation = useUpdateSceneMutation();
 
   const selectedScene = Array.isArray(scenes)
     ? scenes.find((s) => s.id === selectedSceneId) || scenes[0] || null
@@ -164,11 +170,89 @@ const ScriptEditorPage: React.FC = () => {
     }
   };
 
-  const handleNextScene = () => {
+  const handleNextScene = async () => {
     if (!selectedScene || scenes.length === 0) return;
     const currentIndex = scenes.findIndex((s) => s.id === selectedScene.id);
     if (currentIndex < scenes.length - 1) {
       setSelectedSceneId(scenes[currentIndex + 1].id);
+    } else {
+      await handleCreateNextScene();
+    }
+  };
+
+  const handleCreateNextScene = async () => {
+    if (!selectedScene || !scriptVersionId) return;
+    
+    const nextSceneNumber = (selectedScene.scene_number || scenes.length) + 1;
+    
+    try {
+      const newScene = await createSceneMutation.mutateAsync({
+        script_version_id: scriptVersionId,
+        scene_number: nextSceneNumber,
+        slugline: "INT. LOCATION - DAY",
+        content: "",
+        order: nextSceneNumber,
+      });
+      
+      setSelectedSceneId(newScene.id);
+    } catch (error) {
+      console.error("Failed to create new scene:", error);
+    }
+  };
+
+  const handleCreateScene = async () => {
+    if (!scriptVersionId) return;
+    
+    const nextSceneNumber = scenes.length > 0 
+      ? Math.max(...scenes.map(s => s.scene_number)) + 1
+      : 1;
+    
+    try {
+      const newScene = await createSceneMutation.mutateAsync({
+        script_version_id: scriptVersionId,
+        scene_number: nextSceneNumber,
+        slugline: "INT. LOCATION - DAY",
+        content: "",
+        order: nextSceneNumber,
+      });
+      
+      setSelectedSceneId(newScene.id);
+    } catch (error) {
+      console.error("Failed to create new scene:", error);
+    }
+  };
+
+  const handleDeleteScene = async (sceneId: number) => {
+    try {
+      await deleteSceneMutation.mutateAsync(sceneId);
+      
+      const deletedScene = scenes.find(s => s.id === sceneId);
+      if (deletedScene && selectedSceneId === sceneId) {
+        const remainingScenes = scenes.filter(s => s.id !== sceneId);
+        if (remainingScenes.length > 0) {
+          setSelectedSceneId(remainingScenes[0].id);
+        } else {
+          setSelectedSceneId(null);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete scene:", error);
+    }
+  };
+
+  const handleLockScene = async (sceneId: number, locked: boolean) => {
+    if (!selectedScene || selectedScene.id !== sceneId) return;
+    
+    try {
+      await updateSceneMutation.mutateAsync({
+        id: sceneId,
+        metadata: {
+          ...selectedScene.metadata,
+          locked: locked,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to lock/unlock scene:", error);
     }
   };
 
@@ -251,15 +335,21 @@ const ScriptEditorPage: React.FC = () => {
 
           {/* Central Panel - Script Content */}
           <div className="flex-1 bg-white flex flex-col overflow-hidden">
-            <ScriptContentEditor
-              selectedScene={selectedScene}
-              scriptVersionId={scriptVersionId}
-              sceneTitle={sceneTitle}
-              onPreviousScene={handlePreviousScene}
-              onNextScene={handleNextScene}
-              onToggleFullscreen={handleToggleFullscreen}
-              isFullscreen={isFullscreen}
-            />
+                  <ScriptContentEditor
+                    selectedScene={selectedScene}
+                    scriptVersionId={scriptVersionId}
+                    sceneTitle={sceneTitle}
+                    onPreviousScene={handlePreviousScene}
+                    onNextScene={handleNextScene}
+                    onToggleFullscreen={handleToggleFullscreen}
+                    isFullscreen={isFullscreen}
+                    isLastScene={selectedScene ? scenes.findIndex((s) => s.id === selectedScene.id) === scenes.length - 1 : false}
+                    totalScenes={scenes.length}
+                    onCreateScene={handleCreateScene}
+                    onDeleteScene={handleDeleteScene}
+                    onLockScene={handleLockScene}
+                    scenes={scenes}
+                  />
           </div>
 
           {/* Right Sidebar - Scene Metadata */}

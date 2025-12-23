@@ -35,3 +35,4 @@ module ScriptUploadError
     end
   end
 end
+

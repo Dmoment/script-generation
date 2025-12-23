@@ -1,17 +1,14 @@
 # frozen_string_literal: true
 
 class AccessControl < ApplicationRecord
-  # Associations
   belongs_to :user
   belongs_to :company
   belongs_to :project, optional: true
 
-  # Validations
   validates :role, presence: true, inclusion: {
     in: %w[company_admin company_member project_admin project_member]
   }
 
-  # Ensure project belongs to the same company
   validate :project_belongs_to_company, if: -> { project_id.present? }
 
   # Ensure uniqueness: one role per user per company (when project_id is NULL)

@@ -27,7 +27,6 @@ class User < ApplicationRecord
     role == 'super_admin'
   end
 
-  # Company-specific role methods (check role in a specific company)
   def company_admin?(company_id = nil)
     return false if super_admin? # Super admin doesn't need company_admin check
     company_id ||= self.company_id
@@ -42,7 +41,6 @@ class User < ApplicationRecord
     access_controls.company_members.exists?(company_id: company_id)
   end
 
-  # Get role in a specific company
   def role_in_company(company_id)
     return 'super_admin' if super_admin?
     ac = access_controls.company_level.find_by(company_id: company_id)

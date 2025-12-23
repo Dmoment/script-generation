@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useUpdateSceneMutation } from "../../queries/scenes/useUpdateSceneMutation";
 import type { Scene } from "../../types/api";
-import { colors } from "../../lib/theme";
 
 interface SceneTextEditorProps {
   scene: Scene | null;
   scriptVersionId: number;
   onContentChange?: (content: string) => void;
+  onFinishScene?: () => void;
+  isLastScene?: boolean;
 }
 
 const SceneTextEditor: React.FC<SceneTextEditorProps> = ({
   scene,
   scriptVersionId,
   onContentChange,
+  onFinishScene,
+  isLastScene = false,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [content, setContent] = useState<string>(scene?.content || "");
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateSceneMutation = useUpdateSceneMutation();
@@ -25,7 +26,6 @@ const SceneTextEditor: React.FC<SceneTextEditorProps> = ({
   useEffect(() => {
     if (scene) {
       setContent(scene.content || "");
-      setLastSaved(null);
 
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -37,18 +37,14 @@ const SceneTextEditor: React.FC<SceneTextEditorProps> = ({
     async (contentToSave: string) => {
       if (!scene || !contentToSave.trim()) return;
 
-      setIsSaving(true);
       try {
         await updateSceneMutation.mutateAsync({
           id: scene.id,
           content: contentToSave,
         });
-        setLastSaved(new Date());
         onContentChange?.(contentToSave);
       } catch (error) {
         console.error("Failed to save scene content:", error);
-      } finally {
-        setIsSaving(false);
       }
     },
     [scene, updateSceneMutation, onContentChange]
@@ -88,6 +84,11 @@ const SceneTextEditor: React.FC<SceneTextEditorProps> = ({
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 2;
       }, 0);
+    } else if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (onFinishScene) {
+        onFinishScene();
+      }
     }
   };
 
@@ -149,34 +150,6 @@ const SceneTextEditor: React.FC<SceneTextEditorProps> = ({
           )}
         </div>
       </div>
-
-      {isSaving && (
-        <div className="px-6 py-2 border-t border-gray-200 bg-gray-50 flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-xs text-gray-600 font-mono">Saving...</span>
-        </div>
-      )}
-
-      {lastSaved && !isSaving && (
-        <div className="px-6 py-2 border-t border-gray-200 bg-gray-50 flex items-center gap-2">
-          <svg
-            className="w-4 h-4 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-          <span className="text-xs text-gray-600 font-mono">
-            Saved at {lastSaved.toLocaleTimeString()}
-          </span>
-        </div>
-      )}
     </div>
   );
 };

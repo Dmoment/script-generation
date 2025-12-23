@@ -1,10 +1,10 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CurrentService } from '../../types/generated/services.gen';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CurrentService } from "../../types/generated/services.gen";
 
 export interface Company {
   id: number;
   name: string;
-  account_type: 'company' | 'individual';
+  account_type: "company" | "individual";
 }
 
 export interface CurrentUser {
@@ -12,9 +12,9 @@ export interface CurrentUser {
   name: string;
   email: string;
   image?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: "male" | "female" | "other";
   phone_number?: string;
-  role?: 'admin' | 'member';
+  role?: "admin" | "member";
   onboarding_completed: boolean;
   company?: Company;
   created_at: string;
@@ -22,7 +22,7 @@ export interface CurrentUser {
 }
 
 export const userKeys = {
-  current: ['user', 'current'] as const,
+  current: ["user", "current"] as const,
 };
 
 interface UseCurrentUserQueryOptions {
@@ -45,9 +45,8 @@ export const useCurrentUserQuery = ({
 
 export const useInvalidateCurrentUser = () => {
   const queryClient = useQueryClient();
-  
+
   return () => {
     queryClient.invalidateQueries({ queryKey: userKeys.current });
   };
 };
-

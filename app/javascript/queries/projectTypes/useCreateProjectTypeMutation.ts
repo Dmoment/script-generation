@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { OpenAPI } from '../../types/generated/core/OpenAPI';
-import { request } from '../../types/generated/core/request';
-import { projectTypeKeys } from './useProjectTypesQuery';
-import type { ProjectType } from './useProjectTypesQuery';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { OpenAPI } from "../../types/generated/core/OpenAPI";
+import { request } from "../../types/generated/core/request";
+import { projectTypeKeys } from "./useProjectTypesQuery";
+import type { ProjectType } from "./useProjectTypesQuery";
 
 interface CreateProjectTypeData {
   name: string;
@@ -16,17 +16,15 @@ export const useCreateProjectTypeMutation = () => {
   return useMutation<CreateProjectTypeResponse, Error, CreateProjectTypeData>({
     mutationFn: async (data: CreateProjectTypeData) => {
       const response = await request<CreateProjectTypeResponse>(OpenAPI, {
-        method: 'POST',
-        url: '/v1/project_types',
+        method: "POST",
+        url: "/v1/project_types",
         body: data,
-        mediaType: 'application/json',
+        mediaType: "application/json",
       });
       return response;
     },
     onSuccess: () => {
-      // Invalidate project types queries to refetch
       queryClient.invalidateQueries({ queryKey: projectTypeKeys.all });
     },
   });
 };
-

@@ -53,7 +53,6 @@ class ApplicationPolicy
 
   private
 
-  # Helper methods for role checking
   def super_admin?
     user&.super_admin?
   end
