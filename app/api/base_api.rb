@@ -23,6 +23,8 @@ class BaseApi < Grape::API
     error_response = case e
     when JWT::DecodeError, JWT::ExpiredSignature
       { error: "Invalid or expired token" }
+    when ActiveRecord::RecordNotFound
+      { error: "#{e.model || 'Record'} not found" }
     when Grape::Exceptions::ValidationErrors
       error_details = e.errors.is_a?(Hash) ? e.errors.map { |k, v| "#{k}: #{v.join(', ')}" }.join("; ") : e.errors.to_s
       Rails.logger.error "Grape validation errors: #{error_details}"
@@ -38,6 +40,8 @@ class BaseApi < Grape::API
     status_code = case e
     when JWT::DecodeError, JWT::ExpiredSignature
       401
+    when ActiveRecord::RecordNotFound
+      404
     when Grape::Exceptions::ValidationErrors
       400
     when Grape::Exceptions::MethodNotAllowed

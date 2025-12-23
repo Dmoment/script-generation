@@ -215,3 +215,4 @@ const SceneActionsFooter: React.FC<SceneActionsFooterProps> = ({
 };
 
 export default SceneActionsFooter;
+

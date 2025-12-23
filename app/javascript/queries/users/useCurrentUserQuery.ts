@@ -50,3 +50,4 @@ export const useInvalidateCurrentUser = () => {
     queryClient.invalidateQueries({ queryKey: userKeys.current });
   };
 };
+

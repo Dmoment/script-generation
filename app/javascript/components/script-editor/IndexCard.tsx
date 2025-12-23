@@ -192,3 +192,4 @@ const IndexCard: React.FC<IndexCardProps> = ({
 };
 
 export default IndexCard;
+
