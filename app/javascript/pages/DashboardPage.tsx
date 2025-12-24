@@ -158,15 +158,27 @@ const DashboardPage: React.FC = () => {
   }, [statusFilter, typeFilter, searchQuery, sortColumn, sortDirection]);
 
   // Automatically trigger login if not authenticated (e.g., coming from marketing page)
+  // Add delay to allow Auth0 SDK to hydrate from localStorage first
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      loginWithRedirect({
-        appState: {
-          returnTo: "/dashboard",
-        },
-      }).catch((error) => {
-        console.error("Login redirect failed:", error);
-      });
+      // Check if there's a recent auth attempt in localStorage to prevent loops
+      const lastAuthAttempt = localStorage.getItem('auth0_last_redirect');
+      const now = Date.now();
+      
+      // Only redirect if we haven't tried in the last 5 seconds
+      if (!lastAuthAttempt || (now - parseInt(lastAuthAttempt, 10)) > 5000) {
+        localStorage.setItem('auth0_last_redirect', now.toString());
+        loginWithRedirect({
+          appState: {
+            returnTo: "/dashboard",
+          },
+        }).catch((error) => {
+          console.error("Login redirect failed:", error);
+        });
+      }
+    } else if (isAuthenticated) {
+      // Clear the redirect tracker once authenticated
+      localStorage.removeItem('auth0_last_redirect');
     }
   }, [isLoading, isAuthenticated, loginWithRedirect]);
 

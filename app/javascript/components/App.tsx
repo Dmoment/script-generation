@@ -49,11 +49,12 @@ const RootRouteHandler: React.FC<{ features: Feature[]; appName: string }> = ({ 
   }, [location]);
 
   useEffect(() => {
-    // Redirect authenticated users away from root
-    if (isAuthenticated && location.pathname === '/') {
+    // Redirect authenticated users away from root (only if not processing callback)
+    // The onRedirectCallback in Auth0Provider handles the callback redirect
+    if (isAuthenticated && location.pathname === '/' && !isAuthCallback) {
       window.location.href = '/dashboard';
     }
-  }, [isAuthenticated, location.pathname]);
+  }, [isAuthenticated, location.pathname, isAuthCallback]);
 
   // Show loading during Auth0 callback or while Auth0 is loading
   if (isAuthCallback || (isLoading && location.pathname === '/')) {

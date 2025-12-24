@@ -50,10 +50,12 @@ function mountReact() {
         scope: "openid profile email",
         ...(auth0Audience && { audience: auth0Audience }),
       }}
+      cacheLocation="localstorage"
       onRedirectCallback={(appState) => {
         // Navigate to the returnTo URL or dashboard after login
+        // With cacheLocation="localstorage", tokens persist across page reloads
         const returnTo = appState?.returnTo || '/dashboard';
-        window.location.href = returnTo;
+        window.location.replace(returnTo);
       }}
     >
       <App {...props} />
