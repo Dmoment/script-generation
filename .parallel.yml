@@ -8,3 +8,4 @@ processes: 4
 # Test file pattern
 test_files: 'spec/**/*_spec.rb'
 
+

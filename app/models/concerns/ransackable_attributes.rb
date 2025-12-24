@@ -26,3 +26,4 @@ module RansackableAttributes
 end
 
 
+

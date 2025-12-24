@@ -145,3 +145,4 @@ const IndexCardFilters: React.FC<IndexCardFiltersProps> = ({
 
 export default IndexCardFilters;
 
+
