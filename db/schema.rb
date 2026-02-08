@@ -139,7 +139,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_22_153716) do
     t.index ["auth0_id"], name: "index_users_on_auth0_id", unique: true
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.check_constraint "role::text = ANY (ARRAY['super_admin'::character varying, 'company_admin'::character varying, 'project_admin'::character varying, 'regular_user'::character varying]::text[])", name: "check_valid_role"
+    t.check_constraint "role::text = ANY (ARRAY['super_admin'::character varying::text, 'company_admin'::character varying::text, 'project_admin'::character varying::text, 'regular_user'::character varying::text])", name: "check_valid_role"
   end
 
   add_foreign_key "access_controls", "companies"
