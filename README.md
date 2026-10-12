@@ -110,6 +110,17 @@ bin/setup
 
 The application will be available at `http://localhost:3000`
 
+## Local QA without Auth0
+
+```bash
+DEV_AUTH_BYPASS=1 bin/rails server -p 3001
+SEED_EMAIL=dev.tester@localhost bin/rails runner db/seeds/sample_screenplay.rb
+```
+
+Development/test only: the app runs as a stub user and the API accepts
+`Authorization: Bearer dev-bypass-token`, so the whole UI can be driven without
+an Auth0 login (see `docs/SCENE_EDITOR_EXPLANATION.md`).
+
 ## API Development Workflow
 
 When creating or modifying API endpoints, you need to regenerate TypeScript types for the frontend.
