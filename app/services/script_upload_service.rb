@@ -48,6 +48,7 @@ class ScriptUploadService
     initial_version = create_initial_version(script)
     create_initial_scene(initial_version)
     attach_file_to_version(script)
+    import_scenes_from_file(script)
     script.reload
   end
 
@@ -133,6 +134,19 @@ class ScriptUploadService
     filename = uploaded_file.original_filename || uploaded_file.filename
     notes = params[:notes] || "Uploaded file: #{filename}"
     version.update!(notes: notes)
+  end
+
+  # Final Draft, Fountain and plain-text uploads are parsed into scenes so the
+  # editor opens with the real script. PDFs stay attached as reference only.
+  def import_scenes_from_file(script)
+    filename = uploaded_file.respond_to?(:original_filename) ? uploaded_file.original_filename : nil
+    return unless Screenplay::ScriptImporter.importable?(filename)
+
+    version = find_initial_version(script)
+    result = Screenplay::ScriptImporter.new(version, file: uploaded_file).call
+    Rails.logger.info "Imported #{result.scenes_count} scenes (#{result.elements_count} elements) from #{filename}"
+  rescue Screenplay::ImportError => e
+    Rails.logger.warn "Could not import scenes from #{filename}: #{e.message}"
   end
 
   def extract_file_size

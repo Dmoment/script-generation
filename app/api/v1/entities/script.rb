@@ -22,6 +22,9 @@ module V1
       end
 
       # Timestamps (used for sorting/display in frontend)
+      expose :author_name, documentation: { type: 'String', desc: 'Name of the writer who created the script' } do |script|
+        script.created_by_user&.name
+      end
       expose :created_at
       expose :updated_at
 
