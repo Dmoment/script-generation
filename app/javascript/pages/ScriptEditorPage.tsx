@@ -6,6 +6,7 @@ import { colors } from "../lib/theme";
 import ScriptEditorHeader, { type EditorTab } from "../components/script-editor/ScriptEditorHeader";
 import CharactersView from "../components/script-editor/CharactersView";
 import BreakdownView from "../components/script-editor/BreakdownView";
+import RevisionBar from "../components/script-editor/RevisionBar";
 import { useScriptQuery } from "../queries/scripts/useScriptQuery";
 import { useRevisionsQuery } from "../queries/versions/useVersionQueries";
 import SceneNavigationSidebar from "../components/script-editor/SceneNavigationSidebar";
@@ -59,6 +60,8 @@ const ScriptEditorPage: React.FC = () => {
   });
   const { data: script } = useScriptQuery({ scriptId: scriptId ? parseInt(scriptId, 10) : 0, enabled: isAuthenticated });
   const { data: revisions } = useRevisionsQuery(scriptVersionId, isAuthenticated);
+  const currentVersion = script?.script_versions?.find((v) => v.id === scriptVersionId);
+  const { user } = useAuth0();
   const revisedSceneIds = useMemo(() => new Set(revisions?.changed_scene_ids || []), [revisions]);
   const createSceneMutation = useCreateSceneMutation();
   const deleteSceneMutation = useDeleteSceneMutation();
@@ -114,7 +117,8 @@ const ScriptEditorPage: React.FC = () => {
       .map((scene) => ({
         id: scene.id,
         sceneNumber: scene.scene_number,
-        slugline: scene.slugline || "(no slugline)",
+        sceneLabel: scene.scene_label,
+        slugline: scene.omitted ? "OMITTED" : scene.slugline || "(no slugline)",
         summary: deriveSummary(scene),
         tone: (scene.metadata?.tone as string) || "Neutral",
         purpose: (scene.metadata?.purpose as string) || "—",
@@ -162,15 +166,13 @@ const ScriptEditorPage: React.FC = () => {
   const handleCreateNextScene = async () => {
     if (!selectedScene || !scriptVersionId) return;
     
-    const nextSceneNumber = (selectedScene.scene_number || scenes.length) + 1;
-    
     try {
       const newScene = await createSceneMutation.mutateAsync({
         script_version_id: scriptVersionId,
-        scene_number: nextSceneNumber,
+        scene_number: Math.max(...scenes.map((s) => s.scene_number)) + 1,
         slugline: "INT. LOCATION - DAY",
         content: "",
-        order: nextSceneNumber,
+        after_scene_id: selectedScene.id,
       });
       
       setSelectedSceneId(newScene.id);
@@ -206,6 +208,8 @@ const ScriptEditorPage: React.FC = () => {
       await deleteSceneMutation.mutateAsync(sceneId);
       
       const deletedScene = scenes.find(s => s.id === sceneId);
+      // With locked numbering the scene stays as an OMITTED placeholder; keep it selected.
+      if (currentVersion?.scene_numbers_locked_at) return;
       if (deletedScene && selectedSceneId === sceneId) {
         const remainingScenes = scenes.filter(s => s.id !== sceneId);
         if (remainingScenes.length > 0) {
@@ -354,6 +358,7 @@ const ScriptEditorPage: React.FC = () => {
 
           {/* Central Panel - Script Content */}
           <div className="flex-1 bg-white flex flex-col overflow-hidden">
+                  <RevisionBar version={currentVersion} />
                   <ScriptContentEditor
                     selectedScene={selectedScene}
                     scriptVersionId={scriptVersionId}
@@ -381,6 +386,7 @@ const ScriptEditorPage: React.FC = () => {
               scene={selectedScene}
               sceneIndex={selectedScene ? scenes.findIndex((s) => s.id === selectedScene.id) + 1 : 0}
               totalScenes={scenes.length}
+              currentUserId={user?.sub}
             />
           )}
         </div>

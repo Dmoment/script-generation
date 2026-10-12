@@ -186,7 +186,7 @@ const SceneNavigationSidebar: React.FC<SceneNavigationSidebarProps> = ({
                   />
                 </svg>
                 <span className="text-sm font-mono truncate" style={{ fontFamily: 'Courier, "Courier New", monospace' }}>
-                  {scene.scene_number}. {scene.slugline || "Untitled Scene"}
+                  {scene.scene_label || scene.scene_number}. {scene.omitted ? "OMITTED" : scene.slugline || "Untitled Scene"}
                 </span>
                 {revisedSceneIds?.has(scene.id) && (
                   <span

@@ -116,3 +116,47 @@ export const invalidateSceneDerived = (queryClient: ReturnType<typeof useQueryCl
   queryClient.invalidateQueries({ queryKey: versionKeys.breakdown(versionId) });
   queryClient.invalidateQueries({ queryKey: versionKeys.revisions(versionId) });
 };
+
+/** Lock or unlock production scene numbers. */
+export const useLockNumbersMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ScriptVersion, Error, { versionId: number; locked: boolean }>({
+    mutationFn: async ({ versionId, locked }) => {
+      const response = await request<ScriptVersion>(OpenAPI, {
+        method: "PUT",
+        url: `/v1/script_versions/${versionId}/lock_numbers`,
+        body: { locked },
+        mediaType: "application/json",
+      });
+      return response as unknown as ScriptVersion;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scripts"] });
+      queryClient.invalidateQueries({ queryKey: sceneKeys.all });
+    },
+  });
+};
+
+/** Set revision colour / date / notes on a draft. */
+export const useUpdateVersionMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ScriptVersion, Error, { versionId: number; revision_color?: string; revision_date?: string; notes?: string }>({
+    mutationFn: async ({ versionId, ...body }) => {
+      const response = await request<ScriptVersion>(OpenAPI, {
+        method: "PUT",
+        url: `/v1/script_versions/${versionId}`,
+        body,
+        mediaType: "application/json",
+      });
+      return response as unknown as ScriptVersion;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scripts"] }),
+  });
+};
+
+export const REVISION_COLORS = ["white", "blue", "pink", "yellow", "green", "goldenrod", "buff", "salmon", "cherry"] as const;
+export const REVISION_HEX: Record<string, string> = {
+  white: "#FFFFFF", blue: "#BFD7F2", pink: "#F9C9D8", yellow: "#FBEFA8", green: "#C9EBC9",
+  goldenrod: "#F0CF7A", buff: "#F4E1C1", salmon: "#F8C4B4", cherry: "#F2A6A6",
+};
+export const revisionHex = (color?: string | null) => REVISION_HEX[(color || "").replace(/^double /, "")] || "#FFFFFF";

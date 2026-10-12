@@ -43,6 +43,10 @@ export interface ScriptVersion {
   created_at: string;
   updated_at: string;
   has_uploaded_file?: boolean;
+  scene_numbers_locked_at?: string | null;
+  revision_color?: string | null;
+  revision_date?: string | null;
+  revision_color_label?: string | null;
 }
 
 // Screenplay Element Types (industry standard formatting)
@@ -76,6 +80,8 @@ export interface Scene {
   elements?: ScreenplayElement[];      // Structured screenplay elements
   order: number;
   metadata?: SceneMetadata;
+  scene_label?: string;                // Production label: locked number, 12A, or OMITTED
+  omitted?: boolean;
   character_names?: string[];          // Derived: characters in this scene
   locations?: string[];                // Derived: locations in this scene
   created_at: string;
@@ -96,6 +102,8 @@ export interface SceneMetadata {
   status?: string;
   beats?: string[];
   breakdown?: Record<string, string[]>; // Production breakdown tags per category
+  scene_label?: string;                // Locked production number (set by the server)
+  omitted?: boolean;
   source_scene_id?: number;            // Scene this one was cloned from (previous draft)
   card_x?: number;                     // Corkboard x position
   card_y?: number;                     // Corkboard y position

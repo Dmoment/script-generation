@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_25_115645) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_13_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -87,6 +87,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_25_115645) do
     t.index ["status"], name: "index_projects_on_status"
   end
 
+  create_table "scene_comments", force: :cascade do |t|
+    t.bigint "scene_id", null: false
+    t.uuid "user_id", null: false
+    t.bigint "parent_id"
+    t.text "body", null: false
+    t.string "element_id"
+    t.datetime "resolved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["parent_id"], name: "index_scene_comments_on_parent_id"
+    t.index ["scene_id", "created_at"], name: "index_scene_comments_on_scene_id_and_created_at"
+    t.index ["scene_id"], name: "index_scene_comments_on_scene_id"
+    t.index ["user_id"], name: "index_scene_comments_on_user_id"
+  end
+
   create_table "scenes", force: :cascade do |t|
     t.bigint "script_version_id", null: false
     t.integer "scene_number", null: false
@@ -109,6 +124,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_25_115645) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "scene_numbers_locked_at"
+    t.string "revision_color"
+    t.date "revision_date"
     t.index ["script_id", "version_number"], name: "index_script_versions_on_script_id_and_version_number", unique: true
     t.index ["script_id"], name: "index_script_versions_on_script_id"
   end
@@ -151,6 +169,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_25_115645) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "projects", "companies"
   add_foreign_key "projects", "users", column: "created_by_user_id"
+  add_foreign_key "scene_comments", "scene_comments", column: "parent_id"
+  add_foreign_key "scene_comments", "scenes"
+  add_foreign_key "scene_comments", "users"
   add_foreign_key "scenes", "script_versions"
   add_foreign_key "script_versions", "scripts"
   add_foreign_key "scripts", "projects"

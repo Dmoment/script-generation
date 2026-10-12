@@ -14,7 +14,12 @@ module Screenplay
 
     def call
       ActiveRecord::Base.transaction do
-        version = @script.script_versions.create!(notes: @notes.presence || "Draft from v#{@source&.version_number}")
+        version = @script.script_versions.create!(
+          notes: @notes.presence || "Draft from v#{@source&.version_number}",
+          scene_numbers_locked_at: @source&.numbers_locked? ? Time.current : nil,
+          revision_color: @source&.numbers_locked? ? RevisionColors.next_after(@source.revision_color) : nil,
+          revision_date: @source&.numbers_locked? ? Date.current : nil
+        )
         @source&.scenes&.ordered&.each do |scene|
           version.scenes.create!(
             scene_number: scene.scene_number,

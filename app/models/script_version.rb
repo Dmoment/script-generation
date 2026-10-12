@@ -5,6 +5,10 @@ class ScriptVersion < ApplicationRecord
   has_one_attached :file
   has_many :scenes, dependent: :destroy
 
+  def numbers_locked?
+    scene_numbers_locked_at.present?
+  end
+
   validates :version_number, presence: true, uniqueness: { scope: :script_id }
   validates :version_number, numericality: { greater_than: 0 }
 

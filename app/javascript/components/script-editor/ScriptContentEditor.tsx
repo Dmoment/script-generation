@@ -119,7 +119,7 @@ const ScriptContentEditor: React.FC<ScriptContentEditorProps> = ({
             className="px-4 py-1.5 text-white rounded text-sm font-bold uppercase border-2 border-black"
             style={{ backgroundColor: colors.primary.pink }}
           >
-            Scene {selectedScene?.scene_number || "—"}
+            Scene {selectedScene?.scene_label || selectedScene?.scene_number || "—"}
           </button>
           {isEditingSlugline ? (
             <div className="flex items-center gap-2">

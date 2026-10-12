@@ -12,6 +12,7 @@ export interface CreateSceneData {
   elements?: ScreenplayElement[];
   order?: number;
   metadata?: SceneMetadata;
+  after_scene_id?: number;
 }
 
 export const useCreateSceneMutation = () => {

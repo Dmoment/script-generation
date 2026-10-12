@@ -4,6 +4,7 @@ import { colors } from "../../lib/theme";
 export interface SceneCard {
   id: number;
   sceneNumber: number;
+  sceneLabel?: string;
   slugline: string;
   summary: string;
   tone: string;
@@ -77,7 +78,7 @@ const IndexCard: React.FC<IndexCardProps> = ({
               className="text-xs font-black uppercase text-black"
               style={{ fontFamily: 'Courier, "Courier New", monospace' }}
             >
-              SCENE {scene.sceneNumber}
+              SCENE {scene.sceneLabel || scene.sceneNumber}
             </span>
             {scene.act && (
               <span

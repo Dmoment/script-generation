@@ -8,7 +8,7 @@ export const useDeleteSceneMutation = () => {
 
   return useMutation<void, Error, number>({
     mutationFn: async (sceneId: number) => {
-      await request<void>(OpenAPI, {
+      await request<unknown>(OpenAPI, {
         method: "DELETE",
         url: `/v1/scenes/${sceneId}`,
         mediaType: "application/json",

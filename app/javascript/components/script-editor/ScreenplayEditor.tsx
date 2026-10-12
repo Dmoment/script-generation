@@ -555,6 +555,17 @@ const ScreenplayEditor: React.FC<ScreenplayEditorProps> = ({ scene, allScenes, o
     );
   }
 
+  if (scene.omitted) {
+    return (
+      <div className="flex-1 flex items-center justify-center" style={{ backgroundColor: colors.background.beigeAlt }}>
+        <div className="text-center max-w-md px-6">
+          <p className="font-black uppercase text-lg">Scene {scene.scene_label || scene.scene_number} omitted</p>
+          <p className="text-sm text-gray-600 font-mono mt-2">Scene numbers are locked, so this cut scene keeps its number as a placeholder. Unlock numbers in the revision bar to remove it for good.</p>
+        </div>
+      </div>
+    );
+  }
+
   const statusLabel: Record<SaveStatus, string> = {
     saved: "Saved",
     dirty: "Unsaved changes",

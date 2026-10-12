@@ -360,14 +360,64 @@ module V1
         end
 
         ActiveRecord::Base.transaction do
-          # Two passes keep the unique (version, scene_number) index happy while numbers shuffle.
-          ids.each_with_index { |scene_id, i| scenes[scene_id].update_columns(scene_number: -(i + 1)) }
-          ids.each_with_index do |scene_id, i|
-            scenes[scene_id].update_columns(scene_number: i + 1, order: i + 1, updated_at: Time.current)
+          if script_version.numbers_locked?
+            # Locked: labels stay with their scenes, only the display order moves.
+            ids.each_with_index { |scene_id, i| scenes[scene_id].update_columns(order: i + 1, updated_at: Time.current) }
+          else
+            # Two passes keep the unique (version, scene_number) index happy while numbers shuffle.
+            ids.each_with_index { |scene_id, i| scenes[scene_id].update_columns(scene_number: -(i + 1)) }
+            ids.each_with_index do |scene_id, i|
+              scenes[scene_id].update_columns(scene_number: i + 1, order: i + 1, updated_at: Time.current)
+            end
           end
         end
 
         present script_version.scenes.ordered.reload, with: V1::Entities::Scene
+      end
+
+      desc "Lock scene numbers (production numbering: inserts become A-scenes, deletions become OMITTED)", {
+        success: V1::Entities::ScriptVersion
+      }
+      params do
+        requires :id, type: Integer, desc: "Version ID"
+        requires :locked, type: Boolean, desc: "true to lock, false to unlock and renumber"
+      end
+      put ":id/lock_numbers" do
+        authenticate!
+        version = ScriptVersion.find(params[:id])
+        authorize version.script, :update?
+
+        if params[:locked]
+          Screenplay::SceneNumbering.lock!(version) unless version.numbers_locked?
+        elsif version.numbers_locked?
+          Screenplay::SceneNumbering.unlock!(version)
+        end
+        present version.reload, with: V1::Entities::ScriptVersion
+      end
+
+      desc "Set the revision colour and date of a draft", { success: V1::Entities::ScriptVersion }
+      params do
+        requires :id, type: Integer, desc: "Version ID"
+        optional :revision_color, type: String, desc: "white, blue, pink, yellow, green, goldenrod, buff, salmon, cherry (or 'double <colour>'); empty to clear"
+        optional :revision_date, type: Date
+        optional :notes, type: String
+      end
+      put ":id" do
+        authenticate!
+        version = ScriptVersion.find(params[:id])
+        authorize version.script, :update?
+
+        attrs = {}
+        if params.key?(:revision_color)
+          color = params[:revision_color].to_s.downcase.strip
+          base = color.sub(/\Adouble /, "")
+          error!({ error: "Unknown revision colour" }, 422) if color.present? && !Screenplay::RevisionColors::SEQUENCE.include?(base)
+          attrs[:revision_color] = color.presence
+        end
+        attrs[:revision_date] = params[:revision_date] if params.key?(:revision_date)
+        attrs[:notes] = params[:notes] if params.key?(:notes)
+        version.update!(attrs)
+        present version, with: V1::Entities::ScriptVersion
       end
 
       desc "Compare this version with another version of the same script (scene by scene, element by element)", {

@@ -4,6 +4,8 @@ import { colors } from "../../lib/theme";
 import type { Scene, SceneMetadata } from "../../types/api";
 import { useUpdateSceneMutation } from "../../queries/scenes/useUpdateSceneMutation";
 import { invalidateSceneDerived } from "../../queries/versions/useVersionQueries";
+import SceneComments from "./SceneComments";
+import { useSceneCommentsQuery } from "../../queries/scenes/useSceneCommentsQuery";
 
 interface SceneMetadataSidebarProps {
   isCollapsed: boolean;
@@ -11,6 +13,7 @@ interface SceneMetadataSidebarProps {
   scene: Scene | null;
   sceneIndex: number;
   totalScenes: number;
+  currentUserId?: string;
 }
 
 /** Breakdown categories a crew tags per scene. Cast is read from the script itself. */
@@ -38,7 +41,10 @@ const SceneMetadataSidebar: React.FC<SceneMetadataSidebarProps> = ({
   scene,
   sceneIndex,
   totalScenes,
+  currentUserId,
 }) => {
+  const { data: commentThreads = [] } = useSceneCommentsQuery(scene?.id ?? null);
+  const openComments = commentThreads.filter((t) => !t.resolved_at).length;
   const queryClient = useQueryClient();
   const updateScene = useUpdateSceneMutation();
   const [draft, setDraft] = useState<SceneMetadata>({});
@@ -185,6 +191,11 @@ const SceneMetadataSidebar: React.FC<SceneMetadataSidebarProps> = ({
               <label className={label} htmlFor="meta-summary">Summary</label>
               <textarea id="meta-summary" className={`${field} min-h-[64px]`} placeholder="One or two lines for the index card" value={(draft.summary as string) || ""} onChange={(e) => change({ summary: e.target.value })} />
             </div>
+          </Section>
+
+          {/* Comments */}
+          <Section title="Comments" color={colors.primary.pink} count={openComments} open={!!open.comments} onToggle={() => toggle("comments")}>
+            <SceneComments sceneId={scene.id} currentUserId={currentUserId} />
           </Section>
 
           {/* Notes */}

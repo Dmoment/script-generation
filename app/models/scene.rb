@@ -2,6 +2,7 @@
 
 class Scene < ApplicationRecord
   belongs_to :script_version
+  has_many :comments, class_name: 'SceneComment', dependent: :destroy
 
   self.whitelisted_ransackable_attributes = %w[
     scene_number
@@ -26,6 +27,15 @@ class Scene < ApplicationRecord
   before_save :sync_slugline_from_elements, if: :elements_changed?
 
   # Extract all unique character names from this scene's elements
+  # Production label: the locked number (12, 12A), else the live number.
+  def scene_label
+    Screenplay::SceneNumbering.label_for(self)
+  end
+
+  def omitted?
+    metadata&.dig('omitted') == true
+  end
+
   def character_names
     return [] unless elements.is_a?(Array)
 

@@ -10,6 +10,7 @@ class User < ApplicationRecord
 
   belongs_to :company, optional: true # Primary/default company (for backward compatibility)
   has_many :access_controls, dependent: :destroy
+  has_many :scene_comments, dependent: :destroy
   has_many :companies, through: :access_controls, source: :company
   has_many :projects, dependent: :destroy, foreign_key: 'created_by_user_id'
   has_many :accessible_projects, through: :access_controls, source: :project

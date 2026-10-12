@@ -73,6 +73,7 @@ module V1
         end
         optional :order, type: Integer, desc: "Display order (defaults to next available)"
         optional :metadata, type: Hash, desc: "Additional metadata (JSON object)"
+        optional :after_scene_id, type: Integer, desc: "Insert directly after this scene (renumbers, or assigns an A-scene label when numbers are locked)"
       end
       post do
         authenticate!
@@ -80,14 +81,34 @@ module V1
         script_version = ScriptVersion.find(params[:script_version_id])
         authorize script_version.script, :update?
 
+        metadata = params[:metadata] || {}
+        scene_number = params[:scene_number]
+        order = params[:order]
+
+        if params[:after_scene_id]
+          previous = script_version.scenes.find(params[:after_scene_id])
+          following = script_version.scenes.where("\"order\" > ?", previous.order).order(:order)
+          if script_version.numbers_locked?
+            metadata = metadata.merge("scene_label" => Screenplay::SceneNumbering.inserted_label(script_version, previous))
+            scene_number = (script_version.scenes.maximum(:scene_number) || 0) + 1
+          else
+            # Open numbering: shift everything after the insertion point by one (two passes for the unique index).
+            following.reverse_each { |s| s.update_columns(scene_number: -(s.scene_number + 1)) }
+            following.reverse_each { |s| s.update_columns(scene_number: -s.scene_number, order: s.order + 1) }
+            scene_number = previous.scene_number + 1
+          end
+          order = previous.order + 1
+          following.each { |s| s.update_columns(order: s.order + 1) } if script_version.numbers_locked?
+        end
+
         scene = Scene.new(
           script_version: script_version,
-          scene_number: params[:scene_number],
+          scene_number: scene_number,
           slugline: params[:slugline],
           content: params[:content],
           elements: params[:elements] || [],
-          order: params[:order],
-          metadata: params[:metadata] || {}
+          order: order,
+          metadata: metadata
         )
 
         # If content provided but no elements, parse content into elements
@@ -166,8 +187,14 @@ module V1
         scene = Scene.find(params[:id])
         authorize scene, :destroy?
 
-        scene.destroy
-        status 204
+        if scene.script_version.numbers_locked? && !scene.omitted?
+          # Locked numbering: keep the number as an OMITTED placeholder.
+          Screenplay::SceneNumbering.omit!(scene)
+          present scene, with: V1::Entities::Scene
+        else
+          scene.destroy
+          status 204
+        end
       end
     end
   end

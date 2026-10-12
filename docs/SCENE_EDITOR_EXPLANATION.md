@@ -69,3 +69,18 @@ The Drafts menu in the header switches versions, starts a new draft
 one (`GET /api/v1/script_versions/:id/compare?with=`). Scenes revised since the
 previous draft carry a `*` in the scene list and in the right margin of the
 print view (`GET /api/v1/script_versions/:id/revisions`).
+
+## Production numbering, revision colours and comments
+
+The revision bar above the editor locks scene numbers for a draft
+(`PUT /api/v1/script_versions/:id/lock_numbers`). Once locked, every scene
+keeps its number as `scene_label`; a scene inserted after another gets a
+letter (6A, 6B) via `POST /api/v1/scenes` with `after_scene_id`; deleting a
+scene keeps it as an OMITTED placeholder; reordering keeps labels. Unlocking
+renumbers from 1 and drops placeholders. The revision colour and date
+(`PUT /api/v1/script_versions/:id`) print on the title page; a new draft from a
+locked draft advances to the next colour in the industry sequence (white, blue,
+pink, yellow, green, goldenrod, buff, salmon, cherry, then double colours).
+
+Scene comments (`/api/v1/scenes/:id/comments`) are threads with one level of
+replies; threads can be resolved, and only the author can delete a comment.

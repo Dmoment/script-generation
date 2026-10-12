@@ -546,6 +546,47 @@ DRAFT_TWO_CHANGES = {
   10 => ->(elements) { elements.reject { |e| e["text"] == "The gull lands on the blank sign. Considers it. Leaves it alone." } }
 }.freeze
 
+# Second draft goes to production: lock numbers as the White revision, then
+# insert a new 6A scene and omit scene 4 so A-scenes and OMITTED placeholders
+# are visible in the sample.
+def lock_and_revise!(draft)
+  return if draft.numbers_locked?
+
+  Screenplay::SceneNumbering.lock!(draft)
+  draft.update!(revision_color: "white", revision_date: Date.current)
+  hold = draft.scenes.ordered.find { |s| s.scene_number == 6 }
+  deck = draft.scenes.ordered.find { |s| s.scene_number == 4 }
+  return unless hold && deck
+
+  draft.scenes.where("\"order\" > ?", hold.order).find_each { |s| s.update_columns(order: s.order + 1) }
+  elements = build_elements(<<~SCENE)
+    EXT. SEA SPARROW - BOW - DAY
+
+    Joseph climbs back on deck with the pencil page folded into his shirt pocket. Arjun, 30s, is coiling a line.
+
+    @ARJUN
+    Well?
+
+    @JOSEPH
+    She read it twice.
+
+    @ARJUN
+    That's not a no.
+  SCENE
+  draft.scenes.create!(
+    scene_number: (draft.scenes.maximum(:scene_number) || 0) + 1,
+    order: hold.order + 1,
+    elements: elements,
+    content: Screenplay::TextRenderer.render(elements),
+    metadata: { "act" => "Act 2", "tone" => "Cool", "status" => "Draft", "duration" => "0:40",
+                "purpose" => "Added in the White revision: Joseph reports back to the co-op",
+                "summary" => "New 6A. Joseph tells Arjun that Mira read the offer twice.",
+                "scene_label" => Screenplay::SceneNumbering.inserted_label(draft, hold),
+                "breakdown" => { "props" => [ "Pencil co-op offer page", "Coil of rope" ], "vehicles" => [ "Sea Sparrow ferry" ] } }
+  )
+  Screenplay::SceneNumbering.omit!(deck)
+end
+
 ActiveRecord::Base.transaction do
   project = Project.find_or_create_by!(company_id: company.id, title: PROJECT_TITLE) do |p|
     p.created_by_user_id = user.id
@@ -586,7 +627,10 @@ ActiveRecord::Base.transaction do
       end
     end
 
-    puts "Script '#{SCRIPT_TITLE}' already exists for #{email} (script ##{existing.id}); backfilled content on #{backfilled} scene(s), breakdown tags on #{tagged}#{drafted ? ", added second draft ##{drafted.id}" : ""}. Set SEED_FORCE=1 to replace."
+    second = drafted || existing.script_versions.order(:version_number).second
+    lock_and_revise!(second) if second
+
+    puts "Script '#{SCRIPT_TITLE}' already exists for #{email} (script ##{existing.id}); backfilled content on #{backfilled} scene(s), breakdown tags on #{tagged}#{drafted ? ", added second draft ##{drafted.id}" : ""}#{second ? ", locked draft ##{second.id} as White" : ""}. Set SEED_FORCE=1 to replace."
   else
     existing&.destroy!
     script = project.scripts.create!(
@@ -620,6 +664,7 @@ ActiveRecord::Base.transaction do
       change = DRAFT_TWO_CHANGES[sc.scene_number]
       sc.update!(elements: change.call(sc.elements)) if change
     end
+    lock_and_revise!(draft)
 
     puts "Seeded project ##{project.id} '#{PROJECT_TITLE}' / script ##{script.id} / version ##{version.id} with #{version.scenes.count} scenes for #{email} (+ second draft ##{draft.id})"
     puts "Characters: #{version.scenes.flat_map(&:character_names).uniq.sort.join(', ')}"

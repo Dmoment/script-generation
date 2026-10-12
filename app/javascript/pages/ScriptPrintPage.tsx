@@ -4,7 +4,7 @@ import { useAuth0 } from '../hooks/useAuth';
 import LoadingScreen from "../components/LoadingScreen";
 import { useScenesQuery } from "../queries/scenes/useScenesQuery";
 import { useScriptQuery } from "../queries/scripts/useScriptQuery";
-import { useRevisionsQuery } from "../queries/versions/useVersionQueries";
+import { useRevisionsQuery, revisionHex } from "../queries/versions/useVersionQueries";
 import type { Scene, ScreenplayElement, ScreenplayElementType } from "../types/api";
 import { cueText } from "../lib/screenplay-editor";
 
@@ -92,6 +92,13 @@ const ScriptPrintPage: React.FC = () => {
           {version ? `Draft ${version.version_number}` : ""}
           {version?.updated_at ? ` · ${new Date(version.updated_at).toLocaleDateString()}` : ""}
         </p>
+        {version?.revision_color && (
+          <p style={{ marginTop: "1em" }}>
+            <span style={{ display: "inline-block", padding: "2px 10px", border: "1px solid #000", backgroundColor: revisionHex(version.revision_color), textTransform: "uppercase" }}>
+              {version.revision_color_label} revision{version.revision_date ? ` · ${new Date(version.revision_date).toLocaleDateString()}` : ""}
+            </span>
+          </p>
+        )}
         {revisions?.previous_version && (
           <p style={{ marginTop: "2em", fontSize: "10pt" }}>* marks scenes revised since draft {revisions.previous_version.version_number}</p>
         )}
@@ -105,6 +112,16 @@ const ScriptPrintPage: React.FC = () => {
 };
 
 function renderScene(scene: Scene, revisedScene = false): React.ReactNode {
+  if (scene.omitted) {
+    return (
+      <p className="el slugline" key={scene.id}>
+        <span style={{ display: "flex", justifyContent: "space-between" }}>
+          <span>{scene.scene_label || scene.scene_number} OMITTED</span>
+          <span aria-label="scene number">{scene.scene_label || scene.scene_number}</span>
+        </span>
+      </p>
+    );
+  }
   const elements: ScreenplayElement[] = Array.isArray(scene.elements) ? scene.elements : [];
   const blocks = elements.some((el) => el.type === "slugline") || !scene.slugline
     ? elements
@@ -128,17 +145,17 @@ function renderScene(scene: Scene, revisedScene = false): React.ReactNode {
       {groups.map((group, i) =>
         Array.isArray(group) ? (
           <div className="dialogue-block" key={`${scene.id}-${i}`}>
-            {group.map((el, j) => renderElement(el, `${scene.id}-${i}-${j}`, scene.scene_number, revisedScene))}
+            {group.map((el, j) => renderElement(el, `${scene.id}-${i}-${j}`, scene.scene_label || String(scene.scene_number), revisedScene))}
           </div>
         ) : (
-          renderElement(group, `${scene.id}-${i}`, scene.scene_number, revisedScene)
+          renderElement(group, `${scene.id}-${i}`, scene.scene_label || String(scene.scene_number), revisedScene)
         )
       )}
     </React.Fragment>
   );
 }
 
-function renderElement(el: ScreenplayElement, key: string, sceneNumber: number, revisedScene = false): React.ReactNode {
+function renderElement(el: ScreenplayElement, key: string, sceneNumber: string, revisedScene = false): React.ReactNode {
   if (el.type === "page_break") return <div className="page-break" key={key} />;
   if (!el.text?.trim()) return null;
   const text = el.type === "character" ? cueText(el) : el.text;
