@@ -1,0 +1,17 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Unmaintained Dependency",
+      "warning_code": 120,
+      "fingerprint": "d84924377155b41e094acae7404ec2e521629d86f97b0ff628e3d1b263f8101c",
+      "check_name": "EOLRails",
+      "message": "Support for Rails 8.0.5.1 ended on 2026-10-07",
+      "file": "Gemfile.lock",
+      "line": 348,
+      "confidence": "High",
+      "note": "Rails 8.0 line is EOL; patched to the last 8.0 release, Rails 8.1 upgrade is a scheduled task."
+    }
+  ],
+  "updated": "2026-10-13",
+  "brakeman_version": "7.1.0"
+}
