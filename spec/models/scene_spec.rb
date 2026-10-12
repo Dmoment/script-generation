@@ -12,7 +12,7 @@ RSpec.describe Scene do
   it 'derives elements and slugline when only content is saved' do
     scene = version.scenes.create!(scene_number: 1, order: 1, content: "INT. KITCHEN - NIGHT\n\nA kettle.\n\nMIRA (V.O.)\n(flat)\nNot again.")
     expect(scene.elements.map { |e| e['type'] }).to eq(%w[slugline action character parenthetical dialogue])
-    expect(scene.elements[2]).to include('text' => 'MIRA', 'extensions' => ['V.O.'])
+    expect(scene.elements[2]).to include('text' => 'MIRA', 'extensions' => [ 'V.O.' ])
     expect(scene.slugline).to eq('INT. KITCHEN - NIGHT')
   end
 
@@ -20,7 +20,7 @@ RSpec.describe Scene do
     scene = version.scenes.create!(scene_number: 1, order: 1, elements: [
       { 'type' => 'slugline', 'text' => 'EXT. PIER - DAY' },
       { 'type' => 'action', 'text' => 'Gulls.' },
-      { 'type' => 'character', 'text' => 'BABA', 'extensions' => ["CONT'D"] },
+      { 'type' => 'character', 'text' => 'BABA', 'extensions' => [ "CONT'D" ] },
       { 'type' => 'dialogue', 'text' => 'She knows.' }
     ])
     expect(scene.content).to eq("EXT. PIER - DAY\n\nGulls.\n\nBABA (CONT'D)\nShe knows.")
@@ -29,7 +29,7 @@ RSpec.describe Scene do
 
   it 'keeps an explicit slugline when the saved elements have no heading' do
     scene = version.scenes.create!(scene_number: 1, order: 1, slugline: 'INT. LOCATION - DAY', content: '')
-    scene.update!(elements: [{ 'type' => 'action', 'text' => 'No heading here.' }])
+    scene.update!(elements: [ { 'type' => 'action', 'text' => 'No heading here.' } ])
     expect(scene.slugline).to eq('INT. LOCATION - DAY')
     expect(scene.content).to eq('No heading here.')
   end
@@ -45,13 +45,13 @@ RSpec.describe Scene do
   end
 
   it 'prepends a heading element when a heading is set on a scene without one' do
-    scene = version.scenes.create!(scene_number: 1, order: 1, elements: [{ 'type' => 'action', 'text' => 'Gulls.' }])
+    scene = version.scenes.create!(scene_number: 1, order: 1, elements: [ { 'type' => 'action', 'text' => 'Gulls.' } ])
     scene.update!(slugline: 'EXT. PIER - DAY')
     expect(scene.elements.map { |e| e['type'] }).to eq(%w[slugline action])
   end
 
   it 'leaves both untouched when both are given' do
-    scene = version.scenes.create!(scene_number: 1, order: 1, content: 'custom text', elements: [{ 'type' => 'action', 'text' => 'different' }])
+    scene = version.scenes.create!(scene_number: 1, order: 1, content: 'custom text', elements: [ { 'type' => 'action', 'text' => 'different' } ])
     expect(scene.content).to eq('custom text')
     expect(scene.elements.first['text']).to eq('different')
   end
@@ -62,7 +62,7 @@ RSpec.describe Scene do
       { 'type' => 'action', 'text' => 'Cramped. Brass fittings gone green.' },
       { 'type' => 'character', 'text' => 'MRS. FONSECA' },
       { 'type' => 'dialogue', 'text' => 'Return.' },
-      { 'type' => 'character', 'text' => 'BABA', 'extensions' => ['V.O.'] },
+      { 'type' => 'character', 'text' => 'BABA', 'extensions' => [ 'V.O.' ] },
       { 'type' => 'parenthetical', 'text' => '(over crackling speaker)' },
       { 'type' => 'dialogue', 'text' => 'Sit down.' },
       { 'type' => 'transition', 'text' => 'FADE OUT.' }

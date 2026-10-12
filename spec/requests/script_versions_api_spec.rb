@@ -19,7 +19,7 @@ RSpec.describe 'Script versions API', type: :request do
 
     version.scenes.create!(scene_number: 1, order: 1, elements: [
       { 'type' => 'slugline', 'text' => 'INT. KITCHEN - NIGHT' },
-      { 'type' => 'character', 'text' => 'MIRA', 'extensions' => ['V.O.'] },
+      { 'type' => 'character', 'text' => 'MIRA', 'extensions' => [ 'V.O.' ] },
       { 'type' => 'dialogue', 'text' => 'Not again.' }
     ])
     version.scenes.create!(scene_number: 2, order: 2, elements: [
@@ -62,7 +62,7 @@ RSpec.describe 'Script versions API', type: :request do
       json = JSON.parse(response.body)
       expect(json['scenes_count']).to eq(3)
       expect(json['format']).to eq('fdx')
-      expect(version.scenes.ordered.map(&:slugline)).to eq([nil, 'INT. KITCHEN - NIGHT', 'EXT. PIER - DAWN'])
+      expect(version.scenes.ordered.map(&:slugline)).to eq([ nil, 'INT. KITCHEN - NIGHT', 'EXT. PIER - DAWN' ])
     end
 
     it 'returns 422 for files it cannot parse' do
@@ -77,16 +77,16 @@ RSpec.describe 'Script versions API', type: :request do
   describe 'PUT /api/v1/script_versions/:id/reorder_scenes' do
     it 'renumbers scenes to follow the given order' do
       first, second = version.scenes.ordered.to_a
-      put "/api/v1/script_versions/#{version.id}/reorder_scenes", params: { scene_ids: [second.id, first.id] }, headers: headers
+      put "/api/v1/script_versions/#{version.id}/reorder_scenes", params: { scene_ids: [ second.id, first.id ] }, headers: headers
 
       expect(response).to have_http_status(:success)
       json = JSON.parse(response.body)
-      expect(json.map { |s| [s['id'], s['scene_number'], s['order']] }).to eq([[second.id, 1, 1], [first.id, 2, 2]])
+      expect(json.map { |s| [ s['id'], s['scene_number'], s['order'] ] }).to eq([ [ second.id, 1, 1 ], [ first.id, 2, 2 ] ])
     end
 
     it 'rejects an incomplete id list' do
       first = version.scenes.ordered.first
-      put "/api/v1/script_versions/#{version.id}/reorder_scenes", params: { scene_ids: [first.id] }, headers: headers
+      put "/api/v1/script_versions/#{version.id}/reorder_scenes", params: { scene_ids: [ first.id ] }, headers: headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
   end

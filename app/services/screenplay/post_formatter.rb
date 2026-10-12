@@ -49,14 +49,14 @@ module Screenplay
         parsed_elements.each_with_index do |element, index|
           formatted = format_element_fresh(element, previous_type)
           new_elements << formatted
-          previous_type = formatted['type']
+          previous_type = formatted["type"]
         end
       elsif old_elements.any?
         # Fall back to formatting existing elements
         old_elements.each_with_index do |element, index|
           formatted = format_element_fresh(element, previous_type)
           new_elements << formatted
-          previous_type = formatted['type']
+          previous_type = formatted["type"]
         end
       end
 
@@ -64,9 +64,9 @@ module Screenplay
       track_element_changes(scene.id, old_elements, new_elements)
 
       # Format slugline separately
-      original_slugline = scene.slugline || ''
+      original_slugline = scene.slugline || ""
       formatted_slugline = if original_slugline.present?
-        @soft_formatter.format('slugline', original_slugline)
+        @soft_formatter.format("slugline", original_slugline)
       else
         extract_slugline(new_elements)
       end
@@ -76,9 +76,9 @@ module Screenplay
         @changes << {
           scene_id: scene.id,
           element_index: -1,
-          type: 'slugline_change',
-          original: { type: 'slugline', text: original_slugline.presence || '(empty)' },
-          formatted: { type: 'slugline', text: formatted_slugline.presence || '(empty)' }
+          type: "slugline_change",
+          original: { type: "slugline", text: original_slugline.presence || "(empty)" },
+          formatted: { type: "slugline", text: formatted_slugline.presence || "(empty)" }
         }
       end
 
@@ -95,8 +95,8 @@ module Screenplay
 
     # Format a single element (without tracking changes - that's done separately)
     def format_element_fresh(element, previous_type)
-      original_type = element['type']
-      original_text = element['text'] || ''
+      original_type = element["type"]
+      original_text = element["text"] || ""
 
       # Detect type if needed (for parsed content)
       detected_type = @soft_formatter.detect_type(original_text, previous_type)
@@ -106,25 +106,25 @@ module Screenplay
       formatted_text = @soft_formatter.format(final_type, original_text)
 
       {
-        'type' => final_type,
-        'text' => formatted_text,
-        'id' => element['id'] || SecureRandom.uuid,
-        'extensions' => element['extensions']
+        "type" => final_type,
+        "text" => formatted_text,
+        "id" => element["id"] || SecureRandom.uuid,
+        "extensions" => element["extensions"]
       }.compact
     end
 
     # Compare old elements with new elements and track changes
     def track_element_changes(scene_id, old_elements, new_elements)
-      max_length = [old_elements.length, new_elements.length].max
+      max_length = [ old_elements.length, new_elements.length ].max
 
       max_length.times do |i|
         old_el = old_elements[i] || {}
         new_el = new_elements[i] || {}
 
-        old_text = old_el['text'] || ''
-        new_text = new_el['text'] || ''
-        old_type = old_el['type'] || ''
-        new_type = new_el['type'] || ''
+        old_text = old_el["text"] || ""
+        new_text = new_el["text"] || ""
+        old_type = old_el["type"] || ""
+        new_type = new_el["type"] || ""
 
         # Only track if text actually changed (not just type)
         # Skip if both texts are identical
@@ -134,14 +134,14 @@ module Screenplay
         @changes << {
           scene_id: scene_id,
           element_index: i,
-          type: 'element_change',
+          type: "element_change",
           original: {
-            type: old_type.presence || '(new)',
-            text: old_text.presence || '(added)'
+            type: old_type.presence || "(new)",
+            text: old_text.presence || "(added)"
           },
           formatted: {
-            type: new_type.presence || '(removed)',
-            text: new_text.presence || '(removed)'
+            type: new_type.presence || "(removed)",
+            text: new_text.presence || "(removed)"
           }
         }
       end
@@ -168,8 +168,8 @@ module Screenplay
     private
 
     def extract_slugline(elements)
-      slugline_element = elements.find { |el| el['type'] == 'slugline' }
-      slugline_element&.dig('text')
+      slugline_element = elements.find { |el| el["type"] == "slugline" }
+      slugline_element&.dig("text")
     end
 
     # Convert elements array back to plain text content so the content

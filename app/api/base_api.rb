@@ -6,7 +6,7 @@ class BaseApi < Grape::API
 
   helpers do
     def authorize(record, query = nil)
-      query ||= params[:action].to_s + '?'
+      query ||= params[:action].to_s + "?"
       Pundit.authorize(current_user, record, query)
     rescue Pundit::NotAuthorizedError => e
       error!({ error: e.message || "Access denied" }, 403)

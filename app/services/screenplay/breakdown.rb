@@ -43,10 +43,10 @@ module Screenplay
     def to_csv
       data = call
       CSV.generate do |csv|
-        csv << ["Category", "Item", "Scenes", "Scene count"]
+        csv << [ "Category", "Item", "Scenes", "Scene count" ]
         data[:categories].each do |category|
           category[:items].each do |item|
-            csv << [category[:label], item[:name], item[:scene_numbers].join(" "), item[:scene_numbers].size]
+            csv << [ category[:label], item[:name], item[:scene_numbers].join(" "), item[:scene_numbers].size ]
           end
         end
       end

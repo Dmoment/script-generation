@@ -57,7 +57,6 @@ module V1
           error!({ error: "Validation failed", details: project_type.errors.full_messages }, 422)
         end
       end
-
     end
   end
 end

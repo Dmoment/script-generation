@@ -63,7 +63,7 @@ end
 SCENES = [
   {
     meta: { act: "Act 1", tone: "Calm", purpose: "Establish Mira, the island and the ferry's last day", duration: "1:30",
-            status: "Revised", beats: ["Dawn on the pier", "The 'LAST CROSSING' sign", "Mira's routine"],
+            status: "Revised", beats: [ "Dawn on the pier", "The 'LAST CROSSING' sign", "Mira's routine" ],
             summary: "Dawn. Mira, 34, opens the ticket booth on a near-empty island pier for the ferry's final day of service." },
     text: <<~SCENE
       EXT. KALIDHAR ISLAND PIER - DAWN
@@ -90,7 +90,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 1", tone: "Warm", purpose: "Introduce Baba and the stakes of the last day", duration: "2:10",
-            status: "Revised", beats: ["Baba arrives late", "The engine cough", "Mira hides the eviction letter"],
+            status: "Revised", beats: [ "Baba arrives late", "The engine cough", "Mira hides the eviction letter" ],
             summary: "Mira's father Baba, the ferry's captain, arrives late and hungover. She hides a council letter from him." },
     text: <<~SCENE
       INT. SEA SPARROW - WHEELHOUSE - MORNING
@@ -135,7 +135,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 1", tone: "Warm", purpose: "The regulars; show what the ferry means to the island", duration: "1:45",
-            status: "Draft", beats: ["Mrs. Fonseca and her chickens", "The schoolkids", "Nobody wants to say goodbye"],
+            status: "Draft", beats: [ "Mrs. Fonseca and her chickens", "The schoolkids", "Nobody wants to say goodbye" ],
             summary: "The morning regulars board for the last time: a widow with chickens, a pair of schoolkids, a fisherman who won't make eye contact." },
     text: <<~SCENE
       EXT. KALIDHAR ISLAND PIER - CONTINUOUS
@@ -187,7 +187,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 1", tone: "Calm", purpose: "The crossing itself as ritual; plant the engine problem", duration: "1:20",
-            status: "Draft", beats: ["Baba's announcement", "Rohan at the rail", "Engine stutter #1"],
+            status: "Draft", beats: [ "Baba's announcement", "Rohan at the rail", "Engine stutter #1" ],
             summary: "First crossing. Baba makes his usual announcement. The engine stutters mid-channel and nobody but Mira notices." },
     text: <<~SCENE
       EXT. SEA SPARROW - DECK - MORNING
@@ -216,7 +216,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 2", tone: "Tense", purpose: "Reveal the letter; Mira and Baba's real conflict", duration: "2:40",
-            status: "Revised", beats: ["Mainland terminal", "The council officer", "Baba reads the letter"],
+            status: "Revised", beats: [ "Mainland terminal", "The council officer", "Baba reads the letter" ],
             summary: "On the mainland, a council officer presses Mira about the scrapping deadline. Baba finds the letter: the council will fine him for every day the ferry sits unsold." },
     text: <<~SCENE
       EXT. MAINLAND FERRY TERMINAL - DAY
@@ -277,7 +277,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 2", tone: "Cool", purpose: "Midpoint: Joseph's offer, the alternative to scrapping", duration: "2:00",
-            status: "Draft", beats: ["Joseph in the hold", "The offer", "Mira can't afford hope"],
+            status: "Draft", beats: [ "Joseph in the hold", "The offer", "Mira can't afford hope" ],
             summary: "Joseph finds Mira in the hold and makes an offer: the fishermen will buy the Sea Sparrow as a cooperative, if Baba will teach them to run it." },
     text: <<~SCENE
       INT. SEA SPARROW - LOWER HOLD - DAY
@@ -320,7 +320,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 2", tone: "Intense", purpose: "The engine fails; crisis at sea", duration: "2:30",
-            status: "Draft", beats: ["Afternoon crossing", "Full engine failure", "Baba in the engine room"],
+            status: "Draft", beats: [ "Afternoon crossing", "Full engine failure", "Baba in the engine room" ],
             summary: "On the afternoon crossing the engine dies completely. The Sea Sparrow drifts toward the channel markers with twenty people aboard." },
     text: <<~SCENE
       EXT. SEA SPARROW - DECK - LATE AFTERNOON
@@ -377,7 +377,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 2", tone: "Tense", purpose: "Father and daughter fix the engine together; the real conversation", duration: "2:45",
-            status: "Draft", beats: ["Bleeding the fuel line", "Why she hid the letter", "The engine turns over"],
+            status: "Draft", beats: [ "Bleeding the fuel line", "Why she hid the letter", "The engine turns over" ],
             summary: "Working on the engine together, Mira admits why she hid the letter. Baba admits he already knew the boat was finished. The engine turns over." },
     text: <<~SCENE
       INT. SEA SPARROW - ENGINE ROOM - CONTINUOUS
@@ -444,7 +444,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 3", tone: "Warm", purpose: "The final crossing; Baba's decision", duration: "2:15",
-            status: "Draft", beats: ["Six o'clock run", "Baba's last announcement", "He hands Joseph the wheel"],
+            status: "Draft", beats: [ "Six o'clock run", "Baba's last announcement", "He hands Joseph the wheel" ],
             summary: "The six o'clock crossing. Baba makes his last announcement, then calls Joseph into the wheelhouse and puts his hands on the wheel." },
     text: <<~SCENE
       EXT. SEA SPARROW - DECK - DUSK
@@ -501,7 +501,7 @@ SCENES = [
   },
   {
     meta: { act: "Act 3", tone: "Calm", purpose: "Resolution: the sign comes down, the ferry stays", duration: "1:15",
-            status: "Draft", beats: ["Pier at night", "Mira takes down the sign", "The gull"],
+            status: "Draft", beats: [ "Pier at night", "Mira takes down the sign", "The gull" ],
             summary: "Night. The ferry is tied up for the night, not the last time. Mira cuts down the sign. Baba, below, starts the engine just to hear it." },
     text: <<~SCENE
       EXT. KALIDHAR ISLAND PIER - NIGHT
@@ -527,22 +527,22 @@ SCENES = [
 
 # Production breakdown tags per scene number (props, costumes, ... as a crew would tag them).
 BREAKDOWN = {
-  1 => { "props" => ["Rubber stamps", "Ink pad", "Cash tin", "Transistor radio", "Hand-painted LAST CROSSING sign"], "costumes" => ["Mira's oversized windbreaker"], "locations" => ["Kalidhar Island pier"], "sfx" => ["Fog"], "extras" => ["Gull"] },
-  2 => { "props" => ["Thermos", "Council letter", "Photo of young Baba"], "vehicles" => ["Sea Sparrow ferry"], "sfx" => ["Engine cough and stall"] },
-  3 => { "props" => ["Crate of three chickens", "Tickets", "Exact change"], "extras" => ["Queue of islanders"], "makeup" => ["Rohan's faint moustache"] },
-  4 => { "props" => ["Cash tin", "Bucket under the seat"], "vehicles" => ["Sea Sparrow ferry"], "sfx" => ["Engine stutter"], "music" => ["Crossing theme (first statement)"] },
-  5 => { "props" => ["Council letter", "Council lanyard", "ISLAND EXPRESS banner"], "vehicles" => ["Island Express catamaran"], "extras" => ["Pigeons", "Terminal commuters"] },
-  6 => { "props" => ["Pencil co-op offer page", "Coil of rope", "Cash tin"], "locations" => ["Sea Sparrow lower hold"] },
-  7 => { "props" => ["Shopping bags", "Two chickens", "Torch"], "stunts" => ["Ferry drifting toward channel markers"], "sfx" => ["Full engine failure", "Current drift"], "extras" => ["Twenty passengers"] },
-  8 => { "props" => ["Torch", "Bleed valve", "Eleven spanner"], "sfx" => ["Diesel spray", "Starter grinding then catching"], "makeup" => ["Diesel on hands and faces"] },
-  9 => { "props" => ["Drum", "Better drum", "Cash tin", "Council letter"], "extras" => ["Whole island on deck"], "music" => ["Deck drums", "Crossing theme (full)"], "sfx" => ["Golden hour light"] },
-  10 => { "props" => ["Kitchen knife", "Zip ties", "LAST CROSSING sign (blank side)"], "sfx" => ["Engine idle"], "extras" => ["Gull"], "music" => ["End theme"] }
+  1 => { "props" => [ "Rubber stamps", "Ink pad", "Cash tin", "Transistor radio", "Hand-painted LAST CROSSING sign" ], "costumes" => [ "Mira's oversized windbreaker" ], "locations" => [ "Kalidhar Island pier" ], "sfx" => [ "Fog" ], "extras" => [ "Gull" ] },
+  2 => { "props" => [ "Thermos", "Council letter", "Photo of young Baba" ], "vehicles" => [ "Sea Sparrow ferry" ], "sfx" => [ "Engine cough and stall" ] },
+  3 => { "props" => [ "Crate of three chickens", "Tickets", "Exact change" ], "extras" => [ "Queue of islanders" ], "makeup" => [ "Rohan's faint moustache" ] },
+  4 => { "props" => [ "Cash tin", "Bucket under the seat" ], "vehicles" => [ "Sea Sparrow ferry" ], "sfx" => [ "Engine stutter" ], "music" => [ "Crossing theme (first statement)" ] },
+  5 => { "props" => [ "Council letter", "Council lanyard", "ISLAND EXPRESS banner" ], "vehicles" => [ "Island Express catamaran" ], "extras" => [ "Pigeons", "Terminal commuters" ] },
+  6 => { "props" => [ "Pencil co-op offer page", "Coil of rope", "Cash tin" ], "locations" => [ "Sea Sparrow lower hold" ] },
+  7 => { "props" => [ "Shopping bags", "Two chickens", "Torch" ], "stunts" => [ "Ferry drifting toward channel markers" ], "sfx" => [ "Full engine failure", "Current drift" ], "extras" => [ "Twenty passengers" ] },
+  8 => { "props" => [ "Torch", "Bleed valve", "Eleven spanner" ], "sfx" => [ "Diesel spray", "Starter grinding then catching" ], "makeup" => [ "Diesel on hands and faces" ] },
+  9 => { "props" => [ "Drum", "Better drum", "Cash tin", "Council letter" ], "extras" => [ "Whole island on deck" ], "music" => [ "Deck drums", "Crossing theme (full)" ], "sfx" => [ "Golden hour light" ] },
+  10 => { "props" => [ "Kitchen knife", "Zip ties", "LAST CROSSING sign (blank side)" ], "sfx" => [ "Engine idle" ], "extras" => [ "Gull" ], "music" => [ "End theme" ] }
 }.freeze
 
 # Changes applied to the second draft so revision marks and comparison have something to show.
 DRAFT_TWO_CHANGES = {
   2 => ->(elements) { elements.map { |e| e["text"] == "Forty-one years. She knows." ? e.merge("text" => "Forty-one years. She knows, Mira.") : e } },
-  6 => ->(elements) { elements + [{ "type" => "action", "text" => "Behind her, through the hatch, the catamaran's wake slaps the hull." }] },
+  6 => ->(elements) { elements + [ { "type" => "action", "text" => "Behind her, through the hatch, the catamaran's wake slaps the hull." } ] },
   10 => ->(elements) { elements.reject { |e| e["text"] == "The gull lands on the blank sign. Considers it. Leaves it alone." } }
 }.freeze
 
@@ -559,7 +559,7 @@ ActiveRecord::Base.transaction do
     # Backfill: the editor edits the plain-text `content`; make sure every seeded scene has it.
     backfilled = 0
     existing.script_versions.find_each do |v|
-      v.scenes.where(content: [nil, ""]).find_each do |sc|
+      v.scenes.where(content: [ nil, "" ]).find_each do |sc|
         next if sc.elements.blank?
         sc.update!(content: sc.elements_as_text)
         backfilled += 1

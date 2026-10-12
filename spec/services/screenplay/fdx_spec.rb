@@ -16,7 +16,7 @@ RSpec.describe Screenplay::Fdx do
     end
 
     it 'splits character extensions and keeps the original scene number' do
-      expect(elements[3]).to eq('type' => 'character', 'text' => 'MRS. FONSECA', 'extensions' => ['V.O.', "CONT'D"])
+      expect(elements[3]).to eq('type' => 'character', 'text' => 'MRS. FONSECA', 'extensions' => [ 'V.O.', "CONT'D" ])
       expect(elements[1]['scene_number']).to eq('1')
       expect(elements[9]['scene_number']).to eq('2')
     end
@@ -27,7 +27,7 @@ RSpec.describe Screenplay::Fdx do
     end
 
     it 'exposes the title page separately' do
-      expect(described_class.new(fixture).title_page).to eq(['THE KETTLE', 'Written by', 'A. Writer'])
+      expect(described_class.new(fixture).title_page).to eq([ 'THE KETTLE', 'Written by', 'A. Writer' ])
     end
 
     it 'rejects documents that are not Final Draft' do

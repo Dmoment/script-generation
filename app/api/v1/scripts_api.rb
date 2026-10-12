@@ -106,7 +106,7 @@ module V1
 
         result = extract_multipart_params(
           form_params,
-          required_fields: ['project_id', 'title', 'file']
+          required_fields: [ "project_id", "title", "file" ]
         )
 
         if result[:errors].any?
@@ -126,7 +126,7 @@ module V1
           params: {
             project_id: project_id,
             title: result[:params][:title],
-            script_type: result[:params][:script_type] || 'screenplay',
+            script_type: result[:params][:script_type] || "screenplay",
             description: result[:params][:description],
             notes: result[:params][:notes],
             file: result[:file] # ActionDispatch::Http::UploadedFile directly
@@ -321,7 +321,7 @@ module V1
         authorize script_version.script, :update?
 
         form_params = parse_multipart_params(env)
-        result = extract_multipart_params(form_params, required_fields: ["file"])
+        result = extract_multipart_params(form_params, required_fields: [ "file" ])
         error!({ error: result[:errors].join(", ") }, 400) if result[:errors].any?
 
         import = Screenplay::ScriptImporter.new(script_version, file: result[:file]).call
@@ -398,7 +398,7 @@ module V1
       end
 
       desc "Scenes revised since the previous draft (revision marks)", {
-        failure: [{ code: 401, message: "Unauthorized" }, { code: 404, message: "Version not found" }]
+        failure: [ { code: 401, message: "Unauthorized" }, { code: 404, message: "Version not found" } ]
       }
       params do
         requires :id, type: Integer, desc: "Version ID"
@@ -418,7 +418,7 @@ module V1
       end
 
       desc "Production breakdown for a version (JSON, or CSV with file_format=csv)", {
-        failure: [{ code: 401, message: "Unauthorized" }, { code: 404, message: "Version not found" }]
+        failure: [ { code: 401, message: "Unauthorized" }, { code: 404, message: "Version not found" } ]
       }
       params do
         requires :id, type: Integer, desc: "Version ID"

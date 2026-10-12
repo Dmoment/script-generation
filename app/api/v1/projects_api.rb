@@ -72,10 +72,10 @@ module V1
           project_type: params[:project_type],
           company_id: user_company.id,
           created_by_user_id: current_user.id,
-          status: params[:status] || 'draft'
+          status: params[:status] || "draft"
         )
 
-        optional_fields = [:description, :genre, :logline, :budget, :budget_range, :shooting_location, :release_type]
+        optional_fields = [ :description, :genre, :logline, :budget, :budget_range, :shooting_location, :release_type ]
         optional_fields.each do |field|
           project.send("#{field}=", params[field]) if params[field].present?
         end

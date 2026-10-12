@@ -37,7 +37,7 @@ module Screenplay
             key = m[1].strip.downcase.tr(" ", "_")
             @title_page[key] = m[2].strip
           elsif key && line.start_with?(" ", "\t")
-            @title_page[key] = [@title_page[key], line.strip].reject(&:blank?).join("\n")
+            @title_page[key] = [ @title_page[key], line.strip ].reject(&:blank?).join("\n")
           end
         end
         rest

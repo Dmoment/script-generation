@@ -88,10 +88,10 @@ const IndexCardFilters: React.FC<IndexCardFiltersProps> = ({
             Act
           </label>
           <FilterDropdown
-            options={availableActs}
-            selectedValue={filters.act}
+            options={[{ value: "", label: "All Acts" }, ...availableActs.map((v) => ({ value: v, label: v }))]}
+            value={filters.act ?? ""}
             placeholder="All Acts"
-            onSelect={(value) => onFilterChange("act", value)}
+            onChange={(value: string) => onFilterChange("act", value || null)}
           />
         </div>
         <div>
@@ -99,10 +99,10 @@ const IndexCardFilters: React.FC<IndexCardFiltersProps> = ({
             Location
           </label>
           <FilterDropdown
-            options={availableLocations}
-            selectedValue={filters.location}
+            options={[{ value: "", label: "All Locations" }, ...availableLocations.map((v) => ({ value: v, label: v }))]}
+            value={filters.location ?? ""}
             placeholder="All Locations"
-            onSelect={(value) => onFilterChange("location", value)}
+            onChange={(value: string) => onFilterChange("location", value || null)}
           />
         </div>
         <div>
@@ -110,10 +110,10 @@ const IndexCardFilters: React.FC<IndexCardFiltersProps> = ({
             Character
           </label>
           <FilterDropdown
-            options={availableCharacters}
-            selectedValue={filters.character}
+            options={[{ value: "", label: "All Characters" }, ...availableCharacters.map((v) => ({ value: v, label: v }))]}
+            value={filters.character ?? ""}
             placeholder="All Characters"
-            onSelect={(value) => onFilterChange("character", value)}
+            onChange={(value: string) => onFilterChange("character", value || null)}
           />
         </div>
         <div>
@@ -121,10 +121,10 @@ const IndexCardFilters: React.FC<IndexCardFiltersProps> = ({
             Tone
           </label>
           <FilterDropdown
-            options={availableTones}
-            selectedValue={filters.tone}
+            options={[{ value: "", label: "All Tones" }, ...availableTones.map((v) => ({ value: v, label: v }))]}
+            value={filters.tone ?? ""}
             placeholder="All Tones"
-            onSelect={(value) => onFilterChange("tone", value)}
+            onChange={(value: string) => onFilterChange("tone", value || null)}
           />
         </div>
         <div>
@@ -132,10 +132,10 @@ const IndexCardFilters: React.FC<IndexCardFiltersProps> = ({
             Status
           </label>
           <FilterDropdown
-            options={availableStatuses}
-            selectedValue={filters.status}
+            options={[{ value: "", label: "All Statuses" }, ...availableStatuses.map((v) => ({ value: v, label: v }))]}
+            value={filters.status ?? ""}
             placeholder="All Statuses"
-            onSelect={(value) => onFilterChange("status", value)}
+            onChange={(value: string) => onFilterChange("status", value || null)}
           />
         </div>
       </div>

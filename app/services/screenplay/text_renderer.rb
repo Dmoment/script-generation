@@ -30,11 +30,11 @@ module Screenplay
         lines << "" unless lines.empty? || contiguous
 
         lines << case type
-                 when "character" then CharacterName.render(element)
-                 when "centered" then "> #{text} <"
-                 when "page_break" then "==="
-                 else text
-                 end
+        when "character" then CharacterName.render(element)
+        when "centered" then "> #{text} <"
+        when "page_break" then "==="
+        else text
+        end
 
         previous_type = type
       end

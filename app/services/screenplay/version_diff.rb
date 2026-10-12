@@ -77,19 +77,19 @@ module Screenplay
 
     def key_elements(scene)
       elements = scene.elements.presence || []
-      elements = [{ "type" => "slugline", "text" => scene.slugline }] + elements if scene.slugline.present? && elements.none? { |e| e["type"] == "slugline" }
+      elements = [ { "type" => "slugline", "text" => scene.slugline } ] + elements if scene.slugline.present? && elements.none? { |e| e["type"] == "slugline" }
       elements.map { |e| e.slice("type", "text", "extensions") }
     end
 
     # Longest-common-subsequence diff over elements compared by type, text and extensions.
     def element_diff(before, after)
-      key = ->(el) { [el["type"], el["text"].to_s.strip, Array(el["extensions"])] }
+      key = ->(el) { [ el["type"], el["text"].to_s.strip, Array(el["extensions"]) ] }
       n = before.size
       m = after.size
       table = Array.new(n + 1) { Array.new(m + 1, 0) }
       (n - 1).downto(0) do |i|
         (m - 1).downto(0) do |j|
-          table[i][j] = key.(before[i]) == key.(after[j]) ? table[i + 1][j + 1] + 1 : [table[i + 1][j], table[i][j + 1]].max
+          table[i][j] = key.(before[i]) == key.(after[j]) ? table[i + 1][j + 1] + 1 : [ table[i + 1][j], table[i][j + 1] ].max
         end
       end
 

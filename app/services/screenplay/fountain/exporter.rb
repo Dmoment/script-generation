@@ -13,13 +13,13 @@ module Screenplay
       end
 
       def export
-        [title_page, body].reject(&:blank?).join("\n\n") + "\n"
+        [ title_page, body ].reject(&:blank?).join("\n\n") + "\n"
       end
 
       private
 
       def title_page
-        lines = ["Title: #{@script.title}"]
+        lines = [ "Title: #{@script.title}" ]
         author = @script.created_by_user&.name
         lines << "Credit: Written by" if author.present?
         lines << "Author: #{author}" if author.present?
@@ -34,7 +34,7 @@ module Screenplay
 
       def render_scene(scene)
         elements = scene.elements.presence || []
-        elements = [{ "type" => "slugline", "text" => scene.slugline }] + elements if scene.slugline.present? && elements.none? { |e| e["type"] == "slugline" }
+        elements = [ { "type" => "slugline", "text" => scene.slugline } ] + elements if scene.slugline.present? && elements.none? { |e| e["type"] == "slugline" }
 
         elements.map { |element| render_element(element) }.compact.join("\n")
       end
@@ -48,14 +48,14 @@ module Screenplay
         return nil if text.empty? && type != "page_break"
 
         rendered = case type
-                   when "slugline" then text.match?(Parser::SLUGLINE_PATTERN) ? text : ".#{text}"
-                   when "transition" then text.end_with?("TO:") ? text : ">#{text}"
-                   when "character" then force_character(CharacterName.render(element))
-                   when "centered" then "> #{text} <"
-                   when "page_break" then "==="
-                   when "action" then force_action(text)
-                   else text
-                   end
+        when "slugline" then text.match?(Parser::SLUGLINE_PATTERN) ? text : ".#{text}"
+        when "transition" then text.end_with?("TO:") ? text : ">#{text}"
+        when "character" then force_character(CharacterName.render(element))
+        when "centered" then "> #{text} <"
+        when "page_break" then "==="
+        when "action" then force_action(text)
+        else text
+        end
 
         # Blank line before every paragraph except the ones inside a dialogue block.
         contiguous = %w[parenthetical dialogue].include?(type)

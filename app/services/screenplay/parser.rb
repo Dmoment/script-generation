@@ -48,7 +48,7 @@ module Screenplay
       stripped = line.strip
       return nil if stripped.empty?
 
-      previous_type = previous_element&.dig('type')
+      previous_type = previous_element&.dig("type")
 
       # Check for forced elements (Fountain syntax)
       forced = detect_forced_element(stripped)
@@ -56,28 +56,28 @@ module Screenplay
 
       # 1. Slugline detection (INT./EXT.)
       if slugline?(stripped)
-        return { 'type' => 'slugline', 'text' => stripped.upcase }
+        return { "type" => "slugline", "text" => stripped.upcase }
       end
 
       # 2. Transition detection (CUT TO, FADE, etc.)
       if transition?(stripped)
         # "CUT TO:" style transitions end with a colon; "FADE OUT." style end with a period.
-        return { 'type' => 'transition', 'text' => stripped.upcase + (stripped.end_with?(':', '.') ? '' : ':') }
+        return { "type" => "transition", "text" => stripped.upcase + (stripped.end_with?(":", ".") ? "" : ":") }
       end
 
       # 3. Parenthetical detection
       if parenthetical?(stripped)
-        return { 'type' => 'parenthetical', 'text' => stripped.downcase }
+        return { "type" => "parenthetical", "text" => stripped.downcase }
       end
 
       # 4. After character → dialogue
-      if previous_type == 'character'
-        return { 'type' => 'dialogue', 'text' => stripped }
+      if previous_type == "character"
+        return { "type" => "dialogue", "text" => stripped }
       end
 
       # 5. After parenthetical → dialogue
-      if previous_type == 'parenthetical'
-        return { 'type' => 'dialogue', 'text' => stripped }
+      if previous_type == "parenthetical"
+        return { "type" => "dialogue", "text" => stripped }
       end
 
       # 6. Character detection with look-ahead
@@ -90,25 +90,25 @@ module Screenplay
       end
 
       # 7. Default: action
-      { 'type' => 'action', 'text' => stripped }
+      { "type" => "action", "text" => stripped }
     end
 
     def detect_forced_element(line)
       case line
       when /\A\.\s*(.+)/ # .SLUGLINE forces scene heading
-        { 'type' => 'slugline', 'text' => $1.upcase }
+        { "type" => "slugline", "text" => $1.upcase }
       when /\A!\s*(.+)/ # !ACTION forces action
-        { 'type' => 'action', 'text' => $1 }
+        { "type" => "action", "text" => $1 }
       when /\A@\s*(.+)/ # @CHARACTER forces character
         parse_character($1)
       when /\A>\s*(.+?)\s*<\z/ # >TEXT< forces centered
-        { 'type' => 'centered', 'text' => $1 }
+        { "type" => "centered", "text" => $1 }
       when /\A>\s*(.+)/ # > forces transition
-        { 'type' => 'transition', 'text' => $1.upcase }
+        { "type" => "transition", "text" => $1.upcase }
       when /\A~\s*(.+)/ # ~ forces lyrics
-        { 'type' => 'centered', 'text' => $1 }
+        { "type" => "centered", "text" => $1 }
       when /\A===\s*\z/ # Page break
-        { 'type' => 'page_break', 'text' => '' }
+        { "type" => "page_break", "text" => "" }
       else
         nil
       end
@@ -121,7 +121,7 @@ module Screenplay
     def transition?(text)
       upper = text.upcase
       upper.match?(TRANSITION_PATTERN) ||
-        (text == text.upcase && text.strip.end_with?(':') && text.length < 30)
+        (text == text.upcase && text.strip.end_with?(":") && text.length < 30)
     end
 
     def parenthetical?(text)
@@ -130,7 +130,7 @@ module Screenplay
 
     def looks_like_character_name?(text, next_line)
       # Judge the name without trailing extensions such as (V.O.), (O.S.), (CONT'D)
-      text = text.sub(/(\s*\([^)]*\))+\s*\z/, '').strip
+      text = text.sub(/(\s*\([^)]*\))+\s*\z/, "").strip
       return false if text.empty?
 
       # Must be short
@@ -142,10 +142,10 @@ module Screenplay
 
       # Must not contain sentence-ending punctuation.
       # Periods are allowed only in all-caps abbreviated names: "MRS. FONSECA", "DR. WHO", "J.R."
-      return false if text.include?('.') && !text.match?(/\A(?:[A-Z][A-Z'\-]*\.?\s*)+\z/)
-      return false if text.include?(',')
-      return false if text.include?('!')
-      return false if text.include?('?')
+      return false if text.include?(".") && !text.match?(/\A(?:[A-Z][A-Z'\-]*\.?\s*)+\z/)
+      return false if text.include?(",")
+      return false if text.include?("!")
+      return false if text.include?("?")
 
       # Must not start with articles or common sentence starters
       first_word = words.first&.downcase

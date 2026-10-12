@@ -21,15 +21,15 @@ RSpec.describe Screenplay::Fountain do
     end
 
     it 'honours forced elements and strips the dual-dialogue caret' do
-      expect(elements.map { |e| [e['type'], e['text']] }).to include(
-        ['action', 'SILENCE'],
-        ['transition', 'SMASH CUT TO:'],
-        ['slugline', 'MONTAGE - THE LAST CROSSING'],
-        ['character', 'TANVI'],
-        ['character', 'MCCONNELL'],
-        ['centered', 'THE END']
+      expect(elements.map { |e| [ e['type'], e['text'] ] }).to include(
+        [ 'action', 'SILENCE' ],
+        [ 'transition', 'SMASH CUT TO:' ],
+        [ 'slugline', 'MONTAGE - THE LAST CROSSING' ],
+        [ 'character', 'TANVI' ],
+        [ 'character', 'MCCONNELL' ],
+        [ 'centered', 'THE END' ]
       )
-      expect(elements.find { |e| e['text'] == 'MRS. FONSECA' }['extensions']).to eq(['V.O.', "CONT'D"])
+      expect(elements.find { |e| e['text'] == 'MRS. FONSECA' }['extensions']).to eq([ 'V.O.', "CONT'D" ])
     end
   end
 

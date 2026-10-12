@@ -20,13 +20,13 @@ RSpec.describe 'Script drafts, comparison and breakdown API', type: :request do
     v1.scenes.create!(scene_number: 1, order: 1, elements: [
       { 'type' => 'slugline', 'text' => 'INT. KITCHEN - NIGHT' },
       { 'type' => 'action', 'text' => 'A kettle screams.' },
-      { 'type' => 'character', 'text' => 'MIRA', 'extensions' => ['V.O.'] },
+      { 'type' => 'character', 'text' => 'MIRA', 'extensions' => [ 'V.O.' ] },
       { 'type' => 'dialogue', 'text' => 'Not again.' }
-    ], metadata: { 'breakdown' => { 'props' => ['kettle', 'radio'], 'sfx' => ['steam'] } })
+    ], metadata: { 'breakdown' => { 'props' => [ 'kettle', 'radio' ], 'sfx' => [ 'steam' ] } })
     v1.scenes.create!(scene_number: 2, order: 2, elements: [
       { 'type' => 'slugline', 'text' => 'EXT. PIER - DAWN' },
       { 'type' => 'action', 'text' => 'Gulls.' }
-    ], metadata: { 'breakdown' => { 'props' => ['kettle'], 'vehicles' => ['ferry'] } })
+    ], metadata: { 'breakdown' => { 'props' => [ 'kettle' ], 'vehicles' => [ 'ferry' ] } })
   end
 
   describe 'POST /api/v1/scripts/:id/versions' do
@@ -40,9 +40,9 @@ RSpec.describe 'Script drafts, comparison and breakdown API', type: :request do
 
       v2 = script.script_versions.find(json['id'])
       expect(v2.scenes.count).to eq(2)
-      expect(v2.scenes.ordered.map(&:slugline)).to eq(['INT. KITCHEN - NIGHT', 'EXT. PIER - DAWN'])
+      expect(v2.scenes.ordered.map(&:slugline)).to eq([ 'INT. KITCHEN - NIGHT', 'EXT. PIER - DAWN' ])
       expect(v2.scenes.ordered.first.metadata['source_scene_id']).to eq(v1.scenes.ordered.first.id)
-      expect(v2.scenes.ordered.first.metadata['breakdown']['props']).to eq(['kettle', 'radio'])
+      expect(v2.scenes.ordered.first.metadata['breakdown']['props']).to eq([ 'kettle', 'radio' ])
     end
   end
 
@@ -53,7 +53,7 @@ RSpec.describe 'Script drafts, comparison and breakdown API', type: :request do
       # change a line, reorder, add a scene, remove one
       kitchen.update!(elements: kitchen.elements.map { |e| e['text'] == 'Not again.' ? e.merge('text' => 'Not again, Baba.') : e })
       pier.destroy!
-      v2.scenes.create!(scene_number: 3, order: 3, elements: [{ 'type' => 'slugline', 'text' => 'INT. HOLD - DAY' }, { 'type' => 'action', 'text' => 'Dark.' }])
+      v2.scenes.create!(scene_number: 3, order: 3, elements: [ { 'type' => 'slugline', 'text' => 'INT. HOLD - DAY' }, { 'type' => 'action', 'text' => 'Dark.' } ])
 
       get "/api/v1/script_versions/#{v2.id}/compare", params: { with: v1.id }, headers: headers
 
@@ -61,8 +61,8 @@ RSpec.describe 'Script drafts, comparison and breakdown API', type: :request do
       json = JSON.parse(response.body)
       expect(json['summary']).to eq('changed' => 1, 'added' => 1, 'removed' => 1)
       changed = json['scenes'].find { |s| s['status'] == 'changed' }
-      ops = changed['changes'].map { |c| [c['op'], c['element']['text']] }
-      expect(ops).to include(['del', 'Not again.'], ['add', 'Not again, Baba.'], ['same', 'A kettle screams.'])
+      ops = changed['changes'].map { |c| [ c['op'], c['element']['text'] ] }
+      expect(ops).to include([ 'del', 'Not again.' ], [ 'add', 'Not again, Baba.' ], [ 'same', 'A kettle screams.' ])
       expect(json['scenes'].find { |s| s['status'] == 'removed' }['slugline']).to eq('EXT. PIER - DAWN')
       expect(json['scenes'].find { |s| s['status'] == 'added' }['slugline']).to eq('INT. HOLD - DAY')
     end
@@ -91,12 +91,12 @@ RSpec.describe 'Script drafts, comparison and breakdown API', type: :request do
     it 'lists scenes revised since the previous draft' do
       v2 = Screenplay::VersionCloner.new(script).call
       kitchen = v2.scenes.ordered.first
-      kitchen.update!(elements: kitchen.elements + [{ 'type' => 'action', 'text' => 'New beat.' }])
+      kitchen.update!(elements: kitchen.elements + [ { 'type' => 'action', 'text' => 'New beat.' } ])
 
       get "/api/v1/script_versions/#{v2.id}/revisions", headers: headers
       json = JSON.parse(response.body)
       expect(json['previous_version']['version_number']).to eq(1)
-      expect(json['changed_scene_ids']).to eq([kitchen.id])
+      expect(json['changed_scene_ids']).to eq([ kitchen.id ])
     end
 
     it 'is empty for the first draft' do
@@ -110,10 +110,10 @@ RSpec.describe 'Script drafts, comparison and breakdown API', type: :request do
       get "/api/v1/script_versions/#{v1.id}/breakdown", headers: headers
       json = JSON.parse(response.body)
       props = json['categories'].find { |c| c['key'] == 'props' }['items']
-      expect(props).to eq([{ 'name' => 'kettle', 'scene_numbers' => [1, 2] }, { 'name' => 'radio', 'scene_numbers' => [1] }])
+      expect(props).to eq([ { 'name' => 'kettle', 'scene_numbers' => [ 1, 2 ] }, { 'name' => 'radio', 'scene_numbers' => [ 1 ] } ])
       cast = json['categories'].find { |c| c['key'] == 'cast' }['items']
-      expect(cast).to eq([{ 'name' => 'MIRA', 'scene_numbers' => [1] }])
-      expect(json['scenes'].first['items']['sfx']).to eq(['steam'])
+      expect(cast).to eq([ { 'name' => 'MIRA', 'scene_numbers' => [ 1 ] } ])
+      expect(json['scenes'].first['items']['sfx']).to eq([ 'steam' ])
     end
 
     it 'exports CSV' do

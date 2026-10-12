@@ -17,11 +17,11 @@ RSpec.describe Screenplay::ScriptImporter do
     expect(result.format).to eq(:fdx)
     expect(result.scenes_count).to eq(3)
     scenes = version.scenes.ordered
-    expect(scenes.map(&:slugline)).to eq([nil, 'INT. KITCHEN - NIGHT', 'EXT. PIER - DAWN'])
-    expect(scenes.map(&:scene_number)).to eq([1, 2, 3])
+    expect(scenes.map(&:slugline)).to eq([ nil, 'INT. KITCHEN - NIGHT', 'EXT. PIER - DAWN' ])
+    expect(scenes.map(&:scene_number)).to eq([ 1, 2, 3 ])
     expect(scenes.second.metadata['original_scene_number']).to eq('1')
     expect(scenes.second.content).to include("MRS. FONSECA (V.O.) (CONT'D)\n(flat)\nNot again.")
-    expect(scenes.second.character_names).to eq(['MRS. FONSECA'])
+    expect(scenes.second.character_names).to eq([ 'MRS. FONSECA' ])
   end
 
   it 'imports plain text through the Fountain reader' do

@@ -27,7 +27,7 @@ module MultipartParams
       #   - :params [Hash] All extracted parameters (symbol keys)
       #   - :file_hash [Hash, nil] File in hash format if present
       #   - :errors [Array<String>] Validation errors
-      def extract_multipart_params(form_params, required_fields: [], file_field: 'file')
+      def extract_multipart_params(form_params, required_fields: [], file_field: "file")
         errors = []
         extracted_params = {}
         file_hash = nil

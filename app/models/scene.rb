@@ -30,8 +30,8 @@ class Scene < ApplicationRecord
     return [] unless elements.is_a?(Array)
 
     elements
-      .select { |el| el['type'] == 'character' }
-      .map { |el| el['text'] }
+      .select { |el| el["type"] == "character" }
+      .map { |el| el["text"] }
       .uniq
   end
 
@@ -41,7 +41,7 @@ class Scene < ApplicationRecord
 
     # Parse location from slugline (everything between INT./EXT. and the dash)
     match = slugline.match(/\A(?:INT\.|EXT\.|INT\.\/EXT\.)\s+(.+?)\s*[-–—]/)
-    match ? [match[1].strip] : []
+    match ? [ match[1].strip ] : []
   end
 
   # Convert elements to plain text (for search/export)
@@ -66,10 +66,10 @@ class Scene < ApplicationRecord
     previous_type = nil
 
     self.elements = elements.map do |el|
-      formatted_text = formatter.format(el['type'], el['text'])
-      previous_type = el['type']
+      formatted_text = formatter.format(el["type"], el["text"])
+      previous_type = el["type"]
 
-      el.merge('text' => formatted_text)
+      el.merge("text" => formatted_text)
     end
   end
 
@@ -96,11 +96,11 @@ class Scene < ApplicationRecord
   # heading element so the structured form never shows a stale slugline.
   def sync_elements_from_slugline
     els = elements.is_a?(Array) ? elements.map(&:dup) : []
-    index = els.index { |el| el['type'] == 'slugline' }
+    index = els.index { |el| el["type"] == "slugline" }
     if index
-      els[index] = els[index].merge('text' => slugline)
+      els[index] = els[index].merge("text" => slugline)
     else
-      els.unshift('type' => 'slugline', 'text' => slugline)
+      els.unshift("type" => "slugline", "text" => slugline)
     end
     self.elements = els
   end
@@ -110,7 +110,7 @@ class Scene < ApplicationRecord
   def sync_slugline_from_elements
     return unless elements.is_a?(Array)
 
-    slugline_element = elements.find { |el| el['type'] == 'slugline' }
-    self.slugline = slugline_element['text'] if slugline_element && slugline_element['text'].present?
+    slugline_element = elements.find { |el| el["type"] == "slugline" }
+    self.slugline = slugline_element["text"] if slugline_element && slugline_element["text"].present?
   end
 end

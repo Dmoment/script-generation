@@ -39,16 +39,16 @@ module Screenplay
 
     # Common transitions
     TRANSITIONS = [
-      'CUT TO:',
-      'FADE IN:',
-      'FADE OUT.',
-      'FADE TO BLACK.',
-      'DISSOLVE TO:',
-      'SMASH CUT TO:',
-      'MATCH CUT TO:',
-      'JUMP CUT TO:',
-      'TIME CUT:',
-      'INTERCUT:'
+      "CUT TO:",
+      "FADE IN:",
+      "FADE OUT.",
+      "FADE TO BLACK.",
+      "DISSOLVE TO:",
+      "SMASH CUT TO:",
+      "MATCH CUT TO:",
+      "JUMP CUT TO:",
+      "TIME CUT:",
+      "INTERCUT:"
     ].freeze
 
     def self.valid_type?(type)

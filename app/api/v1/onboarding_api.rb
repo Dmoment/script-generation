@@ -28,10 +28,10 @@ module V1
           # Create or find company
           company_name = if params[:account_type] == "company"
                            params[:company_name]
-                         else
+          else
                            # For individual accounts, create a company with user's name
                            "#{params[:full_name]}'s Workspace"
-                         end
+          end
 
           company = Company.create!(
             name: company_name,
@@ -53,7 +53,7 @@ module V1
             company_id: company.id,
             project_id: nil # Company-level role
           ) do |ac|
-            ac.role = 'company_admin'
+            ac.role = "company_admin"
           end
 
           present current_user.reload, with: V1::Entities::User

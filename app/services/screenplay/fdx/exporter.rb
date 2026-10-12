@@ -41,7 +41,7 @@ module Screenplay
         @version.scenes.ordered.each do |scene|
           elements = scene.elements.presence || []
           if scene.slugline.present? && elements.none? { |e| e["type"] == "slugline" }
-            elements = [{ "type" => "slugline", "text" => scene.slugline }] + elements
+            elements = [ { "type" => "slugline", "text" => scene.slugline } ] + elements
           end
 
           elements.each do |element|

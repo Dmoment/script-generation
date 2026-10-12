@@ -17,17 +17,17 @@ module Screenplay
     # Apply soft formatting to text based on element type
     # Returns formatted text - never raises, never warns
     def format(type, text)
-      return '' if text.nil?
+      return "" if text.nil?
       return text if text.strip.empty?
 
       case type.to_s
-      when 'slugline'
+      when "slugline"
         soft_format_slugline(text)
-      when 'character'
+      when "character"
         soft_format_character(text)
-      when 'transition'
+      when "transition"
         soft_format_transition(text)
-      when 'parenthetical'
+      when "parenthetical"
         soft_format_parenthetical(text)
       else
         # dialogue, action, centered - preserve as-is
@@ -38,49 +38,49 @@ module Screenplay
     # Detect element type from text and context
     # Returns best guess - never forces, writer can override
     def detect_type(text, previous_type = nil)
-      return 'action' if text.nil? || text.strip.empty?
+      return "action" if text.nil? || text.strip.empty?
 
       trimmed = text.strip
 
       # 1. Slugline detection (starts with INT./EXT.)
-      return 'slugline' if slugline?(trimmed)
+      return "slugline" if slugline?(trimmed)
 
       # 2. Transition detection (CUT TO, FADE, etc.)
-      return 'transition' if transition?(trimmed)
+      return "transition" if transition?(trimmed)
 
       # 3. Parenthetical detection (wrapped in parens)
-      return 'parenthetical' if parenthetical?(trimmed)
+      return "parenthetical" if parenthetical?(trimmed)
 
       # 4. After character → dialogue
-      return 'dialogue' if previous_type == 'character'
+      return "dialogue" if previous_type == "character"
 
       # 5. After parenthetical → dialogue (continuing)
-      return 'dialogue' if previous_type == 'parenthetical'
+      return "dialogue" if previous_type == "parenthetical"
 
       # 6. Character detection (short, looks like a name)
-      return 'character' if looks_like_character?(trimmed, previous_type)
+      return "character" if looks_like_character?(trimmed, previous_type)
 
       # Default: action
-      'action'
+      "action"
     end
 
     # Get the next logical element type after pressing Enter
     def next_type_after(current_type)
       case current_type.to_s
-      when 'slugline'
-        'action'
-      when 'action'
-        'action'  # Could be character, but let detection decide
-      when 'character'
-        'dialogue'
-      when 'dialogue'
-        'action'  # Back to action, detection will find character if typed
-      when 'parenthetical'
-        'dialogue'
-      when 'transition'
-        'slugline'
+      when "slugline"
+        "action"
+      when "action"
+        "action"  # Could be character, but let detection decide
+      when "character"
+        "dialogue"
+      when "dialogue"
+        "action"  # Back to action, detection will find character if typed
+      when "parenthetical"
+        "dialogue"
+      when "transition"
+        "slugline"
       else
-        'action'
+        "action"
       end
     end
 
@@ -93,15 +93,15 @@ module Screenplay
 
       # Normalize INT/EXT prefix with period
       result = result
-        .gsub(/\AINT\s*\/\s*EXT\s*\.?\s*/i, 'INT./EXT. ')
-        .gsub(/\AI\s*\/\s*E\s*\.?\s*/i, 'INT./EXT. ')
-        .gsub(/\AINT\s*\.?\s*(?!\/)/i, 'INT. ')
-        .gsub(/\AEXT\s*\.?\s*/i, 'EXT. ')
+        .gsub(/\AINT\s*\/\s*EXT\s*\.?\s*/i, "INT./EXT. ")
+        .gsub(/\AI\s*\/\s*E\s*\.?\s*/i, "INT./EXT. ")
+        .gsub(/\AINT\s*\.?\s*(?!\/)/i, "INT. ")
+        .gsub(/\AEXT\s*\.?\s*/i, "EXT. ")
 
       # Normalize dash/hyphen (but only if there's content after location)
       # Don't add dash if writer hasn't typed time yet
-      if result.include?(' - ') || result.include?(' – ') || result.include?(' — ')
-        result = result.gsub(/\s*[-–—]\s*/, ' - ')
+      if result.include?(" - ") || result.include?(" – ") || result.include?(" — ")
+        result = result.gsub(/\s*[-–—]\s*/, " - ")
       end
 
       result
@@ -119,7 +119,7 @@ module Screenplay
     # "cut to" → "CUT TO:"
     def soft_format_transition(text)
       result = text.strip.upcase
-      result += ':' unless result.end_with?(':') || result.end_with?('.')
+      result += ":" unless result.end_with?(":") || result.end_with?(".")
       result
     end
 
@@ -127,8 +127,8 @@ module Screenplay
     # "beat" → "(beat)"
     def soft_format_parenthetical(text)
       result = text.strip.downcase
-      result = "(#{result}" unless result.start_with?('(')
-      result = "#{result})" unless result.end_with?(')')
+      result = "(#{result}" unless result.start_with?("(")
+      result = "#{result})" unless result.end_with?(")")
       result
     end
 
@@ -140,7 +140,7 @@ module Screenplay
 
     def transition?(text)
       text.match?(/\A(CUT TO|FADE|DISSOLVE|SMASH CUT|MATCH CUT|JUMP CUT|TIME CUT|INTERCUT)/i) ||
-        (text == text.upcase && text.strip.end_with?(':') && text.length < 25)
+        (text == text.upcase && text.strip.end_with?(":") && text.length < 25)
     end
 
     def parenthetical?(text)
@@ -148,10 +148,10 @@ module Screenplay
     end
 
     def looks_like_character?(text, previous_type)
-      return false if previous_type == 'character'  # Can't have two characters in row
+      return false if previous_type == "character"  # Can't have two characters in row
       return false if text.length > 40  # Too long for a name
-      return false if text.include?('.')  # Likely a sentence
-      return false if text.split(' ').length > 4  # Too many words
+      return false if text.include?(".")  # Likely a sentence
+      return false if text.split(" ").length > 4  # Too many words
 
       # If already uppercase and short, likely a character
       text == text.upcase && text.length >= 2
