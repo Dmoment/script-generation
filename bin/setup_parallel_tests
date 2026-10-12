@@ -22,3 +22,4 @@ echo "You can now run tests in parallel with:"
 echo "  bundle exec parallel_rspec spec/ -n 4"
 
 
+

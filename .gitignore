@@ -42,3 +42,6 @@
 /node_modules
 # Parallel test results
 tmp/parallel_test_results/
+
+# macOS
+.DS_Store

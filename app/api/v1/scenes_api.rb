@@ -63,7 +63,14 @@ module V1
         requires :script_version_id, type: Integer, desc: "Script version ID"
         requires :scene_number, type: Integer, desc: "Scene number"
         optional :slugline, type: String, desc: "Scene slugline (e.g., 'EXT. BEACH - DAY')"
-        optional :content, type: String, desc: "Scene content/text"
+        optional :content, type: String, desc: "Scene content/text (legacy, prefer elements)"
+        optional :elements, type: Array, desc: "Structured screenplay elements array" do
+          optional :type, type: String, values: Screenplay::ElementTypes::TYPES,
+                   desc: "Element type: slugline, action, character, dialogue, parenthetical, transition, centered"
+          optional :text, type: String, desc: "Element text content"
+          optional :extensions, type: Array[String], desc: "Character extensions (V.O., O.S., CONT'D)"
+          optional :id, type: String, desc: "Optional client-side element ID"
+        end
         optional :order, type: Integer, desc: "Display order (defaults to next available)"
         optional :metadata, type: Hash, desc: "Additional metadata (JSON object)"
       end
@@ -78,9 +85,15 @@ module V1
           scene_number: params[:scene_number],
           slugline: params[:slugline],
           content: params[:content],
+          elements: params[:elements] || [],
           order: params[:order],
           metadata: params[:metadata] || {}
         )
+
+        # If content provided but no elements, parse content into elements
+        if params[:content].present? && params[:elements].blank?
+          scene.parse_content_to_elements!
+        end
 
         authorize scene, :create?
 
@@ -103,7 +116,14 @@ module V1
         requires :id, type: Integer, desc: "Scene ID"
         optional :scene_number, type: Integer, desc: "Scene number"
         optional :slugline, type: String, desc: "Scene slugline"
-        optional :content, type: String, desc: "Scene content/text"
+        optional :content, type: String, desc: "Scene content/text (legacy, prefer elements)"
+        optional :elements, type: Array, desc: "Structured screenplay elements array" do
+          optional :type, type: String, values: Screenplay::ElementTypes::TYPES,
+                   desc: "Element type: slugline, action, character, dialogue, parenthetical, transition, centered"
+          optional :text, type: String, desc: "Element text content"
+          optional :extensions, type: Array[String], desc: "Character extensions (V.O., O.S., CONT'D)"
+          optional :id, type: String, desc: "Optional client-side element ID"
+        end
         optional :order, type: Integer, desc: "Display order"
         optional :metadata, type: Hash, desc: "Additional metadata (JSON object)"
       end
@@ -117,6 +137,7 @@ module V1
         update_attributes[:scene_number] = params[:scene_number] if params.key?(:scene_number)
         update_attributes[:slugline] = params[:slugline] if params.key?(:slugline)
         update_attributes[:content] = params[:content] if params.key?(:content)
+        update_attributes[:elements] = params[:elements] if params.key?(:elements)
         update_attributes[:order] = params[:order] if params.key?(:order)
         update_attributes[:metadata] = params[:metadata] if params.key?(:metadata)
 

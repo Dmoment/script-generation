@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetProjectTypesResponse, PostProjectTypesResponse, GetScriptsResponse, PostScriptsResponse, GetScenesResponse, PostScenesResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, GetById2Data, GetById2Response, DeleteById1Data, DeleteById1Response, DeleteById2Data, DeleteById2Response, GetById3Data, GetById3Response, PutById1Data, PutById1Response, DeleteById3Data, DeleteById3Response, PostCompleteResponse, GetStatusResponse, PostUploadResponse } from './types.gen';
+import type { GetCurrentResponse, PutCurrentData, PutCurrentResponse, GetUsersResponse, GetProjectsResponse, PostProjectsData, PostProjectsResponse, GetProjectTypesResponse, PostProjectTypesResponse, GetScriptsResponse, PostScriptsResponse, GetScenesResponse, PostScenesResponse, GetByIdData, GetByIdResponse, GetById1Data, GetById1Response, PutByIdData, PutByIdResponse, DeleteByIdData, DeleteByIdResponse, GetById2Data, GetById2Response, DeleteById1Data, DeleteById1Response, GetFormatPreviewData, GetFormatPreviewResponse, PostApplyFormattingData, PostApplyFormattingResponse, DeleteById2Data, DeleteById2Response, GetById3Data, GetById3Response, PutById1Data, PutById1Response, DeleteById3Data, DeleteById3Response, PostCompleteResponse, GetStatusResponse, PostUploadResponse } from './types.gen';
 
 export class CurrentService {
     /**
@@ -251,6 +251,40 @@ export class IdService {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/v1/scripts/:id',
+            path: {
+                id: data.id
+            }
+        });
+    }
+    
+    /**
+     * Preview post-formatting changes for a script version
+     * @param data The data for the request.
+     * @param data.id
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static getFormatPreview(data: GetFormatPreviewData): CancelablePromise<GetFormatPreviewResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/v1/script_versions/:id/format_preview',
+            path: {
+                id: data.id
+            }
+        });
+    }
+    
+    /**
+     * Apply post-formatting to a script version
+     * @param data The data for the request.
+     * @param data.id
+     * @returns unknown Success
+     * @throws ApiError
+     */
+    public static postApplyFormatting(data: PostApplyFormattingData): CancelablePromise<PostApplyFormattingResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/v1/script_versions/:id/apply_formatting',
             path: {
                 id: data.id
             }

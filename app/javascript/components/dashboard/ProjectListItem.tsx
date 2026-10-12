@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { colors } from "../../lib/theme";
 
 interface ProjectListItemProps {
@@ -26,6 +27,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
   onSelect,
   onDelete,
 }) => {
+  const navigate = useNavigate();
   const getStatusStyles = () => {
     switch (status) {
       case "Active":
@@ -104,7 +106,10 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
         {/* Actions Column */}
         <div className="col-span-1 flex justify-end gap-2">
           <button
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/scripts", { state: { projectId } });
+            }}
             className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
           >
             Open →

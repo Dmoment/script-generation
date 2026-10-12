@@ -33,11 +33,24 @@ class Project < ApplicationRecord
 
   # Defaults
   after_initialize :set_defaults, if: :new_record?
+  after_create :grant_creator_project_admin_access
 
   private
 
   def set_defaults
     self.status ||= 'draft'
     self.project_type ||= 'film'
+  end
+
+  def grant_creator_project_admin_access
+    return unless created_by_user_id && company_id
+
+    AccessControl.find_or_create_by!(
+      user_id: created_by_user_id,
+      company_id: company_id,
+      project_id: id
+    ) do |ac|
+      ac.role = 'project_admin'
+    end
   end
 end

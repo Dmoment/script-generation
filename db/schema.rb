@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_22_153716) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_25_115645) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,6 +96,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_22_153716) do
     t.jsonb "metadata", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "elements", default: [], null: false
+    t.index ["elements"], name: "index_scenes_on_elements", using: :gin
     t.index ["script_version_id", "order"], name: "index_scenes_on_script_version_id_and_order"
     t.index ["script_version_id", "scene_number"], name: "index_scenes_on_script_version_id_and_scene_number", unique: true
     t.index ["script_version_id"], name: "index_scenes_on_script_version_id"

@@ -1,10 +1,15 @@
 import React, { useState, useMemo } from "react";
 import IndexCardFilters from "./IndexCardFilters";
 import IndexCard, { SceneCard } from "./IndexCard";
+import CorkboardView from "./CorkboardView";
+import { colors } from "../../lib/theme";
+
+type ViewMode = "grid" | "corkboard";
 
 interface IndexCardViewProps {
   scenes: SceneCard[];
   onSceneReorder?: (newOrder: SceneCard[]) => void;
+  onCardPositionChange?: (sceneId: number, x: number, y: number) => void;
   groupingMode: "none" | "act" | "location" | "thread";
   onGroupingModeChange: (mode: "none" | "act" | "location" | "thread") => void;
 }
@@ -12,11 +17,15 @@ interface IndexCardViewProps {
 const IndexCardView: React.FC<IndexCardViewProps> = ({
   scenes,
   onSceneReorder,
+  onCardPositionChange,
   groupingMode,
   onGroupingModeChange,
 }) => {
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const draggedIdRef = React.useRef<number | null>(null);
   const [filters, setFilters] = useState({
     act: null as string | null,
     location: null as string | null,
@@ -109,6 +118,57 @@ const IndexCardView: React.FC<IndexCardViewProps> = ({
     return actColors[act?.toUpperCase() || ""] || colors.primary.pink;
   };
 
+  const handleDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    sceneId: number
+  ) => {
+    draggedIdRef.current = sceneId;
+    e.dataTransfer.effectAllowed = "move";
+    // Firefox requires data to be set to initiate drag.
+    e.dataTransfer.setData("text/plain", String(sceneId));
+  };
+
+  const handleDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    sceneId: number
+  ) => {
+    if (draggedIdRef.current == null || draggedIdRef.current === sceneId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverId(sceneId);
+  };
+
+  const handleDragLeave = (sceneId: number) => {
+    setDragOverId((prev) => (prev === sceneId ? null : prev));
+  };
+
+  const handleDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    targetSceneId: number
+  ) => {
+    e.preventDefault();
+    const sourceId = draggedIdRef.current;
+    draggedIdRef.current = null;
+    setDragOverId(null);
+    if (sourceId == null || sourceId === targetSceneId) return;
+
+    const sourceIndex = scenes.findIndex((s) => s.id === sourceId);
+    const targetIndex = scenes.findIndex((s) => s.id === targetSceneId);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const next = [...scenes];
+    const [moved] = next.splice(sourceIndex, 1);
+    next.splice(targetIndex, 0, moved);
+    onSceneReorder?.(next);
+  };
+
+  const handleDragEnd = () => {
+    draggedIdRef.current = null;
+    setDragOverId(null);
+  };
+
+  const showCorkboard = viewMode === "corkboard";
+
   return (
     <div className="flex-1 flex overflow-hidden bg-gray-50">
       {/* Filters Sidebar */}
@@ -132,66 +192,119 @@ const IndexCardView: React.FC<IndexCardViewProps> = ({
             <h2 className="text-lg font-black uppercase text-black tracking-tight">
               Index Cards
             </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase text-gray-600 font-mono">
-                Group by:
-              </span>
-              <select
-                value={groupingMode}
-                onChange={(e) =>
-                  onGroupingModeChange(
-                    e.target.value as "none" | "act" | "location" | "thread"
-                  )
-                }
-                className="px-3 py-1.5 border-2 border-black rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black"
+            {/* View Mode Toggle */}
+            <div className="flex border-2 border-black rounded overflow-hidden">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
+                  viewMode === "grid"
+                    ? "bg-black text-white"
+                    : "bg-white text-black hover:bg-gray-100"
+                }`}
+                title="Grid view with drag-to-reorder"
               >
-                <option value="none">None</option>
-                <option value="act">Act</option>
-                <option value="location">Location</option>
-                <option value="thread">Thread</option>
-              </select>
+                Grid
+              </button>
+              <button
+                onClick={() => setViewMode("corkboard")}
+                className={`px-3 py-1.5 text-xs font-bold uppercase transition-colors border-l-2 border-black ${
+                  viewMode === "corkboard"
+                    ? "bg-black text-white"
+                    : "bg-white text-black hover:bg-gray-100"
+                }`}
+                title="Freeform corkboard: pan, zoom, place cards anywhere"
+              >
+                Corkboard
+              </button>
             </div>
+            {!showCorkboard && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase text-gray-600 font-mono">
+                  Group by:
+                </span>
+                <select
+                  value={groupingMode}
+                  onChange={(e) =>
+                    onGroupingModeChange(
+                      e.target.value as "none" | "act" | "location" | "thread"
+                    )
+                  }
+                  className="px-3 py-1.5 border-2 border-black rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  <option value="none">None</option>
+                  <option value="act">Act</option>
+                  <option value="location">Location</option>
+                  <option value="thread">Thread</option>
+                </select>
+              </div>
+            )}
           </div>
           <div className="text-xs text-gray-600 font-mono">
             {filteredScenes.length} scene{filteredScenes.length !== 1 ? "s" : ""}
           </div>
         </div>
 
-        {/* Cards Grid */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {Object.entries(groupedScenes).map(([groupName, groupScenes]) => (
-            <div key={groupName} className="mb-8">
-              {groupingMode !== "none" && (
-                <h3 className="text-sm font-black uppercase text-black mb-4 font-mono">
-                  {groupName}
-                </h3>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {groupScenes.map((scene) => (
-                  <IndexCard
-                    key={scene.id}
-                    scene={scene}
-                    isExpanded={expandedCardId === scene.id}
-                    onExpand={handleCardExpand}
-                    onCollapse={handleCardCollapse}
-                    actColor={getActColor(scene.act)}
-                  />
-                ))}
+        {/* Body */}
+        {showCorkboard ? (
+          <CorkboardView
+            scenes={filteredScenes}
+            onCardPositionChange={(id, x, y) =>
+              onCardPositionChange?.(id, x, y)
+            }
+          />
+        ) : (
+          <div className="flex-1 overflow-y-auto p-6">
+            {Object.entries(groupedScenes).map(([groupName, groupScenes]) => (
+              <div key={groupName} className="mb-8">
+                {groupingMode !== "none" && (
+                  <h3 className="text-sm font-black uppercase text-black mb-4 font-mono">
+                    {groupName}
+                  </h3>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {groupScenes.map((scene) => (
+                    <div
+                      key={scene.id}
+                      draggable={!!onSceneReorder}
+                      onDragStart={(e) => handleDragStart(e, scene.id)}
+                      onDragOver={(e) => handleDragOver(e, scene.id)}
+                      onDragLeave={() => handleDragLeave(scene.id)}
+                      onDrop={(e) => handleDrop(e, scene.id)}
+                      onDragEnd={handleDragEnd}
+                      className={`transition-transform ${
+                        dragOverId === scene.id
+                          ? "ring-4 ring-pink-400 rounded-lg"
+                          : ""
+                      }`}
+                      style={{
+                        opacity:
+                          draggedIdRef.current === scene.id ? 0.4 : 1,
+                      }}
+                    >
+                      <IndexCard
+                        scene={scene}
+                        isExpanded={expandedCardId === scene.id}
+                        onExpand={handleCardExpand}
+                        onCollapse={handleCardCollapse}
+                        actColor={getActColor(scene.act)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-          {filteredScenes.length === 0 && (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500 font-mono">
-                No scenes match the current filters
-              </p>
-            </div>
-          )}
-        </div>
+            ))}
+            {filteredScenes.length === 0 && (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-gray-500 font-mono">
+                  No scenes match the current filters
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default IndexCardView;
-

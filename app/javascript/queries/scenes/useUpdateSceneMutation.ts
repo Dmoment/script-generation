@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { request } from "../../types/generated/core/request";
 import { OpenAPI } from "../../types/generated/core/OpenAPI";
-import type { Scene } from "../../types/api";
+import type { Scene, ScreenplayElement, SceneMetadata } from "../../types/api";
 import { sceneKeys } from "./useScenesQuery";
 
 export interface UpdateSceneData {
@@ -9,8 +9,9 @@ export interface UpdateSceneData {
   scene_number?: number;
   slugline?: string;
   content?: string;
+  elements?: ScreenplayElement[];
   order?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: SceneMetadata;
 }
 
 export const useUpdateSceneMutation = () => {

@@ -15,6 +15,8 @@ export interface SceneCard {
   act?: string;
   location?: string;
   status?: string;
+  positionX?: number;
+  positionY?: number;
 }
 
 interface IndexCardProps {
@@ -192,5 +194,6 @@ const IndexCard: React.FC<IndexCardProps> = ({
 };
 
 export default IndexCard;
+
 
 

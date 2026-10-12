@@ -475,6 +475,68 @@
         ]
       }
     },
+    "/v1/script_versions/:id/format_preview": {
+      "get": {
+        "operationId": "getFormatPreview",
+        "summary": "Preview post-formatting changes for a script version",
+        "tags": [
+          ":id"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/script_versions/:id/apply_formatting": {
+      "post": {
+        "operationId": "postApplyFormatting",
+        "summary": "Apply post-formatting to a script version",
+        "tags": [
+          ":id"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
     "/v1/script_versions/:id": {
       "delete": {
         "operationId": "deleteById",

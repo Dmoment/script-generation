@@ -52,7 +52,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     </div>
     {/* Label - always visible in mobile, hidden when collapsed on desktop, shown when sidebar is hovered */}
     <span
-      className={`whitespace-nowrap transition-all duration-300 inline-block ${
+      className={`sidebar-label whitespace-nowrap transition-all duration-300 inline-block ${
         alwaysShowLabel
           ? "opacity-100 ml-2 w-auto"
           : "opacity-0 ml-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-[180px] group-hover/sidebar:ml-2"

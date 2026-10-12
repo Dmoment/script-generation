@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { colors, getStatusStyles, getVersionBadgeColor } from "../../lib/theme";
 import type { Script, ScriptVersion } from "../../types/api";
 
@@ -15,8 +16,17 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
   versions = [],
   onClick,
 }) => {
+  const navigate = useNavigate();
   const [showRemainingVersions, setShowRemainingVersions] = useState(false);
   const remainingVersionsRef = useRef<HTMLDivElement>(null);
+
+  const handleOpen = () => {
+    const sortedVersions = [...versions].sort((a, b) => (a.version_number || 0) - (b.version_number || 0));
+    const latestVersion = sortedVersions[sortedVersions.length - 1];
+    if (latestVersion) {
+      navigate(`/scripts/${script.id}/versions/${latestVersion.id}`);
+    }
+  };
 
   const statusStyles = getStatusStyles(script.status);
   const formattedDate = new Date(script.created_at).toLocaleDateString(
@@ -58,7 +68,7 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
 
   return (
     <div
-      onClick={onClick}
+      onClick={onClick || handleOpen}
       className="group relative bg-white border-2 border-black p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all duration-200 cursor-pointer"
     >
       <div className="flex items-start justify-between mb-4">
@@ -109,7 +119,7 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    // TODO: Navigate to version detail page
+                    navigate(`/scripts/${script.id}/versions/${version.id}`);
                   }}
                   title={`Version ${version.version_number}${
                     version.has_uploaded_file ? " (Uploaded)" : ""
@@ -164,7 +174,7 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               setShowRemainingVersions(false);
-                              // TODO: Navigate to version detail page
+                              navigate(`/scripts/${script.id}/versions/${version.id}`);
                             }}
                             className="w-full flex items-center gap-2 px-2 py-2 hover:bg-gray-100 rounded transition-colors text-left"
                           >
@@ -232,7 +242,10 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
         >
           {script.status.charAt(0).toUpperCase() + script.status.slice(1)}
         </span>
-        <button className="text-xs font-bold uppercase hover:bg-black hover:text-white px-2 py-1 transition-colors">
+        <button
+          onClick={(e) => { e.stopPropagation(); handleOpen(); }}
+          className="text-xs font-bold uppercase hover:bg-black hover:text-white px-2 py-1 transition-colors"
+        >
           Open →
         </button>
       </div>

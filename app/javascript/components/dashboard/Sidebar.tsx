@@ -12,6 +12,14 @@ const Sidebar: React.FC = () => {
   const isScriptDatabase = location.pathname === "/scripts";
 
   return (
+    <>
+    <style>{`
+      .group\\/sidebar:hover .sidebar-label {
+        opacity: 1 !important;
+        width: 180px !important;
+        margin-left: 0.5rem !important;
+      }
+    `}</style>
     <aside className="hidden md:block group/sidebar w-20 hover:w-64 flex-shrink-0 bg-white border-r-2 border-black h-screen sticky top-0 transition-all duration-300 ease-in-out">
       <div className="h-full flex flex-col">
         <div className="border-b-2 border-black bg-gray-50">
@@ -202,6 +210,7 @@ const Sidebar: React.FC = () => {
         </nav>
       </div>
     </aside>
+    </>
   );
 };
 

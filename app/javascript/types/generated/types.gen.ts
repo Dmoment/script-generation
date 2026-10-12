@@ -104,6 +104,22 @@ export type DeleteById1Response = {
     [key: string]: unknown;
 };
 
+export type GetFormatPreviewData = {
+    id: number;
+};
+
+export type GetFormatPreviewResponse = {
+    [key: string]: unknown;
+};
+
+export type PostApplyFormattingData = {
+    id: number;
+};
+
+export type PostApplyFormattingResponse = {
+    [key: string]: unknown;
+};
+
 export type DeleteById2Data = {
     id: number;
 };
@@ -317,6 +333,32 @@ export type $OpenApiTs = {
         };
         delete: {
             req: DeleteById1Data;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
+    '/v1/script_versions/:id/format_preview': {
+        get: {
+            req: GetFormatPreviewData;
+            res: {
+                /**
+                 * Success
+                 */
+                200: {
+                    [key: string]: unknown;
+                };
+            };
+        };
+    };
+    '/v1/script_versions/:id/apply_formatting': {
+        post: {
+            req: PostApplyFormattingData;
             res: {
                 /**
                  * Success
