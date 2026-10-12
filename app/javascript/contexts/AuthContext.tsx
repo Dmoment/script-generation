@@ -5,5 +5,5 @@
  * The actual Auth0Provider is configured in react_app.jsx
  */
 
-export { useAuth0 as useAuth } from '@auth0/auth0-react';
+export { useAuth } from '../hooks/useAuth';
 

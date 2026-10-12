@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth0 } from '../hooks/useAuth';
 import { useNavigate, useLocation } from "react-router-dom";
 import type { Script, Project, ScriptVersion } from "../types/api";
 import "../lib/openapi-config";

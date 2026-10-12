@@ -24,6 +24,8 @@
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
     <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap">
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
@@ -34,6 +36,10 @@
     <%# Auth0 config for frontend if needed %>
     <meta name="auth0-domain" content="<%= ENV['AUTH0_DOMAIN'] %>">
     <meta name="auth0-client-id" content="<%= ENV['AUTH0_CLIENT_ID'] %>">
+    <% if DevAuthBypass.enabled? %>
+      <%# Development/test only: tells the frontend to use a stub session (see app/services/dev_auth_bypass.rb) %>
+      <meta name="dev-auth-bypass" content="1">
+    <% end %>
   </head>
 
   <body>

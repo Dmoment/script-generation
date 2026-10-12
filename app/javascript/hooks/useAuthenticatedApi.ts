@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuth0 } from './useAuth';
 import { setAuthTokenProvider } from '../lib/authTokenProvider';
 
 const AUTH0_SCOPE = 'openid profile email';

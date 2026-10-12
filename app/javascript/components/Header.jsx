@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuth0 } from '../hooks/useAuth';
 
 function parseJsonDataset(el, key, fallback) {
   try {

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth0 } from '../hooks/useAuth';
 import { useNavigate, useLocation } from "react-router-dom";
 import type { Project } from "../types/api";
 import "../lib/openapi-config";
@@ -165,7 +165,6 @@ const DashboardPage: React.FC = () => {
       const lastAuthAttempt = localStorage.getItem('auth0_last_redirect');
       const now = Date.now();
       
-      // Only redirect if we haven't tried in the last 5 seconds
       if (!lastAuthAttempt || (now - parseInt(lastAuthAttempt, 10)) > 5000) {
         localStorage.setItem('auth0_last_redirect', now.toString());
         loginWithRedirect({
@@ -263,13 +262,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <>
-      <style>{`
-        .group\\/sidebar:hover .sidebar-label {
-          opacity: 1 !important;
-          width: 180px !important;
-          margin-left: 0.5rem !important;
-        }
-      `}</style>
       {/* Onboarding Modal - rendered at root level with portal-like behavior */}
       {showOnboarding && (
         <OnboardingModal

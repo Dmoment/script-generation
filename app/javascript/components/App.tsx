@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuth0 } from '../hooks/useAuth';
 import Header from './Header';
 import Footer from './Footer';
 import LandingPage from '../pages/LandingPage';
 import DashboardPage from '../pages/DashboardPage';
 import ScriptDatabasePage from '../pages/ScriptDatabasePage';
 import ScriptEditorPage from '../pages/ScriptEditorPage';
+import ScriptPrintPage from '../pages/ScriptPrintPage';
 import AuthTokenBridge from './AuthTokenBridge';
 import LoadingScreen from './LoadingScreen';
 import { queryClient } from '../lib/queryClient';
@@ -105,6 +106,9 @@ const App: React.FC<AppProps> = ({ features = [], appName = 'Script Generation' 
             
             {/* Script Editor route */}
             <Route path="/scripts/:scriptId/versions/:versionId" element={<ScriptEditorPage />} />
+
+            {/* Print / PDF view of a version */}
+            <Route path="/scripts/:scriptId/versions/:versionId/print" element={<ScriptPrintPage />} />
           </Routes>
         </div>
       </BrowserRouter>
