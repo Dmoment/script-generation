@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth0 } from '../hooks/useAuth';
 import LoadingScreen from "../components/LoadingScreen";
 import { colors } from "../lib/theme";
-import ScriptEditorHeader from "../components/script-editor/ScriptEditorHeader";
+import ScriptEditorHeader, { type EditorTab } from "../components/script-editor/ScriptEditorHeader";
+import CharactersView from "../components/script-editor/CharactersView";
+import BreakdownView from "../components/script-editor/BreakdownView";
+import { useScriptQuery } from "../queries/scripts/useScriptQuery";
+import { useRevisionsQuery } from "../queries/versions/useVersionQueries";
 import SceneNavigationSidebar from "../components/script-editor/SceneNavigationSidebar";
 import SceneMetadataSidebar from "../components/script-editor/SceneMetadataSidebar";
 import ScriptContentEditor from "../components/script-editor/ScriptContentEditor";
 import ScriptEditorActions from "../components/script-editor/ScriptEditorActions";
 import IndexCardView from "../components/script-editor/IndexCardView";
+import FormatScriptModal from "../components/script-editor/FormatScriptModal";
 import type { SceneCard } from "../components/script-editor/IndexCard";
 import { useScenesQuery } from "../queries/scenes/useScenesQuery";
 import { useCreateSceneMutation } from "../queries/scenes/useCreateSceneMutation";
 import { useDeleteSceneMutation } from "../queries/scenes/useDeleteSceneMutation";
 import { useUpdateSceneMutation } from "../queries/scenes/useUpdateSceneMutation";
+import { useReorderScenesMutation } from "../queries/scenes/useReorderScenesMutation";
 import type { Scene } from "../types/api";
 
 /**
@@ -29,9 +35,7 @@ const ScriptEditorPage: React.FC = () => {
   const navigate = useNavigate();
   const { isLoading, isAuthenticated, loginWithRedirect } = useAuth0();
 
-  const [activeTab, setActiveTab] = useState<
-    "scenes" | "script" | "characters" | "outline"
-  >("script");
+  const [activeTab, setActiveTab] = useState<EditorTab>("script");
   const [selectedSceneId, setSelectedSceneId] = useState<number | null>(null);
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
@@ -40,6 +44,7 @@ const ScriptEditorPage: React.FC = () => {
   const [groupingMode, setGroupingMode] = useState<
     "none" | "act" | "location" | "thread"
   >("none");
+  const [isFormatModalOpen, setIsFormatModalOpen] = useState(false);
 
   const isFullscreen = isLeftSidebarCollapsed && isRightSidebarCollapsed;
 
@@ -50,11 +55,15 @@ const ScriptEditorPage: React.FC = () => {
     error: scenesError,
   } = useScenesQuery({
     scriptVersionId,
-    enabled: !!versionId && activeTab === "script",
+    enabled: !!versionId,
   });
+  const { data: script } = useScriptQuery({ scriptId: scriptId ? parseInt(scriptId, 10) : 0, enabled: isAuthenticated });
+  const { data: revisions } = useRevisionsQuery(scriptVersionId, isAuthenticated);
+  const revisedSceneIds = useMemo(() => new Set(revisions?.changed_scene_ids || []), [revisions]);
   const createSceneMutation = useCreateSceneMutation();
   const deleteSceneMutation = useDeleteSceneMutation();
   const updateSceneMutation = useUpdateSceneMutation();
+  const reorderScenesMutation = useReorderScenesMutation();
 
   const selectedScene = Array.isArray(scenes)
     ? scenes.find((s) => s.id === selectedSceneId) || scenes[0] || null
@@ -66,90 +75,60 @@ const ScriptEditorPage: React.FC = () => {
     }
   }, [scenes, selectedSceneId]);
 
-  const sampleScenes: SceneCard[] = [
-    {
-      id: 1,
-      sceneNumber: 1,
-      slugline: "EXT. BEACH – DAY",
-      summary: "Barry arrives at the crime scene, late and disoriented",
-      tone: "Calm",
-      purpose: "Setup",
-      duration: "0:45",
-      characters: ["Barry", "Detective"],
-      beats: [
-        "Barry arrives late",
-        "Sees the crime scene tape",
-        "Meets Detective",
-      ],
-      notes: "Establish Barry's character through his lateness",
-      act: "ACT 1",
-      location: "Beach",
-      status: "Draft",
-    },
-    {
-      id: 2,
-      sceneNumber: 2,
-      slugline: "INT. HOTEL ROOM – DAWN",
-      summary: "Barry removes earplugs and searches for his gun",
-      tone: "Tense",
-      purpose: "Reveal",
-      duration: "1:10",
-      characters: ["Barry"],
-      beats: [
-        "Barry removes earplugs",
-        "Searches for gun",
-        "Finds bullet holes",
-      ],
-      notes: "The bullet holes reveal something happened",
-      act: "ACT 1",
-      location: "Hotel",
-      status: "Draft",
-    },
-    {
-      id: 3,
-      sceneNumber: 3,
-      slugline: "EXT. BEACH – DAY",
-      summary: "Barry confronts the killer in a tense standoff",
-      tone: "Intense",
-      purpose: "Confrontation",
-      duration: "2:30",
-      characters: ["Barry", "Villain"],
-      beats: ["Barry arrives late", "Sees the body", "Confrontation explodes"],
-      notes: "Too similar to Scene 8?",
-      act: "ACT 2",
-      location: "Beach",
-      status: "Draft",
-    },
-    {
-      id: 4,
-      sceneNumber: 4,
-      slugline: "INT. ELECTRONIC GEEK – DAY",
-      summary: "Barry investigates the electronics store for clues",
-      tone: "Calm",
-      purpose: "Investigation",
-      duration: "1:20",
-      characters: ["Barry", "Store Owner"],
-      beats: ["Barry questions owner", "Finds key evidence", "Leaves"],
-      act: "ACT 2",
-      location: "Store",
-      status: "Draft",
-    },
-    {
-      id: 5,
-      sceneNumber: 5,
-      slugline: "EXT. BEACH – NIGHT",
-      summary: "The final confrontation between Barry and the villain",
-      tone: "Intense",
-      purpose: "Climax",
-      duration: "3:15",
-      characters: ["Barry", "Villain"],
-      beats: ["Final standoff", "Barry's realization", "Resolution"],
-      notes: "Make sure this escalates properly from Scene 3",
-      act: "ACT 3",
-      location: "Beach",
-      status: "Draft",
-    },
-  ];
+  // Switching drafts: the scene ids change, so re-select from the new list.
+  useEffect(() => {
+    setSelectedSceneId(null);
+  }, [scriptVersionId]);
+
+  const openScene = useCallback((sceneId: number) => {
+    setSelectedSceneId(sceneId);
+    setActiveTab("script");
+  }, []);
+
+  const sceneCards: SceneCard[] = useMemo(() => {
+    if (!Array.isArray(scenes)) return [];
+
+    const deriveSummary = (scene: Scene): string => {
+      const metaSummary = scene.metadata?.summary;
+      if (typeof metaSummary === "string" && metaSummary.trim()) {
+        return metaSummary;
+      }
+      const firstAction = scene.elements?.find((el) => el.type === "action");
+      if (firstAction?.text) {
+        return firstAction.text.length > 180
+          ? `${firstAction.text.slice(0, 177)}…`
+          : firstAction.text;
+      }
+      const content = (scene.content || "").trim();
+      if (!content) return "";
+      return content.length > 180 ? `${content.slice(0, 177)}…` : content;
+    };
+
+    const deriveLocation = (scene: Scene): string | undefined => {
+      if (typeof scene.metadata?.location === "string") return scene.metadata.location;
+      return scene.locations?.[0];
+    };
+
+    return [...scenes]
+      .sort((a, b) => (a.order ?? a.scene_number) - (b.order ?? b.scene_number))
+      .map((scene) => ({
+        id: scene.id,
+        sceneNumber: scene.scene_number,
+        slugline: scene.slugline || "(no slugline)",
+        summary: deriveSummary(scene),
+        tone: (scene.metadata?.tone as string) || "Neutral",
+        purpose: (scene.metadata?.purpose as string) || "—",
+        duration: (scene.metadata?.duration as string) || "—",
+        characters: scene.character_names || [],
+        beats: (scene.metadata?.beats as string[]) || [],
+        notes: scene.metadata?.notes,
+        act: scene.metadata?.act,
+        location: deriveLocation(scene),
+        status: (scene.metadata?.status as string) || "Draft",
+        positionX: typeof scene.metadata?.card_x === "number" ? scene.metadata.card_x : undefined,
+        positionY: typeof scene.metadata?.card_y === "number" ? scene.metadata.card_y : undefined,
+      }));
+  }, [scenes]);
 
   // Handle authentication redirect
   useEffect(() => {
@@ -278,6 +257,37 @@ const ScriptEditorPage: React.FC = () => {
     }
   };
 
+  // Dragging a card on the corkboard reflows the script: scene numbers and
+  // order follow the new sequence in a single request.
+  const handleSceneReorder = useCallback(
+    (newOrder: SceneCard[]) => {
+      if (!Array.isArray(scenes) || !scriptVersionId) return;
+      const sceneIds = newOrder.map((card) => card.id);
+      const currentIds = [...scenes]
+        .sort((a, b) => (a.order ?? a.scene_number) - (b.order ?? b.scene_number))
+        .map((s) => s.id);
+      if (sceneIds.length !== currentIds.length || sceneIds.every((id, i) => id === currentIds[i])) return;
+      reorderScenesMutation.mutate({ scriptVersionId, sceneIds });
+    },
+    [scenes, scriptVersionId, reorderScenesMutation]
+  );
+
+  const handleCardPositionChange = useCallback(
+    (sceneId: number, x: number, y: number) => {
+      const scene = Array.isArray(scenes) ? scenes.find((s) => s.id === sceneId) : null;
+      if (!scene) return;
+      updateSceneMutation.mutate({
+        id: sceneId,
+        metadata: {
+          ...(scene.metadata || {}),
+          card_x: Math.round(x),
+          card_y: Math.round(y),
+        },
+      });
+    },
+    [scenes, updateSceneMutation]
+  );
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -292,25 +302,33 @@ const ScriptEditorPage: React.FC = () => {
 
   const sceneTitle = selectedScene?.slugline || "No scene selected";
 
-  const handleSceneReorder = (newOrder: SceneCard[]) => {
-    console.log("Scenes reordered:", newOrder);
-  };
-
   return (
     <div
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: colors.background.beigeAlt }}
     >
-      <ScriptEditorHeader activeTab={activeTab} onTabChange={setActiveTab} />
+      <ScriptEditorHeader
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onFormatScript={() => setIsFormatModalOpen(true)}
+        scriptId={scriptId}
+        scriptVersionId={scriptVersionId}
+        script={script}
+      />
 
       {/* Main Content Area */}
       {activeTab === "outline" ? (
         <IndexCardView
-          scenes={sampleScenes}
+          scenes={sceneCards}
           onSceneReorder={handleSceneReorder}
+          onCardPositionChange={handleCardPositionChange}
           groupingMode={groupingMode}
           onGroupingModeChange={setGroupingMode}
         />
+      ) : activeTab === "characters" ? (
+        <CharactersView scenes={scenes} onOpenScene={openScene} />
+      ) : activeTab === "breakdown" ? (
+        <BreakdownView scriptVersionId={scriptVersionId} onOpenScene={openScene} />
       ) : (
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar - Scene Navigation */}
@@ -330,6 +348,7 @@ const ScriptEditorPage: React.FC = () => {
               filterValue={filterValue}
               onFilterChange={setFilterValue}
               scenes={scenes}
+              revisedSceneIds={revisedSceneIds}
             />
           )}
 
@@ -359,7 +378,8 @@ const ScriptEditorPage: React.FC = () => {
               onToggleCollapse={() =>
                 setIsRightSidebarCollapsed(!isRightSidebarCollapsed)
               }
-              selectedScene={selectedScene?.scene_number || 0}
+              scene={selectedScene}
+              sceneIndex={selectedScene ? scenes.findIndex((s) => s.id === selectedScene.id) + 1 : 0}
               totalScenes={scenes.length}
             />
           )}
@@ -367,13 +387,20 @@ const ScriptEditorPage: React.FC = () => {
       )}
 
       {/* Bottom Action Bar - Only show for script view */}
-      {activeTab !== "outline" && (
+      {activeTab === "script" && (
         <ScriptEditorActions
           onFinishLater={handleFinishLater}
           onBack={handleBack}
           onAcceptAndProceed={handleAcceptAndProceed}
         />
       )}
+
+      {/* Format Script Modal */}
+      <FormatScriptModal
+        isOpen={isFormatModalOpen}
+        onClose={() => setIsFormatModalOpen(false)}
+        scriptVersionId={scriptVersionId}
+      />
     </div>
   );
 };

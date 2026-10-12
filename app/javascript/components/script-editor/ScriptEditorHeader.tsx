@@ -1,15 +1,28 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { colors } from "../../lib/theme";
+import ExportMenu from "./ExportMenu";
+import VersionsMenu from "./VersionsMenu";
+import type { Script } from "../../types/api";
+
+export type EditorTab = "scenes" | "script" | "characters" | "outline" | "breakdown";
 
 interface ScriptEditorHeaderProps {
-  activeTab: "scenes" | "script" | "characters" | "outline";
-  onTabChange: (tab: "scenes" | "script" | "characters" | "outline") => void;
+  activeTab: EditorTab;
+  onTabChange: (tab: EditorTab) => void;
+  onFormatScript?: () => void;
+  scriptId?: string | number;
+  scriptVersionId?: number;
+  script?: Script;
 }
 
 const ScriptEditorHeader: React.FC<ScriptEditorHeaderProps> = ({
   activeTab,
   onTabChange,
+  onFormatScript,
+  scriptId,
+  scriptVersionId,
+  script,
 }) => {
   const navigate = useNavigate();
 
@@ -128,9 +141,23 @@ const ScriptEditorHeader: React.FC<ScriptEditorHeaderProps> = ({
           </svg>
           Outline
         </button>
+        <button
+          onClick={() => onTabChange("breakdown")}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded transition-colors border-2 font-bold uppercase text-sm ${
+            activeTab === "breakdown"
+              ? "text-white border-black"
+              : "text-gray-700 border-gray-300 hover:border-gray-400 bg-white"
+          }`}
+          style={activeTab === "breakdown" ? { backgroundColor: colors.primary.pink } : {}}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h10M4 18h6" />
+          </svg>
+          Breakdown
+        </button>
       </div>
       <div className="flex items-center gap-4">
-        <div className="text-xs text-gray-700 font-mono">
+        <div className="text-xs text-gray-700 font-mono whitespace-nowrap hidden xl:block">
           <div className="font-bold uppercase">Film & TV</div>
           <div className="flex items-center gap-1 mt-1">
             <svg
@@ -149,6 +176,32 @@ const ScriptEditorHeader: React.FC<ScriptEditorHeaderProps> = ({
             Sep 8, 2024
           </div>
         </div>
+        {!!scriptVersionId && <VersionsMenu script={script} scriptVersionId={scriptVersionId} />}
+        {scriptId !== undefined && !!scriptVersionId && (
+          <ExportMenu scriptId={scriptId} scriptVersionId={scriptVersionId} />
+        )}
+        {onFormatScript && (
+          <button
+            onClick={onFormatScript}
+            className="px-3 py-1.5 border-2 border-black rounded text-sm font-bold uppercase transition-colors bg-white text-black hover:bg-gray-100 flex items-center gap-2"
+            title="Format Script - Apply industry-standard formatting"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16m-7 6h7"
+              />
+            </svg>
+            Format
+          </button>
+        )}
         <button
           className="px-3 py-1.5 border-2 border-black rounded text-sm font-bold uppercase transition-colors text-white"
           style={{ backgroundColor: colors.primary.pink }}

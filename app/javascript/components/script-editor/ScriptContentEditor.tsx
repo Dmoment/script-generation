@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { colors } from "../../lib/theme";
-import SceneTextEditor from "./SceneTextEditor";
+import ScreenplayEditor from "./ScreenplayEditor";
 import EditableSlugline from "./EditableSlugline";
 import SceneActionsFooter from "./SceneActionsFooter";
 import { useUpdateSceneMutation } from "../../queries/scenes/useUpdateSceneMutation";
@@ -243,11 +243,10 @@ const ScriptContentEditor: React.FC<ScriptContentEditorProps> = ({
         </button>
       </div>
 
-      <SceneTextEditor
+      <ScreenplayEditor
         scene={selectedScene}
-        scriptVersionId={scriptVersionId}
+        allScenes={scenes}
         onFinishScene={onNextScene}
-        isLastScene={isLastScene}
       />
 
       <SceneActionsFooter

@@ -12,6 +12,8 @@ interface SceneNavigationSidebarProps {
   filterValue: string;
   onFilterChange: (value: string) => void;
   scenes?: Scene[];
+  /** Ids of scenes revised since the previous draft (shown with a revision mark). */
+  revisedSceneIds?: Set<number>;
 }
 
 const SceneNavigationSidebar: React.FC<SceneNavigationSidebarProps> = ({
@@ -24,6 +26,7 @@ const SceneNavigationSidebar: React.FC<SceneNavigationSidebarProps> = ({
   filterValue,
   onFilterChange,
   scenes = [],
+  revisedSceneIds,
 }) => {
   const filteredScenes = scenes.filter((scene) => {
     const searchText = filterValue.toLowerCase();
@@ -185,6 +188,15 @@ const SceneNavigationSidebar: React.FC<SceneNavigationSidebarProps> = ({
                 <span className="text-sm font-mono truncate" style={{ fontFamily: 'Courier, "Courier New", monospace' }}>
                   {scene.scene_number}. {scene.slugline || "Untitled Scene"}
                 </span>
+                {revisedSceneIds?.has(scene.id) && (
+                  <span
+                    className="ml-auto flex-shrink-0 font-mono font-bold text-base leading-none"
+                    title="Revised since the previous draft"
+                    aria-label="Revised since the previous draft"
+                  >
+                    *
+                  </span>
+                )}
               </button>
             ))
           )}
