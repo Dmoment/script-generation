@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Build the production image ON the Hetzner server (amd64, no local Docker
+# needed), push it to the registry, then run `kamal deploy --skip-push`.
+#
+# Deploys the current working tree (including uncommitted changes).
+# Usage: bin/deploy-server-build
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+[ -f .env.kamal ] || { echo ".env.kamal missing"; exit 1; }
+set -a; source .env.kamal; set +a
+
+SERVER="root@${DEPLOY_SERVER_IP}"
+IMAGE="${DOCKER_REGISTRY_USERNAME}/script_generation"
+BUILD_DIR="/root/build/script_generation"
+
+VERSION="$(git rev-parse HEAD)"
+if [ -n "$(git status --porcelain)" ]; then
+  VERSION="${VERSION}_uncommitted_$(date -u +%Y%m%d%H%M%S)"
+fi
+
+echo "==> Syncing working tree to ${SERVER}:${BUILD_DIR}"
+ssh "$SERVER" "mkdir -p ${BUILD_DIR}"
+rsync -az --delete \
+  --exclude '.git' --exclude 'node_modules' --exclude 'tmp' --exclude 'log' \
+  --exclude 'app/assets/builds' --exclude 'public/assets' --exclude 'storage' \
+  --exclude '.env*' --exclude 'config/master.key' --exclude 'config/credentials/*.key' \
+  --exclude 'coverage' --exclude '.ruby-lsp' --exclude '.claude' --exclude '.DS_Store' \
+  ./ "${SERVER}:${BUILD_DIR}/"
+
+echo "==> Logging into registry on server"
+ssh "$SERVER" "docker login -u '${DOCKER_REGISTRY_USERNAME}' --password-stdin" <<< "${KAMAL_REGISTRY_PASSWORD}"
+
+echo "==> Building ${IMAGE}:${VERSION} on server"
+ssh "$SERVER" "cd ${BUILD_DIR} && DOCKER_BUILDKIT=1 docker build \
+  --build-arg AUTH0_DOMAIN='${AUTH0_DOMAIN}' \
+  --build-arg AUTH0_CLIENT_ID='${AUTH0_CLIENT_ID}' \
+  --build-arg AUTH0_AUDIENCE='${AUTH0_AUDIENCE}' \
+  --label service=script_generation \
+  -t '${IMAGE}:${VERSION}' -t '${IMAGE}:latest' . \
+  && docker push '${IMAGE}:${VERSION}' && docker push '${IMAGE}:latest'"
+
+echo "==> kamal deploy --skip-push --version ${VERSION}"
+kamal deploy --skip-push --version "${VERSION}"

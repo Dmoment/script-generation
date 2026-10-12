@@ -33,7 +33,9 @@ Rails.application.configure do
   # Multi-tenancy: Allow all hosts for subdomain routing
   config.hosts.clear
   config.hosts << /.*\.onrender\.com/  # Allow Render subdomains
-  config.hosts << /.*\.yourdomain\.com/ # Replace with your custom domain
+  config.hosts << ENV["APP_HOST"] if ENV["APP_HOST"].present?
+  # kamal-proxy health checks hit /up without a public Host header
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -64,7 +66,7 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = {
-    host: ENV.fetch("RENDER_EXTERNAL_HOSTNAME", "yourapp.onrender.com"),
+    host: ENV.fetch("APP_HOST") { ENV.fetch("RENDER_EXTERNAL_HOSTNAME", "yourapp.onrender.com") },
     protocol: "https"
   }
 

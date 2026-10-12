@@ -1,116 +1,99 @@
-# Name of your application. Used to uniquely configure containers.
+# Kamal deployment configuration for script_generation.
+# Shares the Hetzner server (and kamal-proxy) with StmtIQ; each app is a
+# separate kamal-proxy service routed by hostname.
+# Docs: https://kamal-deploy.org/
+
 service: script_generation
 
-# Name of the container image.
-image: your-user/script_generation
+image: <%= ENV['DOCKER_REGISTRY_USERNAME'] || 'modestmoron' %>/script_generation
 
-# Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
-  # job:
-  #   hosts:
-  #     - 192.168.0.1
-  #   cmd: bin/jobs
+    hosts:
+      - <%= ENV['DEPLOY_SERVER_IP'] || '135.181.255.190' %>
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# Remove this section when using multiple web servers and ensure you terminate SSL at your load balancer.
-#
-# Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
+# SSL via Let's Encrypt, routed by hostname on the shared kamal-proxy
 proxy:
   ssl: true
-  host: app.example.com
+  host: <%= ENV['DEPLOY_HOST'] || 'script-generation.135.181.255.190.sslip.io' %>
+  healthcheck:
+    path: /up
+    interval: 10
+    timeout: 5
 
-# Credentials for your image host.
 registry:
-  # Specify the registry server, if you're not using Docker Hub
-  # server: registry.digitalocean.com / ghcr.io / ...
-  username: your-user
-
-  # Always use an access token rather than real password when possible.
+  username: <%= ENV['DOCKER_REGISTRY_USERNAME'] || 'modestmoron' %>
   password:
     - KAMAL_REGISTRY_PASSWORD
 
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
   secret:
     - RAILS_MASTER_KEY
+    - DATABASE_URL
+    - AUTH0_CLIENT_SECRET
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
   clear:
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
-    # When you start using multiple servers, you should split out job processing to a dedicated machine.
+    RAILS_ENV: production
+    RAILS_LOG_TO_STDOUT: true
+    RAILS_SERVE_STATIC_FILES: true
+
+    # Hostname used for config.hosts and mailer URLs
+    APP_HOST: <%= ENV['DEPLOY_HOST'] || 'script-generation.135.181.255.190.sslip.io' %>
+
+    # Auth0 (public SPA values; also baked into the JS bundle at build time)
+    AUTH0_DOMAIN: <%= ENV['AUTH0_DOMAIN'] || 'dev-83y3hw5jpx7swsa3.us.auth0.com' %>
+    AUTH0_CLIENT_ID: <%= ENV['AUTH0_CLIENT_ID'] || '8jLHiPYD0Y5fBVfx1rYskHcTiX7d2wyi' %>
+    AUTH0_AUDIENCE: <%= ENV['AUTH0_AUDIENCE'] || 'https://script-generation.onrender.com/' %>
+
+    # Active Storage (S3)
+    AWS_REGION: <%= ENV['AWS_REGION'] || 'us-east-1' %>
+    AWS_S3_BUCKET: <%= ENV['AWS_S3_BUCKET'] || 'script-generation-production' %>
+
+    # Run Solid Queue inside Puma (single server setup)
     SOLID_QUEUE_IN_PUMA: true
 
-    # Set number of processes dedicated to Solid Queue (default: 1)
-    # JOB_CONCURRENCY: 3
+# Persistent storage for local Active Storage files
+volumes:
+  - "script_generation_storage:/rails/storage"
 
-    # Set number of cores available to the application on each server (default: 1).
-    # WEB_CONCURRENCY: 2
+# Bridge fingerprinted assets between versions
+asset_path: /rails/public/assets
 
-    # Match this to any external database server to configure Active Record correctly
-    # Use script_generation-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
+builder:
+  arch: amd64
+  args:
+    AUTH0_DOMAIN: <%= ENV['AUTH0_DOMAIN'] || 'dev-83y3hw5jpx7swsa3.us.auth0.com' %>
+    AUTH0_CLIENT_ID: <%= ENV['AUTH0_CLIENT_ID'] || '8jLHiPYD0Y5fBVfx1rYskHcTiX7d2wyi' %>
+    AUTH0_AUDIENCE: <%= ENV['AUTH0_AUDIENCE'] || 'https://script-generation.onrender.com/' %>
 
-    # Log everything from Rails
-    # RAILS_LOG_LEVEL: debug
+ssh:
+  user: root
 
-# Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
-# "bin/kamal logs -r job" will tail logs from the first server in the job section.
+# Dedicated PostgreSQL for this app. StmtIQ's Postgres already owns host
+# port 5432, so this one is published on 127.0.0.1:5433 (host-only, for
+# debugging); the app reaches it as `script-generation-db` (network alias) on the kamal network.
+accessories:
+  db:
+    image: postgres:16
+    host: <%= ENV['DEPLOY_SERVER_IP'] || '135.181.255.190' %>
+    port: "127.0.0.1:5433:5432"
+    env:
+      clear:
+        POSTGRES_DB: script_generation_production
+        POSTGRES_USER: script_generation
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
+    # Ruby's URI parser rejects underscores in hostnames, so the app connects
+    # via this hyphenated alias instead of the container name.
+    options:
+      network-alias: script-generation-db
+
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
   shell: app exec --interactive --reuse "bash"
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole"
-
-
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
-volumes:
-  - "script_generation_storage:/rails/storage"
-
-
-# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
-# hitting 404 on in-flight requests. Combines all files from new and old
-# version inside the asset_path.
-asset_path: /rails/public/assets
-
-# Configure the image builder.
-builder:
-  arch: amd64
-
-  # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
-  # remote: ssh://docker@docker-builder-server
-  #
-  # # Pass arguments and secrets to the Docker build process
-  # args:
-  #   RUBY_VERSION: 3.3.4
-  # secrets:
-  #   - GITHUB_TOKEN
-  #   - RAILS_MASTER_KEY
-
-# Use a different ssh user than root
-# ssh:
-#   user: app
-
-# Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: redis:7.0
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+  migrate: app exec "bin/rails db:migrate"

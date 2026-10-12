@@ -1,11 +1,9 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
-# docker build -t script_generation .
-# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name script_generation script_generation
-
-# For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
+# Production image for script_generation. Built and deployed with Kamal.
+#   kamal deploy                 (local Docker build + push)
+#   bin/deploy-server-build      (build on the Hetzner server, then kamal deploy --skip-push)
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=3.3.4
@@ -16,31 +14,32 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_WITHOUT="development:test"
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
 
 # Install packages needed to build gems and node modules
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git node-gyp pkg-config python-is-python3 && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev node-gyp pkg-config python-is-python3 unzip && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Install JavaScript dependencies
-ARG NODE_VERSION=16.4.2
-ARG YARN_VERSION=1.22.19
+# Install Node (esbuild.config.js runs under node) and Bun (package manager / script runner)
+ARG NODE_VERSION=20.11.0
 ENV PATH=/usr/local/node/bin:$PATH
 RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
     /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
-    npm install -g yarn@$YARN_VERSION && \
     rm -rf /tmp/node-build-master
+
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH=/root/.bun/bin:$PATH
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
@@ -49,8 +48,8 @@ RUN bundle install && \
     bundle exec bootsnap precompile --gemfile
 
 # Install node modules
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
 # Copy application code
 COPY . .
@@ -58,9 +57,18 @@ COPY . .
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+# Auth0 SPA settings are compiled into the JS bundle by esbuild.config.js
+# (public values only — never put secrets here).
+ARG AUTH0_DOMAIN
+ARG AUTH0_CLIENT_ID
+ARG AUTH0_AUDIENCE
+ENV AUTH0_DOMAIN=${AUTH0_DOMAIN} \
+    AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID} \
+    AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
 
+# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+# app/assets/builds must exist when Rails boots or Propshaft will not register it as a load path
+RUN mkdir -p app/assets/builds && SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 RUN rm -rf node_modules
 
@@ -75,7 +83,7 @@ COPY --from=build /rails /rails
 # Run and own only the runtime files as a non-root user for security
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
+    mkdir -p db log storage tmp && chown -R rails:rails db log storage tmp
 USER 1000:1000
 
 # Entrypoint prepares the database.
