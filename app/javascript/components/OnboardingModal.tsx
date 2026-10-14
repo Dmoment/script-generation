@@ -8,7 +8,7 @@ type Gender = 'male' | 'female' | 'other';
 interface OnboardingData {
   account_type: AccountType;
   full_name: string;
-  gender: Gender;
+  gender?: Gender;
   company_name?: string;
 }
 
@@ -43,7 +43,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!accountType || !fullName.trim() || !gender) {
+    if (!accountType || !fullName.trim()) {
       return;
     }
 
@@ -54,12 +54,12 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
     await onComplete({
       account_type: accountType,
       full_name: fullName.trim(),
-      gender,
+      gender: gender ?? undefined,
       company_name: accountType === 'company' ? companyName.trim() : undefined,
     });
   };
 
-  const isStep2Valid = fullName.trim() && gender && (accountType === 'individual' || companyName.trim());
+  const isStep2Valid = fullName.trim() && (accountType === 'individual' || companyName.trim());
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto">

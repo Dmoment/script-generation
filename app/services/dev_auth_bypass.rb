@@ -22,7 +22,13 @@ class DevAuthBypass
     enabled? && token == TOKEN
   end
 
+  # DEV_AUTH_BYPASS_EMAIL overrides the identity, so a brand-new user (first-run
+  # experience) can be exercised as well as the seeded tester.
+  def self.email
+    ENV["DEV_AUTH_BYPASS_EMAIL"].presence || EMAIL
+  end
+
   def self.user_info
-    { auth0_id: "dev|bypass", email: EMAIL, name: "Dev Tester", picture: nil }
+    { auth0_id: "dev|#{email.parameterize}", email: email, name: email == EMAIL ? "Dev Tester" : "New Writer", picture: nil }
   end
 end

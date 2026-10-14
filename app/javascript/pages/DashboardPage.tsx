@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth0 } from '../hooks/useAuth';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import type { Project } from "../types/api";
 import "../lib/openapi-config";
 import { useProjectsQuery } from "../queries/projects/useProjectsQuery";
@@ -47,6 +47,17 @@ const DashboardPage: React.FC = () => {
   // Create project mutation
   const createProjectMutation = useCreateProjectMutation();
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // /dashboard?create=project opens the create-project modal (used by the scripts page when there is no project yet).
+  useEffect(() => {
+    if (searchParams.get("create") === "project") {
+      setShowCreateProjectModal(true);
+      searchParams.delete("create");
+      setSearchParams(searchParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Mobile menu state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -526,7 +537,7 @@ const DashboardPage: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar
-            user={user ?? null}
+            user={currentUser ? { name: currentUser.name || user?.name, email: currentUser.email || user?.email, image: user?.picture } : user ?? null}
             gender={currentUser?.gender}
             onLogout={handleLogout}
             onMenuClick={() => setIsMobileMenuOpen(true)}
@@ -876,6 +887,7 @@ const DashboardPage: React.FC = () => {
                     {paginatedProjects.map((project) => (
                     <ProjectCard
                         key={project.id ?? project.title}
+                        projectId={project.id}
                         title={project.title || "UNTITLED PROJECT"}
                         date={formatDate(
                           project.updated_at || project.created_at

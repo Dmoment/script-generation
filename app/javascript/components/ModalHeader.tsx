@@ -17,7 +17,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
   subtitle,
   image = '/videos/create_header.png',
   imageAlt = 'Header',
-  imageClassName = 'h-30 w-auto max-w-[180px] object-cover object-top scale-125',
+  imageClassName = 'h-28 w-auto max-w-[150px] object-cover object-top scale-110 flex-shrink-0',
   onClose,
   onMaximize,
   onMinimize,
@@ -26,7 +26,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
   return (
     <div className="border-b-4 border-black bg-black text-white px-6 py-3 overflow-hidden">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex-shrink-0">
+        <div className="relative z-10 min-w-0 flex-1">
           <div className="flex items-center gap-3">
             <div className="flex gap-2">
               {/* Close Button */}
@@ -77,7 +77,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({
                 <div className="h-4 w-4 bg-green-500 border border-green-700 rounded-sm"></div>
               )}
             </div>
-            <h2 className="text-base font-black uppercase tracking-tight">
+            <h2 className="text-base font-black uppercase tracking-tight whitespace-nowrap">
               {title}
             </h2>
           </div>

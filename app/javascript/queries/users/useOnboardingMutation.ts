@@ -6,7 +6,7 @@ import { userKeys, type CurrentUser } from "./useCurrentUserQuery";
 export interface OnboardingData {
   account_type: "company" | "individual";
   full_name: string;
-  gender: "male" | "female" | "other";
+  gender?: "male" | "female" | "other";
   company_name?: string;
 }
 

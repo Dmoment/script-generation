@@ -28,6 +28,8 @@ export interface Script {
   description?: string;
   created_by_user_id: string;
   author_name?: string;
+  project_title?: string;
+  project_type?: string;
   version_count: number;
   latest_version_number: number;
   created_at: string;

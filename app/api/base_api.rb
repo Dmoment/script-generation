@@ -94,10 +94,12 @@ class BaseApi < Grape::API
 
         # Update user info on each request (keeps data fresh)
         # If found by email but auth0_id was missing, update it
+        # Keep the identity fresh, but never overwrite a name the person chose
+        # during onboarding with the identity provider's display name.
         user.assign_attributes(
           auth0_id: user_info[:auth0_id] || user.auth0_id,
           email: user_info[:email],
-          name: user_info[:name],
+          name: user.onboarding_completed? && user.name.present? ? user.name : user_info[:name],
           role: nil,
         )
 

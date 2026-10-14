@@ -13,7 +13,7 @@ module V1
       params do
         requires :account_type, type: String, values: %w[company individual], desc: "Account type"
         requires :full_name, type: String, desc: "User's full name"
-        requires :gender, type: String, values: %w[male female other], desc: "User's gender"
+        optional :gender, type: String, values: %w[male female other], desc: "User's gender (optional)"
         optional :company_name, type: String, desc: "Company name (required if account_type is company)"
       end
       post :complete do

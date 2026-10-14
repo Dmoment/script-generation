@@ -108,7 +108,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              navigate("/scripts", { state: { projectId } });
+              navigate(`/scripts?project=${projectId}`);
             }}
             className="text-xs font-medium text-gray-700 hover:text-black transition-colors px-2 py-1"
           >

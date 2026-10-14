@@ -119,18 +119,6 @@ const SceneNavigationSidebar: React.FC<SceneNavigationSidebarProps> = ({
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-bold uppercase text-black mb-1 font-mono">
-              Scene number
-            </label>
-            <input
-              type="text"
-              value={sceneNumber}
-              onChange={(e) => onSceneNumberChange(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-black bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-              style={{ fontFamily: 'Courier, "Courier New", monospace' }}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-bold uppercase text-black mb-1 font-mono">
               Name Filter
             </label>
             <input

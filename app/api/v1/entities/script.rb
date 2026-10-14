@@ -22,6 +22,12 @@ module V1
       end
 
       # Timestamps (used for sorting/display in frontend)
+      expose :project_title, documentation: { type: 'String' } do |script|
+        script.project&.title
+      end
+      expose :project_type, documentation: { type: 'String' } do |script|
+        script.project&.project_type
+      end
       expose :author_name, documentation: { type: "String", desc: "Name of the writer who created the script" } do |script|
         script.created_by_user&.name
       end

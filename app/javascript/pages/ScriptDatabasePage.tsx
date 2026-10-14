@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useAuth0 } from '../hooks/useAuth';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import type { Script, Project, ScriptVersion } from "../types/api";
 import "../lib/openapi-config";
 import { useProjectsQuery } from "../queries/projects/useProjectsQuery";
@@ -29,6 +29,13 @@ const ScriptDatabasePage: React.FC = () => {
     useAuth0();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const projectFilterId = searchParams.get("project");
+  const clearProjectFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("project");
+    setSearchParams(next, { replace: true });
+  };
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Current user query to check onboarding status
@@ -140,6 +147,7 @@ const ScriptDatabasePage: React.FC = () => {
     isLoading: scriptsLoading,
     error: scriptsError,
   } = useScriptsQuery({
+    projectId: projectFilterId || undefined,
     q: ransackQuery,
     page: currentPage,
     per_page: perPage,
@@ -193,7 +201,12 @@ const ScriptDatabasePage: React.FC = () => {
   // Reset to page 1 when filters change (but not when page changes)
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, typeFilter, searchQuery, sortColumn, sortDirection]);
+  }, [statusFilter, typeFilter, searchQuery, sortColumn, sortDirection, projectFilterId]);
+
+  const filteredProject = useMemo(
+    () => (projectFilterId ? projects.find((p) => String(p.id) === projectFilterId) : undefined),
+    [projects, projectFilterId]
+  );
 
   // Group scripts by project
   const scriptsByProject = useMemo(() => {
@@ -263,11 +276,13 @@ const ScriptDatabasePage: React.FC = () => {
     project_id: number | string;
     title: string;
   }) => {
-    await createScriptMutation.mutateAsync({
+    const script = await createScriptMutation.mutateAsync({
       ...data,
       script_type: "screenplay", // Default script type
     });
     setShowCreateScriptModal(false);
+    const version = script.script_versions?.[0];
+    if (version) navigate(`/scripts/${script.id}/versions/${version.id}`);
   };
 
   const handleUploadScript = async (data: {
@@ -276,11 +291,13 @@ const ScriptDatabasePage: React.FC = () => {
     file: File;
     notes?: string;
   }) => {
-    await uploadScriptMutation.mutateAsync({
+    const script = await uploadScriptMutation.mutateAsync({
       ...data,
       script_type: "screenplay", // Default script type
     });
     setShowCreateScriptModal(false);
+    const version = script.script_versions?.[0];
+    if (version) navigate(`/scripts/${script.id}/versions/${version.id}`);
   };
 
   const handleDeleteScript = async (scriptId: number) => {
@@ -303,8 +320,7 @@ const ScriptDatabasePage: React.FC = () => {
 
   const handleOpenCreateModal = () => {
     if (projects.length === 0) {
-      alert("Please create a project first before creating scripts.");
-      navigate("/dashboard");
+      navigate("/dashboard?create=project");
       return;
     }
     setShowCreateScriptModal(true);
@@ -318,6 +334,7 @@ const ScriptDatabasePage: React.FC = () => {
           onClose={() => setShowCreateScriptModal(false)}
           onCreate={handleCreateScript}
           onUpload={handleUploadScript}
+          defaultProjectId={projectFilterId}
           isSubmitting={
             createScriptMutation.isPending || uploadScriptMutation.isPending
           }
@@ -442,7 +459,7 @@ const ScriptDatabasePage: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar
-            user={user ?? null}
+            user={currentUser ? { name: currentUser.name || user?.name, email: currentUser.email || user?.email, image: user?.picture } : user ?? null}
             gender={currentUser?.gender}
             onLogout={handleLogout}
             onMenuClick={() => setIsMobileMenuOpen(true)}
@@ -550,6 +567,13 @@ const ScriptDatabasePage: React.FC = () => {
 
               {/* Filters */}
               <div className="mb-6 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+                {filteredProject && (
+                  <div className="flex items-center gap-2 px-3 py-2 border-2 border-black bg-white font-mono text-xs uppercase" data-testid="project-filter">
+                    <span className="text-gray-500">Project</span>
+                    <span className="font-bold truncate max-w-[14rem]">{filteredProject.title}</span>
+                    <button type="button" onClick={clearProjectFilter} className="ml-1 font-bold hover:bg-black hover:text-white px-1" aria-label="Show all projects" title="Show all projects">×</button>
+                  </div>
+                )}
                 {/* Search */}
                 <div className="flex-1 w-full sm:min-w-[200px]">
                   <input

@@ -11,6 +11,7 @@ interface CreateScriptModalProps {
   onUpload: (data: { project_id: number | string; title: string; file: File; notes?: string }) => Promise<void>;
   isSubmitting?: boolean;
   error?: string | null;
+  defaultProjectId?: number | string | null;
 }
 
 const CreateScriptModal: React.FC<CreateScriptModalProps> = ({
@@ -20,6 +21,7 @@ const CreateScriptModal: React.FC<CreateScriptModalProps> = ({
   onUpload,
   isSubmitting = false,
   error = null,
+  defaultProjectId = null,
 }) => {
   const [mode, setMode] = useState<'create' | 'upload'>('create');
   const [projectId, setProjectId] = useState<string>('');
@@ -42,12 +44,15 @@ const CreateScriptModal: React.FC<CreateScriptModalProps> = ({
     }));
   }, [projects]);
 
-  // Auto-select first project if only one exists
+  // Preselect the project the user came from, or the only project they have.
   useEffect(() => {
-    if (projects.length === 1 && !projectId) {
+    if (projectId) return;
+    if (defaultProjectId && projects.some((p) => String(p.id) === String(defaultProjectId))) {
+      setProjectId(String(defaultProjectId));
+    } else if (projects.length === 1) {
       setProjectId(String(projects[0].id));
     }
-  }, [projects, projectId]);
+  }, [projects, projectId, defaultProjectId]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {

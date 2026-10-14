@@ -11,7 +11,7 @@ const Hero = ({ appName }) => {
               Write, manage, and produce scripts — faster.
             </h1>
             <p className="mt-4 text-gray-700 text-lg">
-              {appName} brings AI-assisted writing, production-grade breakdowns, and collaboration into one streamlined workspace.
+              {appName} is a screenwriting room that keeps your script, index cards, drafts and production breakdown in one place. Import Final Draft, write in industry format, lock numbers for the shoot.
             </p>
             <div className="mt-8 flex items-center gap-4">
               <a id="get-started" href="#features" className="inline-flex items-center rounded-md bg-brand-600 px-5 py-3 font-medium text-white hover:bg-brand-700 shadow-card">Explore Features</a>

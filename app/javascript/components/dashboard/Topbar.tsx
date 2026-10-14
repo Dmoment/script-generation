@@ -108,7 +108,7 @@ const Topbar: React.FC<TopbarProps> = ({ user, gender, onLogout, onMenuClick }) 
           className="px-2 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider border-2 border-black hover:bg-black hover:text-white transition-colors flex items-center gap-1.5"
           title="Logout"
         >
-          <span className="hidden sm:inline">Eject</span>
+          <span className="hidden sm:inline">Sign out</span>
           <span className="sm:hidden">
             <i className="bi bi-box-arrow-right text-lg"></i>
           </span>
