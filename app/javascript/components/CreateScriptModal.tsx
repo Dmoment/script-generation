@@ -2,12 +2,17 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ModalHeader from './ModalHeader';
 import FilterDropdown from './FilterDropdown';
 import { colors } from '../lib/theme';
-import type { Project } from '../types/api';
+import type { Project, ScriptType } from '../types/api';
+
+const FORMATS: Array<{ value: ScriptType; label: string; hint: string }> = [
+  { value: 'screenplay', label: 'Screenplay', hint: 'Scenes, action and dialogue. Film, series, shorts.' },
+  { value: 'av_script', label: 'AV script', hint: 'Video beside audio, in rounds, with client approval. Ads and promos.' },
+];
 
 interface CreateScriptModalProps {
   projects: Project[];
   onClose: () => void;
-  onCreate: (data: { project_id: number | string; title: string }) => Promise<void>;
+  onCreate: (data: { project_id: number | string; title: string; script_type: ScriptType }) => Promise<void>;
   onUpload: (data: { project_id: number | string; title: string; file: File; notes?: string }) => Promise<void>;
   isSubmitting?: boolean;
   error?: string | null;
@@ -26,6 +31,7 @@ const CreateScriptModal: React.FC<CreateScriptModalProps> = ({
   const [mode, setMode] = useState<'create' | 'upload'>('create');
   const [projectId, setProjectId] = useState<string>('');
   const [title, setTitle] = useState('');
+  const [scriptType, setScriptType] = useState<ScriptType | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileNotes, setFileNotes] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -43,6 +49,11 @@ const CreateScriptModal: React.FC<CreateScriptModalProps> = ({
       label: project.title || 'Untitled Project',
     }));
   }, [projects]);
+
+  // Ads, commercials and music videos default to the two-column AV format.
+  const selectedProject = projects.find((p) => String(p.id) === projectId);
+  const suggestedType: ScriptType = /ad|commercial|promo|music video|explainer/i.test(selectedProject?.project_type || '') ? 'av_script' : 'screenplay';
+  const effectiveType: ScriptType = scriptType ?? suggestedType;
 
   // Preselect the project the user came from, or the only project they have.
   useEffect(() => {
@@ -76,6 +87,7 @@ const CreateScriptModal: React.FC<CreateScriptModalProps> = ({
       await onCreate({
         project_id: projectId,
         title: title.trim(),
+        script_type: effectiveType,
       });
     } else {
       if (!selectedFile || !title.trim()) {
@@ -308,6 +320,25 @@ const CreateScriptModal: React.FC<CreateScriptModalProps> = ({
                   placeholder="Select a project"
                 />
               </div>
+
+              {/* Format */}
+              {mode === 'create' && (
+                <fieldset>
+                  <legend className="block text-xs font-bold uppercase tracking-wider text-black mb-2">Format *</legend>
+                  <div className="grid grid-cols-2 gap-2">
+                    {FORMATS.map((f) => {
+                      const active = effectiveType === f.value;
+                      return (
+                        <label key={f.value} className={`cursor-pointer border-2 p-3 transition-colors ${active ? 'border-black bg-white shadow-[3px_3px_0_0_rgba(0,0,0,1)]' : 'border-gray-300 bg-white/60 hover:border-gray-500'}`}>
+                          <input type="radio" name="script_type" value={f.value} checked={active} onChange={() => setScriptType(f.value)} className="sr-only" />
+                          <span className="block text-sm font-black uppercase">{f.label}</span>
+                          <span className="block text-[11px] font-mono text-gray-600 mt-1 leading-snug">{f.hint}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              )}
 
               {/* Script Title */}
               <div>

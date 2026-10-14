@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_13_090000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,6 +56,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_13_090000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "av_rows", force: :cascade do |t|
+    t.bigint "script_version_id", null: false
+    t.integer "position", default: 1, null: false
+    t.string "shot"
+    t.text "video", default: "", null: false
+    t.text "audio", default: "", null: false
+    t.text "super_text"
+    t.integer "duration_seconds"
+    t.text "notes"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["script_version_id", "position"], name: "index_av_rows_on_script_version_id_and_position"
+    t.index ["script_version_id"], name: "index_av_rows_on_script_version_id"
+  end
+
   create_table "companies", force: :cascade do |t|
     t.string "name", null: false
     t.string "subdomain"
@@ -86,6 +102,37 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_13_090000) do
     t.index ["created_by_user_id"], name: "index_projects_on_created_by_user_id"
     t.index ["project_type"], name: "index_projects_on_project_type"
     t.index ["status"], name: "index_projects_on_status"
+  end
+
+  create_table "review_comments", force: :cascade do |t|
+    t.bigint "review_link_id", null: false
+    t.bigint "av_row_id"
+    t.bigint "scene_id"
+    t.string "author_name", null: false
+    t.text "body", null: false
+    t.datetime "resolved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["av_row_id"], name: "index_review_comments_on_av_row_id"
+    t.index ["review_link_id"], name: "index_review_comments_on_review_link_id"
+    t.index ["scene_id"], name: "index_review_comments_on_scene_id"
+  end
+
+  create_table "review_links", force: :cascade do |t|
+    t.bigint "script_version_id", null: false
+    t.uuid "created_by_user_id", null: false
+    t.string "token", null: false
+    t.string "client_name"
+    t.string "status", default: "pending", null: false
+    t.datetime "expires_at"
+    t.datetime "revoked_at"
+    t.datetime "decided_at"
+    t.string "decided_by_name"
+    t.text "decision_note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["script_version_id"], name: "index_review_links_on_script_version_id"
+    t.index ["token"], name: "index_review_links_on_token", unique: true
   end
 
   create_table "scene_comments", force: :cascade do |t|
@@ -289,8 +336,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_13_090000) do
   add_foreign_key "access_controls", "users"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "av_rows", "script_versions"
   add_foreign_key "projects", "companies"
   add_foreign_key "projects", "users", column: "created_by_user_id"
+  add_foreign_key "review_comments", "av_rows"
+  add_foreign_key "review_comments", "review_links"
+  add_foreign_key "review_comments", "scenes"
+  add_foreign_key "review_links", "script_versions"
+  add_foreign_key "review_links", "users", column: "created_by_user_id"
   add_foreign_key "scene_comments", "scene_comments", column: "parent_id"
   add_foreign_key "scene_comments", "scenes"
   add_foreign_key "scene_comments", "users"

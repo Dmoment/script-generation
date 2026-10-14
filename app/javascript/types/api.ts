@@ -19,11 +19,71 @@ export interface ApiResponse<T> {
 }
 
 // Script types
+export type ScriptType = "screenplay" | "av_script" | "treatment" | "outline" | "other";
+
+export const SCRIPT_TYPE_LABELS: Record<ScriptType, string> = {
+  screenplay: "Screenplay",
+  av_script: "AV script",
+  treatment: "Treatment",
+  outline: "Outline",
+  other: "Other",
+};
+
+export const scriptTypeLabel = (type: string | undefined): string =>
+  (type && (SCRIPT_TYPE_LABELS as Record<string, string>)[type]) || type || "";
+
+/** One row of a two-column (audio/video) script. */
+export interface AvRow {
+  id: number;
+  script_version_id: number;
+  position: number;
+  shot: string | null;
+  video: string;
+  audio: string;
+  super_text: string | null;
+  duration_seconds: number | null;
+  notes: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReviewStatus = "pending" | "approved" | "changes_requested";
+
+/** A no-login client review link for one round of a script. */
+export interface ReviewLink {
+  id: number;
+  script_version_id: number;
+  token: string;
+  url: string;
+  client_name: string | null;
+  status: ReviewStatus;
+  expires_at: string | null;
+  revoked_at: string | null;
+  decided_at: string | null;
+  decided_by_name: string | null;
+  decision_note: string | null;
+  created_at: string;
+  comment_count: number;
+  open_comment_count: number;
+}
+
+export interface ReviewComment {
+  id: number;
+  review_link_id: number;
+  av_row_id: number | null;
+  scene_id: number | null;
+  author_name: string;
+  body: string;
+  resolved_at: string | null;
+  created_at: string;
+}
+
 export interface Script {
   id: number;
   project_id: number;
   title: string;
-  script_type: "screenplay" | "treatment" | "outline" | "other";
+  script_type: ScriptType;
   status: "draft" | "active" | "locked" | "archived";
   description?: string;
   created_by_user_id: string;

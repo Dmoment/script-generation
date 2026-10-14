@@ -20,6 +20,13 @@ module Screenplay
           revision_color: @source&.numbers_locked? ? RevisionColors.next_after(@source.revision_color) : nil,
           revision_date: @source&.numbers_locked? ? Date.current : nil
         )
+        @source&.av_rows&.ordered&.each do |row|
+          version.av_rows.create!(
+            position: row.position, shot: row.shot, video: row.video, audio: row.audio,
+            super_text: row.super_text, duration_seconds: row.duration_seconds, notes: row.notes,
+            metadata: (row.metadata || {}).merge("source_row_id" => row.id)
+          )
+        end
         @source&.scenes&.ordered&.each do |scene|
           version.scenes.create!(
             scene_number: scene.scene_number,

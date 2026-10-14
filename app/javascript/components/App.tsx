@@ -7,8 +7,8 @@ import Footer from './Footer';
 import LandingPage from '../pages/LandingPage';
 import DashboardPage from '../pages/DashboardPage';
 import ScriptDatabasePage from '../pages/ScriptDatabasePage';
-import ScriptEditorPage from '../pages/ScriptEditorPage';
-import ScriptPrintPage from '../pages/ScriptPrintPage';
+import EditorRoute from './EditorRoute';
+import ReviewPage from '../pages/ReviewPage';
 import AuthTokenBridge from './AuthTokenBridge';
 import LoadingScreen from './LoadingScreen';
 import { queryClient } from '../lib/queryClient';
@@ -105,10 +105,13 @@ const App: React.FC<AppProps> = ({ features = [], appName = 'Script Generation' 
             <Route path="/scripts" element={<ScriptDatabasePage />} />
             
             {/* Script Editor route */}
-            <Route path="/scripts/:scriptId/versions/:versionId" element={<ScriptEditorPage />} />
+            <Route path="/scripts/:scriptId/versions/:versionId" element={<EditorRoute view="editor" />} />
 
             {/* Print / PDF view of a version */}
-            <Route path="/scripts/:scriptId/versions/:versionId/print" element={<ScriptPrintPage />} />
+            <Route path="/scripts/:scriptId/versions/:versionId/print" element={<EditorRoute view="print" />} />
+
+            {/* Public client review (token in the URL, no login) */}
+            <Route path="/review/:token" element={<ReviewPage />} />
           </Routes>
         </div>
       </BrowserRouter>

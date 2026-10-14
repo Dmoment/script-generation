@@ -48,7 +48,7 @@ module V1
       params do
         requires :project_id, type: Integer, desc: "Project ID"
         requires :title, type: String, desc: "Script title"
-        optional :script_type, type: String, values: %w[screenplay treatment outline other], default: "screenplay", desc: "Script type"
+        optional :script_type, type: String, values: Script::TYPES, default: "screenplay", desc: "Script type (av_script = two-column audio/video)"
         optional :description, type: String, desc: "Script description"
         optional :content, type: String, desc: "Initial script content (for created scripts)"
       end
@@ -74,7 +74,7 @@ module V1
         script = service.call
 
         initial_version = script.script_versions.find_by(version_number: 1)
-        if initial_version && initial_version.scenes.empty?
+        if initial_version && !script.av? && initial_version.scenes.empty?
           initial_version.scenes.create!(
             scene_number: 1,
             slugline: "INT. LOCATION - DAY",
@@ -136,7 +136,7 @@ module V1
         script = service.call
 
         initial_version = script.script_versions.find_by(version_number: 1)
-        if initial_version && initial_version.scenes.empty?
+        if initial_version && !script.av? && initial_version.scenes.empty?
           Rails.logger.warn "Script #{script.id} uploaded but no initial scene found. Creating now..."
           initial_version.scenes.create!(
             scene_number: 1,
@@ -438,12 +438,14 @@ module V1
         authorize target.script, :show?
         error!({ error: "Versions belong to different scripts" }, 422) unless base.script_id == target.script_id
 
-        results = Screenplay::VersionDiff.new(base, target).call
+        results = (target.av? ? Av::VersionDiff : Screenplay::VersionDiff).new(base, target).call
         {
           base: { id: base.id, version_number: base.version_number, notes: base.notes },
           target: { id: target.id, version_number: target.version_number, notes: target.notes },
           summary: results.group_by(&:status).transform_values(&:size),
-          scenes: results.map(&:to_h)
+          kind: target.av? ? "av" : "screenplay",
+          scenes: target.av? ? [] : results.map(&:to_h),
+          rows: target.av? ? results.map(&:to_h) : []
         }
       end
 
@@ -460,10 +462,14 @@ module V1
 
         previous = version.script.script_versions.where("version_number < ?", version.version_number).order(version_number: :desc).first
         if previous
-          diff = Screenplay::VersionDiff.new(previous, version)
-          { previous_version: { id: previous.id, version_number: previous.version_number }, changed_scene_ids: diff.changed_scene_ids }
+          if version.av?
+            { previous_version: { id: previous.id, version_number: previous.version_number }, changed_scene_ids: [], changed_row_ids: Av::VersionDiff.new(previous, version).changed_row_ids }
+          else
+            diff = Screenplay::VersionDiff.new(previous, version)
+            { previous_version: { id: previous.id, version_number: previous.version_number }, changed_scene_ids: diff.changed_scene_ids, changed_row_ids: [] }
+          end
         else
-          { previous_version: nil, changed_scene_ids: [] }
+          { previous_version: nil, changed_scene_ids: [], changed_row_ids: [] }
         end
       end
 

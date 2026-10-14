@@ -2,6 +2,7 @@
 
 class Scene < ApplicationRecord
   belongs_to :script_version
+  has_many :review_comments, dependent: :destroy
   has_many :comments, class_name: 'SceneComment', dependent: :destroy
 
   self.whitelisted_ransackable_attributes = %w[

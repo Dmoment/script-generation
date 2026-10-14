@@ -91,3 +91,4 @@ end
 gem "pundit", "~> 2.5"
 
 gem "aws-sdk-s3", require: false
+gem "csv"

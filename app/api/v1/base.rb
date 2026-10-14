@@ -13,6 +13,9 @@ module V1
     mount V1::ScriptsApi
     mount V1::ScenesApi
     mount V1::SceneCommentsApi
+    mount V1::AvRowsApi
+    mount V1::ReviewLinksApi
+    mount V1::ReviewApi
 
     # Add Swagger documentation
     add_swagger_documentation(

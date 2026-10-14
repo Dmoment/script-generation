@@ -101,7 +101,7 @@ RSpec.describe 'Script drafts, comparison and breakdown API', type: :request do
 
     it 'is empty for the first draft' do
       get "/api/v1/script_versions/#{v1.id}/revisions", headers: headers
-      expect(JSON.parse(response.body)).to eq('previous_version' => nil, 'changed_scene_ids' => [])
+      expect(JSON.parse(response.body)).to eq('previous_version' => nil, 'changed_scene_ids' => [], 'changed_row_ids' => [])
     end
   end
 

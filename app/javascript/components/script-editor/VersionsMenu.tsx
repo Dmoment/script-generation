@@ -4,17 +4,21 @@ import { colors } from "../../lib/theme";
 import type { Script, ScriptVersion } from "../../types/api";
 import { useCompareQuery, useCreateVersionMutation, type DiffScene } from "../../queries/versions/useVersionQueries";
 import { cueText } from "../../lib/screenplay-editor";
+import AvCompare, { type AvDiffRow } from "../av/AvCompare";
 
 interface VersionsMenuProps {
   script: Script | undefined;
   scriptVersionId: number;
+  /** "av" labels versions as rounds and shows row-level differences. */
+  kind?: "screenplay" | "av";
 }
 
 /**
  * Drafts: switch between versions, start a new draft from the current one,
  * and compare the current draft with any earlier one.
  */
-const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId }) => {
+const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId, kind = "screenplay" }) => {
+  const noun = kind === "av" ? "Round" : "Draft";
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [compareWith, setCompareWith] = useState<number | null>(null);
@@ -64,16 +68,16 @@ const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId }) 
         aria-haspopup="menu"
         aria-expanded={open}
         className="px-3 py-1.5 border-2 border-black rounded text-sm font-bold uppercase bg-white text-black hover:bg-gray-100 flex items-center gap-2 whitespace-nowrap"
-        title="Drafts: switch, start a new draft, compare"
+        title={`${noun}s: switch, start a new ${noun.toLowerCase()}, compare`}
       >
         <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: colors.primary.pink }} aria-hidden="true" />
-        {current ? `Draft ${current.version_number}` : "Drafts"}
+        {current ? `${noun} ${current.version_number}` : `${noun}s`}
         <span className="font-mono text-gray-500 normal-case">{versions.length ? `of ${versions.length}` : ""}</span>
       </button>
 
       {open && (
         <div role="menu" className="absolute right-0 mt-2 w-80 bg-white border-2 border-black rounded shadow-[4px_4px_0_0_rgba(0,0,0,1)] z-30 py-1">
-          <div className="px-4 pt-2 pb-1 text-[10px] font-mono uppercase tracking-widest text-gray-500">Switch draft</div>
+          <div className="px-4 pt-2 pb-1 text-[10px] font-mono uppercase tracking-widest text-gray-500">Switch {noun.toLowerCase()}</div>
           {versions.map((v) => (
             <button
               key={v.id}
@@ -86,7 +90,7 @@ const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId }) 
               }}
             >
               <span className="font-bold uppercase whitespace-nowrap">
-                Draft {v.version_number}
+                {noun} {v.version_number}
                 {v.id === scriptVersionId && <span className="ml-2 text-[10px] text-white px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.primary.pink }}>open</span>}
               </span>
               <span className="font-mono text-xs text-gray-500 truncate max-w-[9rem]" title={v.notes || ""}>{v.notes || new Date(v.created_at).toLocaleDateString()}</span>
@@ -94,7 +98,7 @@ const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId }) 
           ))}
 
           <div className="border-t-2 border-black my-1" />
-          <div className="px-4 pt-1 pb-1 text-[10px] font-mono uppercase tracking-widest text-gray-500">New draft from this one</div>
+          <div className="px-4 pt-1 pb-1 text-[10px] font-mono uppercase tracking-widest text-gray-500">New {noun.toLowerCase()} from this one</div>
           <form
             className="px-4 pb-2 flex gap-1"
             onSubmit={(e) => {
@@ -104,7 +108,7 @@ const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId }) 
           >
             <input
               className="flex-1 border-2 border-black px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="Notes (e.g. producer's notes pass)"
+              placeholder={kind === "av" ? "Notes (e.g. client round 2 feedback)" : "Notes (e.g. producer's notes pass)"}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               aria-label="Draft notes"
@@ -129,7 +133,7 @@ const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId }) 
                     setCompareWith(v.id);
                   }}
                 >
-                  <span className="font-bold uppercase">Draft {v.version_number}</span>
+                  <span className="font-bold uppercase">{noun} {v.version_number}</span>
                   <span className="font-mono text-xs text-gray-500">show changes</span>
                 </button>
               ))}
@@ -138,7 +142,7 @@ const VersionsMenu: React.FC<VersionsMenuProps> = ({ script, scriptVersionId }) 
         </div>
       )}
 
-      {compareWith && <CompareModal versionId={scriptVersionId} withId={compareWith} onClose={() => setCompareWith(null)} />}
+      {compareWith && <CompareModal versionId={scriptVersionId} withId={compareWith} noun={noun} onClose={() => setCompareWith(null)} />}
     </div>
   );
 };
@@ -150,7 +154,7 @@ const STATUS_STYLE: Record<DiffScene["status"], { label: string; color: string }
   unchanged: { label: "Unchanged", color: "#9CA3AF" },
 };
 
-const CompareModal: React.FC<{ versionId: number; withId: number; onClose: () => void }> = ({ versionId, withId, onClose }) => {
+const CompareModal: React.FC<{ versionId: number; withId: number; noun: string; onClose: () => void }> = ({ versionId, withId, noun, onClose }) => {
   const { data, isLoading, error } = useCompareQuery(versionId, withId);
   const [showUnchanged, setShowUnchanged] = useState(false);
 
@@ -161,14 +165,17 @@ const CompareModal: React.FC<{ versionId: number; withId: number; onClose: () =>
   }, [onClose]);
 
   const scenes = (data?.scenes || []).filter((s) => showUnchanged || s.status !== "unchanged");
+  const avRows = ((data as { rows?: AvDiffRow[] } | undefined)?.rows || []).filter((r) => showUnchanged || r.status !== "unchanged");
+  const isAv = (data as { kind?: string } | undefined)?.kind === "av";
+  const nothing = data && (isAv ? avRows.length === 0 : scenes.length === 0);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-label="Compare drafts">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-label={`Compare ${noun.toLowerCase()}s`}>
       <div className="bg-white border-2 border-black shadow-[6px_6px_0_0_rgba(0,0,0,1)] w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between gap-4" style={{ backgroundColor: colors.background.beige }}>
           <div>
             <h2 className="text-lg font-black uppercase tracking-tight">
-              {data ? `Draft ${data.target.version_number} vs draft ${data.base.version_number}` : "Comparing drafts…"}
+              {data ? `${noun} ${data.target.version_number} vs ${noun.toLowerCase()} ${data.base.version_number}` : `Comparing ${noun.toLowerCase()}s…`}
             </h2>
             {data && (
               <p className="text-xs font-mono text-gray-600 mt-1">
@@ -187,8 +194,9 @@ const CompareModal: React.FC<{ versionId: number; withId: number; onClose: () =>
         <div className="flex-1 overflow-y-auto p-6 font-mono text-sm" style={{ backgroundColor: colors.background.beigeAlt }}>
           {isLoading && <p className="text-gray-500">Comparing…</p>}
           {error && <p style={{ color: colors.status.red }}>{error.message}</p>}
-          {data && scenes.length === 0 && <p className="text-gray-600">No differences between these drafts.</p>}
-          {scenes.map((scene) => {
+          {nothing && <p className="text-gray-600">No differences between these {noun.toLowerCase()}s.</p>}
+          {isAv && <AvCompare rows={avRows} />}
+          {!isAv && scenes.map((scene) => {
             const style = STATUS_STYLE[scene.status];
             return (
               <section key={`${scene.status}-${scene.target_scene_id ?? scene.base_scene_id}`} className="bg-white border-2 border-black mb-4">

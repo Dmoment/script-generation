@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { colors, getStatusStyles, getVersionBadgeColor } from "../../lib/theme";
-import type { Script, ScriptVersion } from "../../types/api";
+import { scriptTypeLabel, type Script, type ScriptVersion } from "../../types/api";
 
 interface ScriptCardProps {
   script: Script;
@@ -94,7 +94,7 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
 
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xs text-gray-600 uppercase">
-          {script.script_type}
+          {scriptTypeLabel(script.script_type)}
         </span>
         <span className="text-xs text-gray-400">•</span>
         <span className="text-xs text-gray-600">

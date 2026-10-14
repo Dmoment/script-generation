@@ -4,6 +4,12 @@ class ScriptVersion < ApplicationRecord
   belongs_to :script
   has_one_attached :file
   has_many :scenes, dependent: :destroy
+  has_many :av_rows, dependent: :destroy
+  has_many :review_links, dependent: :destroy
+
+  def av?
+    script.av?
+  end
 
   def numbers_locked?
     scene_numbers_locked_at.present?

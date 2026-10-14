@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useAuth0 } from '../hooks/useAuth';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import type { Script, Project, ScriptVersion } from "../types/api";
+import { scriptTypeLabel } from "../types/api";
+import type { ScriptType, Script, Project, ScriptVersion } from "../types/api";
 import "../lib/openapi-config";
 import { useProjectsQuery } from "../queries/projects/useProjectsQuery";
 import { useCurrentUserQuery } from "../queries/users/useCurrentUserQuery";
@@ -275,11 +276,9 @@ const ScriptDatabasePage: React.FC = () => {
   const handleCreateScript = async (data: {
     project_id: number | string;
     title: string;
+    script_type: ScriptType;
   }) => {
-    const script = await createScriptMutation.mutateAsync({
-      ...data,
-      script_type: "screenplay", // Default script type
-    });
+    const script = await createScriptMutation.mutateAsync(data);
     setShowCreateScriptModal(false);
     const version = script.script_versions?.[0];
     if (version) navigate(`/scripts/${script.id}/versions/${version.id}`);
@@ -607,6 +606,7 @@ const ScriptDatabasePage: React.FC = () => {
                     options={[
                       { value: "all", label: "All Types" },
                       { value: "screenplay", label: "Screenplay" },
+                      { value: "av_script", label: "AV script" },
                       { value: "treatment", label: "Treatment" },
                       { value: "outline", label: "Outline" },
                       { value: "other", label: "Other" },
@@ -873,7 +873,7 @@ const ScriptDatabasePage: React.FC = () => {
                                   {/* Type */}
                                   <div className="col-span-2">
                                     <span className="text-sm text-gray-600 uppercase">
-                                      {script.script_type}
+                                      {scriptTypeLabel(script.script_type)}
                                     </span>
                                   </div>
 

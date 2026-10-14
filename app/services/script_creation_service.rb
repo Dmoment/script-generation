@@ -14,7 +14,11 @@ class ScriptCreationService
       script = build_script
       save_script(script)
       initial_version = create_initial_version(script)
-      create_initial_scene(initial_version)
+      if script.av?
+        Av::Rows.new(initial_version).seed_starter_rows!
+      else
+        create_initial_scene(initial_version)
+      end
       script.reload
     end
   rescue StandardError => e
