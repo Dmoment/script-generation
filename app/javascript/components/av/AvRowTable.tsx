@@ -7,6 +7,8 @@ interface AvRowTableProps {
   rows: AvRow[];
   revisedRowIds: Set<number>;
   commentsByRow: Map<number, ReviewComment[]>;
+  /** Open notes from the previous round, keyed by this round's row id. */
+  carriedByRow?: Map<number, number>;
   readOnly?: boolean;
   onChange: (id: number, fields: Partial<AvRow>) => void;
   onAddAfter: (afterRowId: number | null) => void;
@@ -48,7 +50,7 @@ const GrowingTextarea: React.FC<{
   );
 };
 
-const AvRowTable: React.FC<AvRowTableProps> = ({ rows, revisedRowIds, commentsByRow, readOnly, onChange, onAddAfter, onDelete, onMove, onReorder, onShowComments }) => {
+const AvRowTable: React.FC<AvRowTableProps> = ({ rows, revisedRowIds, commentsByRow, carriedByRow, readOnly, onChange, onAddAfter, onDelete, onMove, onReorder, onShowComments }) => {
   const [dragId, setDragId] = useState<number | null>(null);
   const [overId, setOverId] = useState<number | null>(null);
   const total = rows.reduce((sum, r) => sum + (r.duration_seconds || 0), 0);
@@ -96,6 +98,7 @@ const AvRowTable: React.FC<AvRowTableProps> = ({ rows, revisedRowIds, commentsBy
         const comments = commentsByRow.get(row.id) || [];
         const openComments = comments.filter((c) => !c.resolved_at).length;
         const revised = revisedRowIds.has(row.id);
+        const carried = carriedByRow?.get(row.id) || 0;
         return (
           <div
             key={row.id}
@@ -175,6 +178,17 @@ const AvRowTable: React.FC<AvRowTableProps> = ({ rows, revisedRowIds, commentsBy
             <div className="px-1 py-1.5 flex flex-col">
               <GrowingTextarea value={row.audio} onChange={(v) => onChange(row.id, { audio: v })} placeholder="VO / dialogue / music / SFX" ariaLabel={`Row ${row.position} audio`} onKeyDown={cellKeys(row.id)} readOnly={readOnly} className="flex-1" />
               <div className="flex items-center justify-between gap-2 px-2 pt-1">
+                {carried > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => onShowComments(row.id)}
+                    className="text-[11px] font-mono font-bold uppercase px-1.5 py-0.5 border-2 border-black"
+                    style={{ backgroundColor: "#FBBF24" }}
+                    title="Open note from the previous round"
+                  >
+                    {carried} {carried === 1 ? "note" : "notes"} from last round
+                  </button>
+                )}
                 {comments.length > 0 ? (
                   <button
                     type="button"

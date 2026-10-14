@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { colors } from "../../lib/theme";
 import type { AvRow, ReviewComment, ReviewLink, ReviewStatus } from "../../types/api";
 import {
+  useCarriedNotesQuery,
   useCreateReviewLinkMutation,
   useResolveReviewCommentMutation,
   useReviewCommentsQuery,
@@ -12,10 +13,19 @@ import {
 interface ReviewPanelProps {
   versionId: number;
   roundNumber: number | undefined;
+  scriptTitle: string;
   rows: AvRow[];
   focusRowId: number | null;
   onFocusHandled: () => void;
+  onJumpToRow: (rowId: number) => void;
 }
+
+/** Message a writer sends with a review link; also the body of the mailto/WhatsApp share. */
+export const shareMessage = (link: ReviewLink, scriptTitle: string, roundNumber: number | undefined) => {
+  const who = link.client_name ? `Hi ${link.client_name.split(",")[0].trim()},` : "Hi,";
+  const until = link.expires_at ? ` The link works until ${new Date(link.expires_at).toLocaleDateString()}.` : "";
+  return `${who}\n\nRound ${roundNumber ?? ""} of "${scriptTitle}" is ready for your review:\n${link.url}\n\nComment on any row, then approve the round or ask for changes at the bottom. No login needed.${until}`;
+};
 
 export const STATUS_META: Record<ReviewStatus, { label: string; bg: string; fg: string }> = {
   pending: { label: "Awaiting review", bg: "#FEF3C7", fg: "#92400E" },
@@ -41,13 +51,33 @@ export const roundStatus = (links: ReviewLink[]): { status: ReviewStatus | "unsh
   return { status: decided[0].status, by: decided[0].decided_by_name, pending };
 };
 
-const ReviewPanel: React.FC<ReviewPanelProps> = ({ versionId, roundNumber, rows, focusRowId, onFocusHandled }) => {
+const ReviewPanel: React.FC<ReviewPanelProps> = ({ versionId, roundNumber, scriptTitle, rows, focusRowId, onFocusHandled, onJumpToRow }) => {
+  const { data: carried } = useCarriedNotesQuery(versionId);
   const { data: links = [] } = useReviewLinksQuery(versionId);
   const { data: comments = [] } = useReviewCommentsQuery(versionId);
   const createLink = useCreateReviewLinkMutation(versionId);
   const revokeLink = useRevokeReviewLinkMutation(versionId);
   const resolve = useResolveReviewCommentMutation(versionId);
   const [clientName, setClientName] = useState("");
+  const [nameTouched, setNameTouched] = useState(false);
+
+  // Suggest the client the previous round went to.
+  useEffect(() => {
+    const previousClient = carried?.previous_round?.review.client_name;
+    if (!nameTouched && !clientName && previousClient) setClientName(previousClient);
+  }, [carried, nameTouched, clientName]);
+
+  const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const nativeShare = async (link: ReviewLink) => {
+    try {
+      await navigator.share({ title: `${scriptTitle} · round ${roundNumber ?? ""}`, text: shareMessage(link, scriptTitle, roundNumber), url: link.url });
+    } catch {
+      // user dismissed the sheet
+    }
+  };
+  const mailto = (link: ReviewLink) =>
+    `mailto:?subject=${encodeURIComponent(`${scriptTitle} · round ${roundNumber ?? ""} for review`)}&body=${encodeURIComponent(shareMessage(link, scriptTitle, roundNumber))}`;
+  const whatsapp = (link: ReviewLink) => `https://wa.me/?text=${encodeURIComponent(shareMessage(link, scriptTitle, roundNumber))}`;
   const [copied, setCopied] = useState<number | null>(null);
   const [showResolved, setShowResolved] = useState(false);
 
@@ -101,7 +131,7 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ versionId, roundNumber, rows,
             setClientName("");
           }}
         >
-          <input className={field} value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Client name (optional)" aria-label="Client name" maxLength={120} />
+          <input className={field} value={clientName} onChange={(e) => { setNameTouched(true); setClientName(e.target.value); }} placeholder="Client name (optional)" aria-label="Client name" maxLength={120} />
           <button type="submit" disabled={createLink.isPending} className="px-3 border-2 border-black text-white text-xs font-bold uppercase whitespace-nowrap disabled:opacity-50" style={{ backgroundColor: colors.primary.pink }}>
             {createLink.isPending ? "…" : "Create link"}
           </button>
@@ -131,6 +161,17 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ versionId, roundNumber, rows,
                   <div className="flex items-center gap-2 mt-2 text-[10px] font-mono uppercase whitespace-nowrap">
                     <button type="button" onClick={() => copy(link)} className="font-bold hover:underline">{copied === link.id ? "Copied!" : "Copy link"}</button>
                     <span className="text-gray-300">·</span>
+                    <a href={mailto(link)} className="font-bold hover:underline" title="Send the link by email">Email</a>
+                    <span className="text-gray-300">·</span>
+                    <a href={whatsapp(link)} target="_blank" rel="noopener" className="font-bold hover:underline" title="Send the link on WhatsApp">WhatsApp</a>
+                    {canNativeShare && (
+                      <>
+                        <span className="text-gray-300">·</span>
+                        <button type="button" onClick={() => nativeShare(link)} className="font-bold hover:underline">Share…</button>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 text-[10px] font-mono uppercase whitespace-nowrap">
                     <a href={link.url} target="_blank" rel="noopener" className="font-bold hover:underline">Open</a>
                     <span className="text-gray-300">·</span>
                     <span className="text-gray-500">{link.comment_count} {link.comment_count === 1 ? "comment" : "comments"}</span>
@@ -143,8 +184,42 @@ const ReviewPanel: React.FC<ReviewPanelProps> = ({ versionId, roundNumber, rows,
         </section>
       )}
 
+      {carried?.previous_round && (carried.notes.length > 0 || carried.previous_round.review.status !== "unshared") && (
+        <section>
+          <h3 className="text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">What the client said on round {carried.previous_round.version_number}</h3>
+          {carried.previous_round.review.decided_at && (
+            <p className="text-xs font-mono mb-2 px-2 py-1.5 border-2 border-black" style={{ backgroundColor: STATUS_META[carried.previous_round.review.status as ReviewStatus]?.bg || "#F3F4F6" }}>
+              <b>{carried.previous_round.review.decided_by_name}</b> {carried.previous_round.review.status === "approved" ? "approved" : "requested changes"}
+              {carried.previous_round.review.decision_note && <span className="block italic mt-0.5">“{carried.previous_round.review.decision_note}”</span>}
+            </p>
+          )}
+          {carried.notes.length === 0 ? (
+            <p className="text-xs font-mono text-gray-500">No open notes left. Everything from round {carried.previous_round.version_number} is addressed.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {carried.notes.map((n) => (
+                <li key={n.id} className="border-2 border-black bg-white px-2 py-1.5" style={{ borderLeftWidth: 6, borderLeftColor: "#FBBF24" }}>
+                  <div className="flex items-baseline gap-2 text-[11px] font-mono text-gray-500">
+                    <span className="font-bold text-black">{n.author_name}</span>
+                    {n.row_id ? (
+                      <button type="button" onClick={() => onJumpToRow(n.row_id!)} className="underline hover:text-black" title="Go to this row">row {n.position}{n.previous_position !== n.position ? ` (was ${n.previous_position})` : ""}</button>
+                    ) : n.previous_position ? (
+                      <span title="That row no longer exists in this round">row {n.previous_position}, removed</span>
+                    ) : (
+                      <span>whole script</span>
+                    )}
+                    <button type="button" onClick={() => resolve.mutate({ id: n.id, resolved: true })} className="ml-auto font-bold uppercase hover:underline" style={{ color: colors.status.green }}>Done</button>
+                  </div>
+                  <p className="whitespace-pre-wrap">{n.body}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
       <section>
-        <h3 className="text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Client comments</h3>
+        <h3 className="text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-2">Client comments on this round</h3>
         {comments.length === 0 && <p className="text-xs font-mono text-gray-500">Nothing yet. Comments reviewers leave on the link show up here.</p>}
         <ul className="space-y-3">
           {grouped.map(({ key, items }) => (

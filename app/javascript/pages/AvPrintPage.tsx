@@ -16,6 +16,15 @@ const AvPrintPage: React.FC<AvPrintPageProps> = ({ script, scriptVersionId }) =>
   const version = script.script_versions?.find((v) => v.id === scriptVersionId);
   const status = roundStatus(links);
   const total = rows.reduce((s, r) => s + (r.duration_seconds || 0), 0);
+  const trail = [...(script.script_versions || [])]
+    .sort((a, b) => a.version_number - b.version_number)
+    .filter((v) => v.version_number <= (version?.version_number ?? Infinity))
+    .map((v) => ({ v, r: v.review }));
+  const describe = (r: NonNullable<typeof trail[number]["r"]>) => {
+    if (r.status === "unshared") return "Not shared with the client";
+    if (r.status === "pending") return `Shared${r.client_name ? ` with ${r.client_name}` : ""}, awaiting review`;
+    return `${r.status === "approved" ? "Approved" : "Changes requested"} by ${r.decided_by_name}${r.decided_at ? ` on ${new Date(r.decided_at).toLocaleDateString()}` : ""}`;
+  };
 
   useEffect(() => {
     document.title = `${script.title} – round ${version?.version_number ?? ""}`;
@@ -42,6 +51,12 @@ const AvPrintPage: React.FC<AvPrintPageProps> = ({ script, scriptVersionId }) =>
         td .super { font-size: 10px; text-transform: uppercase; color: #444; display: block; margin-top: 4px; }
         td .dur { font-size: 10px; color: #555; display: block; margin-top: 3px; font-weight: 400; }
         tfoot td { font-weight: 700; background: #F8F1E8; }
+        .trail { margin-top: 18px; break-inside: avoid; }
+        .trail h2 { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; margin: 0 0 6px; color: #555; }
+        .trail table td { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; }
+        .trail td.num { width: 60px; white-space: nowrap; text-align: left; }
+        .trail .note { display: block; font-style: italic; color: #333; margin-top: 2px; }
+        .trail .here { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: #F2556E; margin-left: 6px; }
         tr { break-inside: avoid; }
         @media print { .print-root { background: #fff; padding: 0; } .toolbar { display: none; } .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; } }
       `}</style>
@@ -76,6 +91,26 @@ const AvPrintPage: React.FC<AvPrintPageProps> = ({ script, scriptVersionId }) =>
             <tr><td className="num">{formatSeconds(total)}</td><td colSpan={2}>Total running time</td></tr>
           </tfoot>
         </table>
+
+        {trail.some(({ r }) => r && r.status !== "unshared") && (
+          <section className="trail">
+            <h2>Approval trail</h2>
+            <table>
+              <tbody>
+                {trail.map(({ v, r }) => (
+                  <tr key={v.id}>
+                    <td className="num">Round {v.version_number}{v.id === scriptVersionId && <span className="here">this</span>}</td>
+                    <td>
+                      {r ? describe(r) : "—"}
+                      {r?.decision_note && <span className="note">“{r.decision_note}”</span>}
+                      {v.notes && <span style={{ display: "block", color: "#666", marginTop: 2 }}>{v.notes}</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
       </section>
     </div>
   );

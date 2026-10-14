@@ -16,6 +16,10 @@ module V1
       expose :created_at
       expose :updated_at
 
+      expose :review, documentation: { type: "Hash", desc: "Client review state of this round" } do |version|
+        version.review_summary
+      end
+
       expose :has_uploaded_file do |version|
         version.file.attached?
       end

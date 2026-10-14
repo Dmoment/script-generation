@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "../../types/generated/core/request";
 import { OpenAPI } from "../../types/generated/core/OpenAPI";
 import { getAuthToken } from "../../lib/authTokenProvider";
-import type { AvRow, ReviewComment, ReviewLink } from "../../types/api";
+import type { AvRow, ReviewComment, ReviewLink, ReviewSummary } from "../../types/api";
 import { versionKeys } from "../versions/useVersionQueries";
 
 export const avKeys = {
@@ -157,6 +157,29 @@ export const useReviewCommentsQuery = (versionId: number, enabled = true) =>
     refetchInterval: 30_000,
   });
 
+export interface CarriedNote extends ReviewComment {
+  previous_position: number | null;
+  row_id: number | null;
+  position: number | null;
+  scene_id_now: number | null;
+}
+
+export interface CarriedNotes {
+  previous_round: { id: number; version_number: number; review: ReviewSummary } | null;
+  notes: CarriedNote[];
+}
+
+/** Open client notes from the previous round, mapped onto this round's rows. */
+export const useCarriedNotesQuery = (versionId: number, enabled = true) =>
+  useQuery<CarriedNotes>({
+    queryKey: [...avKeys.comments(versionId), "carried"],
+    queryFn: async () => {
+      const response = await request<CarriedNotes>(OpenAPI, { method: "GET", url: `/v1/script_versions/${versionId}/carried_notes` });
+      return response as unknown as CarriedNotes;
+    },
+    enabled: enabled && !!versionId,
+  });
+
 export const useResolveReviewCommentMutation = (versionId: number) => {
   const queryClient = useQueryClient();
   return useMutation<ReviewComment, Error, { id: number; resolved: boolean }>({
@@ -165,8 +188,9 @@ export const useResolveReviewCommentMutation = (versionId: number) => {
       return response as unknown as ReviewComment;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: avKeys.comments(versionId) });
-      queryClient.invalidateQueries({ queryKey: avKeys.links(versionId) });
+      queryClient.invalidateQueries({ queryKey: ["review-comments"] });
+      queryClient.invalidateQueries({ queryKey: ["review-links"] });
+      queryClient.invalidateQueries({ queryKey: ["scripts"] });
     },
   });
 };

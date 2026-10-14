@@ -68,6 +68,18 @@ export interface ReviewLink {
   open_comment_count: number;
 }
 
+/** One-glance client review state of a round (from ScriptVersion#review_summary). */
+export interface ReviewSummary {
+  status: ReviewStatus | "unshared";
+  decided_by_name: string | null;
+  decided_at: string | null;
+  decision_note: string | null;
+  client_name: string | null;
+  links: number;
+  pending_links: number;
+  open_comments: number;
+}
+
 export interface ReviewComment {
   id: number;
   review_link_id: number;
@@ -109,6 +121,7 @@ export interface ScriptVersion {
   revision_color?: string | null;
   revision_date?: string | null;
   revision_color_label?: string | null;
+  review?: ReviewSummary;
 }
 
 // Screenplay Element Types (industry standard formatting)

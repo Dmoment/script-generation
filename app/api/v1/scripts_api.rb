@@ -31,7 +31,7 @@ module V1
           scripts = scripts.ransack(params[:q]).result
         end
 
-        scripts = scripts.includes(script_versions: :file_attachment)
+        scripts = scripts.includes(script_versions: [:file_attachment, { review_links: :review_comments }])
 
         paginate_collection(scripts) do |script|
           V1::Entities::Script.represent(script)
@@ -188,7 +188,7 @@ module V1
       end
       get ":id" do
         authenticate!
-        script = Script.find(params[:id])
+        script = Script.includes(script_versions: [:file_attachment, { review_links: :review_comments }]).find(params[:id])
 
         authorize script, :show?
         present script, with: V1::Entities::Script

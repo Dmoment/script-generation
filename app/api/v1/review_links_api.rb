@@ -37,6 +37,33 @@ module V1
           present link, with: V1::Entities::ReviewLink, origin: request_origin
         end
 
+        desc "Open client notes from the previous round, mapped onto this round's rows by lineage"
+        get :carried_notes do
+          authenticate!
+          version = ScriptVersion.find(params[:id])
+          authorize version.script, :show?
+          previous = version.previous_version
+          next { previous_round: nil, notes: [] } unless previous
+
+          live_link_ids = previous.review_links.active.select(:id)
+          notes = ReviewComment.where(review_link_id: live_link_ids).open.includes(:av_row, :scene).chronological
+          by_source = version.av_rows.ordered.index_by(&:source_row_id)
+          by_source_scene = version.scenes.ordered.index_by { |sc| sc.metadata&.dig("source_scene_id") }
+          {
+            previous_round: { id: previous.id, version_number: previous.version_number, review: previous.review_summary },
+            notes: notes.map do |c|
+              current_row = c.av_row_id && by_source[c.av_row_id]
+              current_scene = c.scene_id && by_source_scene[c.scene_id]
+              V1::Entities::ReviewComment.represent(c).as_json.merge(
+                previous_position: c.av_row&.position || c.scene&.scene_number,
+                row_id: current_row&.id,
+                position: current_row&.position,
+                scene_id_now: current_scene&.id
+              )
+            end
+          }
+        end
+
         desc "Every comment that came back through this round's review links", { success: V1::Entities::ReviewComment, is_array: true }
         get :review_comments do
           authenticate!

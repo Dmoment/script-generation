@@ -19,6 +19,7 @@ import Sidebar from "../components/dashboard/Sidebar";
 import SidebarItem from "../components/dashboard/SidebarItem";
 import Topbar from "../components/dashboard/Topbar";
 import ScriptCard from "../components/dashboard/ScriptCard";
+import ReviewStatusPill from "../components/av/ReviewStatusPill";
 import ThreadConnector from "../components/ThreadConnector";
 import { colors, getStatusStyles, getVersionBadgeColor } from "../lib/theme";
 
@@ -857,6 +858,7 @@ const ScriptDatabasePage: React.FC = () => {
                                             >
                                               v{script.latest_version_number}
                                             </span>
+                                            <ReviewStatusPill review={versions[versions.length - 1]?.review} hideUnshared />
                                           </div>
                                         )}
                                       </div>

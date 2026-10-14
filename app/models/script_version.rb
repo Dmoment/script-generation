@@ -11,6 +11,27 @@ class ScriptVersion < ApplicationRecord
     script.av?
   end
 
+  # One-glance state of client review for this round, built from the loaded
+  # links so list endpoints can include it without extra queries.
+  def review_summary
+    live = review_links.reject(&:revoked?)
+    decided = live.select(&:decided_at).max_by(&:decided_at)
+    {
+      status: live.empty? ? "unshared" : (decided ? decided.status : "pending"),
+      decided_by_name: decided&.decided_by_name,
+      decided_at: decided&.decided_at,
+      decision_note: decided&.decision_note,
+      client_name: (decided || live.max_by(&:created_at))&.client_name,
+      links: live.size,
+      pending_links: live.count { |l| l.decided_at.nil? },
+      open_comments: live.sum { |l| l.review_comments.count { |c| c.resolved_at.nil? } }
+    }
+  end
+
+  def previous_version
+    script.script_versions.where("version_number < ?", version_number).order(version_number: :desc).first
+  end
+
   def numbers_locked?
     scene_numbers_locked_at.present?
   end

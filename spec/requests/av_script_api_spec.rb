@@ -230,3 +230,65 @@ RSpec.describe 'AV script API', type: :request do
     end
   end
 end
+
+RSpec.describe 'AV review follow-through', type: :request do
+  let(:company) { Company.create!(name: 'Agency') }
+  let(:user) { User.create!(auth0_id: 'auth0|av2', email: 'av2@example.com', name: 'Asha Rao', company: company, role: nil) }
+  let(:project) { Project.create!(title: 'Monsoon Wedding Ad', project_type: 'Ad', company: company, created_by_user: user, status: 'active') }
+  let(:headers) { { 'Authorization' => 'Bearer valid_token' } }
+  let(:script) { Script.create!(title: 'Monsoon 30s', script_type: 'av_script', project: project, created_by_user: user, status: 'draft') }
+  let(:round1) { script.script_versions.create!(version_number: 1) }
+
+  before do
+    AccessControl.find_or_create_by(user: user, company: company, role: 'company_admin')
+    validator_double = double('Auth0TokenValidator', validate!: true, user_info: { auth0_id: user.auth0_id, email: user.email, name: user.name })
+    allow(Auth0TokenValidator).to receive(:new).and_return(validator_double)
+    round1.av_rows.create!(position: 1, shot: 'WS', video: 'Rain', audio: 'MUSIC')
+    round1.av_rows.create!(position: 2, shot: 'MS', video: 'Bride', audio: 'VO')
+  end
+
+  def json
+    JSON.parse(response.body)
+  end
+
+  it 'summarises review state on every version in the scripts list' do
+    get '/api/v1/scripts', headers: headers
+    expect(json['data'].first['script_versions'].first['review']).to include('status' => 'unshared', 'links' => 0)
+
+    link = round1.review_links.create!(created_by_user: user, client_name: 'Priya')
+    link.review_comments.create!(author_name: 'Priya', body: 'Shorter', av_row: round1.av_rows.first)
+    link.decide!('changes_requested', name: 'Priya', note: 'Tighten')
+    round1.review_links.create!(created_by_user: user, client_name: 'Karan')
+
+    get "/api/v1/scripts/#{script.id}", headers: headers
+    review = json['script_versions'].first['review']
+    expect(review).to include('status' => 'changes_requested', 'decided_by_name' => 'Priya', 'decision_note' => 'Tighten', 'links' => 2, 'pending_links' => 1, 'open_comments' => 1)
+  end
+
+  it 'carries open notes from the previous round onto the rows of the new one' do
+    link = round1.review_links.create!(created_by_user: user, client_name: 'Priya')
+    first, second = round1.av_rows.ordered.to_a
+    kept = link.review_comments.create!(author_name: 'Priya', body: 'Open on the bride', av_row: second)
+    link.review_comments.create!(author_name: 'Priya', body: 'Done already', av_row: first, resolved_at: Time.current)
+    general = link.review_comments.create!(author_name: 'Karan', body: 'Love it')
+    link.decide!('changes_requested', name: 'Priya', note: 'Swap the open')
+
+    round2 = Screenplay::VersionCloner.new(script, source_version: round1).call
+    Av::Rows.new(round2).reorder(round2.av_rows.ordered.map(&:id).reverse)
+
+    get "/api/v1/script_versions/#{round2.id}/carried_notes", headers: headers
+    expect(response).to have_http_status(:success)
+    expect(json['previous_round']).to include('version_number' => 1)
+    expect(json['previous_round']['review']).to include('status' => 'changes_requested', 'decision_note' => 'Swap the open')
+    ids = json['notes'].map { |n| n['id'] }
+    expect(ids).to contain_exactly(kept.id, general.id)
+    moved = json['notes'].find { |n| n['id'] == kept.id }
+    expect(moved['previous_position']).to eq(2)
+    expect(moved['position']).to eq(1)
+    expect(moved['row_id']).to eq(round2.av_rows.ordered.first.id)
+    expect(json['notes'].find { |n| n['id'] == general.id }['row_id']).to be_nil
+
+    get "/api/v1/script_versions/#{round1.id}/carried_notes", headers: headers
+    expect(json).to eq('previous_round' => nil, 'notes' => [])
+  end
+end

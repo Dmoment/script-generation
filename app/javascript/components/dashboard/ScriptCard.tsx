@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { colors, getStatusStyles, getVersionBadgeColor } from "../../lib/theme";
 import { scriptTypeLabel, type Script, type ScriptVersion } from "../../types/api";
+import ReviewStatusPill from "../av/ReviewStatusPill";
 
 interface ScriptCardProps {
   script: Script;
@@ -85,10 +86,11 @@ const ScriptCard: React.FC<ScriptCardProps> = ({
             {formattedDate}
           </p>
         </div>
-        <div className="flex items-center gap-2 ml-2">
+        <div className="flex flex-col items-end gap-1 ml-2">
           <span className="text-xs font-bold uppercase px-2 py-1 border border-black bg-gray-100">
             v{script.latest_version_number}
           </span>
+          <ReviewStatusPill review={sortedVersions[sortedVersions.length - 1]?.review} hideUnshared />
         </div>
       </div>
 

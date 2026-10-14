@@ -16,6 +16,7 @@ import {
   useReorderAvRowsMutation,
   useReviewCommentsQuery,
   useReviewLinksQuery,
+  useCarriedNotesQuery,
   useUpdateAvRowMutation,
   type AvRowFields,
 } from "../queries/av/useAvQueries";
@@ -39,6 +40,7 @@ const AvScriptEditorPage: React.FC<AvScriptEditorPageProps> = ({ script, scriptV
   const { data: revisions } = useRevisionsQuery(scriptVersionId);
   const { data: links = [] } = useReviewLinksQuery(scriptVersionId);
   const { data: comments = [] } = useReviewCommentsQuery(scriptVersionId);
+  const { data: carried } = useCarriedNotesQuery(scriptVersionId);
   const addRow = useAddAvRowMutation(scriptVersionId);
   const updateRow = useUpdateAvRowMutation(scriptVersionId);
   const deleteRow = useDeleteAvRowMutation(scriptVersionId);
@@ -61,6 +63,19 @@ const AvScriptEditorPage: React.FC<AvScriptEditorPageProps> = ({ script, scriptV
     return map;
   }, [comments]);
   const status = roundStatus(links);
+  const carriedByRow = useMemo(() => {
+    const map = new Map<number, number>();
+    (carried?.notes || []).forEach((n) => {
+      if (n.row_id) map.set(n.row_id, (map.get(n.row_id) || 0) + 1);
+    });
+    return map;
+  }, [carried]);
+  const carriedCount = carried?.notes.length || 0;
+  const jumpToRow = useCallback((rowId: number) => {
+    const el = document.querySelector<HTMLElement>(`[data-row-id="${rowId}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.querySelector<HTMLTextAreaElement>("textarea")?.focus({ preventScroll: true });
+  }, []);
   const openComments = comments.filter((c) => !c.resolved_at).length;
 
   useEffect(() => {
@@ -172,7 +187,7 @@ const AvScriptEditorPage: React.FC<AvScriptEditorPageProps> = ({ script, scriptV
           style={{ backgroundColor: colors.primary.pink }}
           aria-pressed={panelOpen}
         >
-          Review{openComments ? ` · ${openComments}` : ""}
+          Review{openComments + carriedCount ? ` · ${openComments + carriedCount}` : ""}
         </button>
         <div className="relative">
           <button type="button" onClick={() => setHelpOpen((v) => !v)} className={btn} aria-expanded={helpOpen}>?</button>
@@ -204,6 +219,7 @@ const AvScriptEditorPage: React.FC<AvScriptEditorPageProps> = ({ script, scriptV
               rows={rows}
               revisedRowIds={revisedRowIds}
               commentsByRow={commentsByRow}
+              carriedByRow={carriedByRow}
               onChange={handleChange}
               onAddAfter={handleAddAfter}
               onDelete={handleDelete}
@@ -219,7 +235,7 @@ const AvScriptEditorPage: React.FC<AvScriptEditorPageProps> = ({ script, scriptV
 
         {panelOpen && (
           <aside className="w-[22rem] shrink-0 border-l-2 border-black bg-white overflow-y-auto p-4" aria-label="Client review">
-            <ReviewPanel versionId={scriptVersionId} roundNumber={version?.version_number} rows={rows} focusRowId={focusRowId} onFocusHandled={() => setFocusRowId(null)} />
+            <ReviewPanel versionId={scriptVersionId} roundNumber={version?.version_number} scriptTitle={script.title} rows={rows} focusRowId={focusRowId} onFocusHandled={() => setFocusRowId(null)} onJumpToRow={jumpToRow} />
           </aside>
         )}
       </div>
