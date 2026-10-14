@@ -22,7 +22,10 @@ Rails.application.routes.draw do
 
   # Catch-all route for React Router (must be absolute last)
   # This allows React Router to handle all routes client-side
+  # Serve the SPA shell for page requests, including clients that ask for */*
+  # (link-preview crawlers, mail apps opening a review link). Asset-style
+  # requests with an extension (.js, .png, .json) still fall through to 404.
   get "*path", to: "pages#index", constraints: ->(req) {
-    !req.xhr? && req.format.html?
+    !req.xhr? && (req.format.html? || req.format == Mime::ALL)
   }
 end
