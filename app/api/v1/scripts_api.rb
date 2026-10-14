@@ -48,7 +48,7 @@ module V1
       params do
         requires :project_id, type: Integer, desc: "Project ID"
         requires :title, type: String, desc: "Script title"
-        optional :script_type, type: String, values: Script::TYPES, default: "screenplay", desc: "Script type (av_script = two-column audio/video)"
+        optional :script_type, type: String, values: %w[screenplay av_script treatment outline other], default: "screenplay", desc: "Script type (av_script = two-column audio/video)"
         optional :description, type: String, desc: "Script description"
         optional :content, type: String, desc: "Initial script content (for created scripts)"
       end

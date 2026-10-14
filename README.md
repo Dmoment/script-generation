@@ -121,6 +121,26 @@ Development/test only: the app runs as a stub user and the API accepts
 `Authorization: Bearer dev-bypass-token`, so the whole UI can be driven without
 an Auth0 login (see `docs/SCENE_EDITOR_EXPLANATION.md`).
 
+## AV scripts and client review
+
+Scripts come in two formats. **Screenplay** is the scene-based editor. **AV script**
+(`script_type: av_script`) is the two-column video/audio format used for ads and
+promos: numbered rows with shot, video, audio, super and duration, rounds
+(versions) with row-level comparison, a shot-list CSV, and a print view.
+
+Any round can be shared with a client through a **review link**:
+
+```
+POST /api/v1/script_versions/:id/review_links      # writer: create (14-day expiry)
+GET  /api/v1/review/:token                          # public: read the round
+POST /api/v1/review/:token/comments                 # public: comment on a row
+POST /api/v1/review/:token/decision                 # public: approved | changes_requested
+```
+
+The public page lives at `/review/:token` and needs no account. Revoked or
+expired links answer 410. Seed a worked example with
+`SEED_EMAIL=... bin/rails runner db/seeds/sample_av_script.rb`.
+
 ## API Development Workflow
 
 When creating or modifying API endpoints, you need to regenerate TypeScript types for the frontend.
